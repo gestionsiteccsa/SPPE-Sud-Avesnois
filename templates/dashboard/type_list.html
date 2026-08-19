@@ -1,0 +1,77 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Types de structure — Tableau de bord SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Types{% endblock %}
+{% block page_title %}Types de structure{% endblock %}
+{% block page_subtitle %}Organiser les catégories proposées lors de la saisie{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+  <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] m-0 md:hidden">Gérez les catégories utilisées pour classer les structures.</p>
+  <a class="inline-flex self-start sm:ml-auto items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]" href="{% url 'dashboard:type_add' %}">
+    <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>
+    Ajouter un type
+  </a>
+</div>
+
+<section class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 mb-5" aria-labelledby="type-search-title">
+  <h2 id="type-search-title" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 mb-3">Rechercher un type</h2>
+  <form class="flex flex-col sm:flex-row sm:items-end gap-3" method="get" role="search" aria-label="Rechercher un type de structure">
+    <div class="flex flex-col gap-2 flex-1 min-w-0">
+      <label class="font-semibold text-[length:var(--fs-sm)] text-[var(--color-text)]" for="type-query">Nom du type</label>
+      <input class="block w-full px-4 py-2.5 text-[length:var(--fs-base)] text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] placeholder:text-[var(--color-text-subtle)]" type="search" name="q" id="type-query" value="{{ query }}" placeholder="Ex. Accueil de loisirs" autocomplete="off">
+    </div>
+    <div class="flex gap-2">
+      <button class="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] border bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]" type="submit"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-search"></use></svg>Rechercher</button>
+      {% if query %}<a class="inline-flex items-center justify-center min-h-[2.75rem] px-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-3)]" href="?">Effacer</a>{% endif %}
+    </div>
+  </form>
+</section>
+
+{% if types %}
+  <div class="mb-3">
+    <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Types de structure</h2>
+    <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0"><strong class="text-[var(--color-text)]">{{ types|length }}</strong> type{{ types|length|pluralize }}{% if query %} trouvé{{ types|length|pluralize }}{% endif %}</p>
+  </div>
+  <div class="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+    <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]">
+      <caption class="visually-hidden">Liste des types et nombre de structures associées</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Type</th>
+          <th scope="col" class="text-left px-3 sm:px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Structures</th>
+          <th scope="col" class="text-right px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] w-24">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in types %}
+          <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-primary-soft)] transition-colors">
+            <td class="px-4 py-3 text-[var(--color-text)]"><a class="font-semibold text-[var(--color-text)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'dashboard:type_edit' t.pk %}">{{ t.nom }}</a></td>
+            <td class="px-3 sm:px-4 py-3 text-[var(--color-text)]"><span class="inline-flex px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--color-surface-3)] text-[length:var(--fs-xs)] font-semibold">{{ t.structure_count }} structure{{ t.structure_count|pluralize }}</span></td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1">
+                <a class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)]" href="{% url 'dashboard:type_edit' t.pk %}" title="Modifier {{ t.nom }}" aria-label="Modifier {{ t.nom }}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-edit"></use></svg></a>
+                <a class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)]" href="{% url 'dashboard:type_delete' t.pk %}" title="Supprimer {{ t.nom }}" aria-label="Supprimer {{ t.nom }}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg></a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="flex flex-col items-center gap-3 text-center py-14 px-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] text-[var(--color-text-muted)]">
+    <svg class="w-12 h-12 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-tag"></use></svg>
+    {% if query %}
+      <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Aucun type trouvé</h2>
+      <p class="m-0">Essayez un autre intitulé.</p>
+      <a class="inline-flex items-center justify-center min-h-[2.75rem] px-4 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border border-[var(--color-primary-soft-border)] text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]" href="?">Effacer la recherche</a>
+    {% else %}
+      <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Aucun type</h2>
+      <p class="m-0">Ajoutez le premier type pour catégoriser les structures.</p>
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline bg-[var(--color-primary)] text-white" href="{% url 'dashboard:type_add' %}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>Ajouter le premier type</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

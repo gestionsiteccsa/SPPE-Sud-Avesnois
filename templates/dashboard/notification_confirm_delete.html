@@ -1,0 +1,36 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Retirer une adresse — SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Retirer une adresse{% endblock %}
+{% block page_title %}Retirer une adresse{% endblock %}
+{% block page_subtitle %}Confirmez avant de modifier les destinataires{% endblock %}
+
+{% block content %}
+<div class="max-w-[32rem] mx-auto">
+  <section class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 md:p-6 shadow-[var(--shadow-xs)] text-center" aria-labelledby="confirm-delete-title">
+    <div class="w-14 h-14 mx-auto mb-4 inline-flex items-center justify-center rounded-full bg-[var(--color-danger-soft)] text-[var(--color-danger)]">
+      <svg class="w-7 h-7" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+    </div>
+
+    <h2 id="confirm-delete-title" class="font-display text-[length:var(--fs-xl)] font-bold text-[var(--color-text)] m-0 mb-3">Retirer ce destinataire&nbsp;?</h2>
+    <p class="text-[var(--color-text-muted)] m-0">
+      L’adresse <strong class="text-[var(--color-text)] break-all">{{ object.email }}</strong> ne recevra plus les nouvelles demandes d’inscription.
+    </p>
+
+    <div class="grid grid-cols-[auto_1fr] items-start gap-3 p-4 mt-5 rounded-[var(--radius-md)] border text-left text-[length:var(--fs-sm)] leading-[1.6] bg-[var(--color-info-soft)] border-[var(--color-info-border)] text-[var(--color-info)]" role="note">
+      <svg class="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-info"></use></svg>
+      <p class="m-0">Vous pourrez ajouter de nouveau cette adresse plus tard. Si aucune adresse active ne reste, les superadministrateurs recevront les notifications.</p>
+    </div>
+
+    <form method="post" class="flex flex-col-reverse sm:flex-row sm:justify-center gap-2 mt-6 pt-5 border-t border-[var(--color-border)]">
+      {% csrf_token %}
+      <a class="inline-flex items-center justify-center min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]" href="{% url 'dashboard:notification_list' %}">Conserver l’adresse</a>
+      <button class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] cursor-pointer border bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:bg-[var(--color-danger-hover)] hover:border-[var(--color-danger-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-danger)]" type="submit">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+        Retirer l’adresse
+      </button>
+    </form>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Structures — Tableau de bord SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Structures{% endblock %}
+{% block page_title %}Structures{% endblock %}
+{% block page_subtitle %}Consulter, filtrer et mettre à jour l’annuaire{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+  <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] m-0 md:hidden">
+    Consultez et mettez à jour les informations transmises aux familles.
+  </p>
+  <a class="inline-flex self-start sm:ml-auto items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" href="{% url 'dashboard:structure_add' %}">
+    <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>
+    Ajouter une structure
+  </a>
+</div>
+
+<section class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 mb-5" aria-labelledby="filters-title">
+  <div class="mb-4">
+    <h2 id="filters-title" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Rechercher dans l’annuaire</h2>
+    <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0">Utilisez un ou plusieurs critères pour réduire la liste.</p>
+  </div>
+  <form class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(16rem,1.4fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_auto] items-end gap-4" method="get" role="search" aria-label="Filtrer les structures" data-filters-form>
+    {% if filters.o %}<input type="hidden" name="o" value="{{ filters.o }}">{% endif %}
+    <div class="flex flex-col gap-2 min-w-0 sm:col-span-2 xl:col-span-1">
+      <label class="font-semibold text-[length:var(--fs-sm)] text-[var(--color-text)]" for="q">Nom ou mot-clé</label>
+      <input class="block w-full px-4 py-2.5 text-[length:var(--fs-base)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] placeholder:text-[var(--color-text-subtle)] placeholder:opacity-100 transition-[border-color,box-shadow,background] duration-200"
+             type="search" name="q" id="q" value="{{ filters.q|default_if_none:'' }}"
+             placeholder="Nom, type, commune, direction…" autocomplete="off">
+    </div>
+    <div class="flex flex-col gap-2 min-w-0">
+      <label class="font-semibold text-[length:var(--fs-sm)] text-[var(--color-text)]" for="type">Type de structure</label>
+      <select class="block w-full px-4 py-2.5 pr-8 text-[length:var(--fs-base)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] appearance-none"
+              name="type" id="type"
+              style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2720%27 height=%2720%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%235A6473%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.75rem center;">
+        <option value="">Tous les types</option>
+        {% for t in types %}<option value="{{ t.pk }}" {% if filters.type == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.nom }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="flex flex-col gap-2 min-w-0">
+      <label class="font-semibold text-[length:var(--fs-sm)] text-[var(--color-text)]" for="commune">Commune</label>
+      <select class="block w-full px-4 py-2.5 pr-8 text-[length:var(--fs-base)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] appearance-none"
+              name="commune" id="commune"
+              style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2720%27 height=%2720%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%235A6473%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.75rem center;">
+        <option value="">Toutes les communes</option>
+        {% for c in communes %}<option value="{{ c.pk }}" {% if filters.commune == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nom }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-1">
+      <button class="inline-flex flex-1 xl:flex-none items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] cursor-pointer border transition-all bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-search"></use></svg>
+        Afficher les résultats
+      </button>
+      {% if filters.q or filters.type or filters.commune %}
+        <a class="inline-flex items-center justify-center min-h-[2.75rem] px-3 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-3)] hover:text-[var(--color-text)]" href="?" data-reset-filters>Effacer</a>
+      {% endif %}
+    </div>
+  </form>
+</section>
+
+{% if page_obj %}
+  <div class="flex flex-wrap items-end justify-between gap-2 mb-3">
+    <div>
+      <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Résultats</h2>
+      <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0" aria-live="polite">
+        <strong class="text-[var(--color-text)]">{{ page_obj.paginator.count }}</strong>
+        structure{{ page_obj.paginator.count|pluralize }} trouvée{{ page_obj.paginator.count|pluralize }}
+        {% if filters.q or filters.type or filters.commune %}avec ces critères{% endif %}
+      </p>
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] m-0">{{ page_obj|length }} affichée{{ page_obj|length|pluralize }} sur cette page</p>
+    {% endif %}
+  </div>
+
+  <form id="batch-form" method="post" action="{% url 'dashboard:structure_batch' %}">
+    {% csrf_token %}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 mb-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)]" id="batch-bar">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <label class="flex items-center gap-2 text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] cursor-pointer">
+        <input type="checkbox" id="select-all" class="w-4 h-4 accent-[var(--color-primary)]">
+        Sélectionner la page
+      </label>
+      <span id="selection-summary" class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]" aria-live="polite">Aucune sélection</span>
+    </div>
+    <button class="inline-flex self-start sm:self-auto items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] cursor-pointer border transition-all bg-[var(--color-surface)] text-[var(--color-danger)] border-[var(--color-danger-border)] hover:bg-[var(--color-danger-soft)] active:translate-y-px disabled:opacity-45 disabled:cursor-not-allowed disabled:pointer-events-none"
+            type="submit" name="action" value="delete" id="batch-delete" disabled>
+      <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+      Supprimer la sélection
+    </button>
+  </div>
+
+  <div class="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+    <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]">
+      <caption class="visually-hidden">Liste des structures et actions disponibles</caption>
+      <thead>
+        <tr class="sticky top-0 z-10">
+          <th scope="col" class="text-center px-2 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] w-10"><span class="sr-only">Sélection</span></th>
+          <th scope="col" {% if sort_col == 'nom' %}aria-sort="{% if sort_desc %}descending{% else %}ascending{% endif %}"{% endif %} class="text-left px-3 md:px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">{{ sort_links.nom }}</th>
+          <th scope="col" {% if sort_col == 'type' %}aria-sort="{% if sort_desc %}descending{% else %}ascending{% endif %}"{% endif %} class="hidden lg:table-cell text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">{{ sort_links.type }}</th>
+          <th scope="col" {% if sort_col == 'commune' %}aria-sort="{% if sort_desc %}descending{% else %}ascending{% endif %}"{% endif %} class="hidden md:table-cell text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">{{ sort_links.commune }}</th>
+          <th scope="col" {% if sort_col == 'places' %}aria-sort="{% if sort_desc %}descending{% else %}ascending{% endif %}"{% endif %} class="text-center px-3 md:px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">{{ sort_links.places }}</th>
+          <th scope="col" class="hidden xl:table-cell text-center px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Handicap</th>
+          <th scope="col" class="hidden xl:table-cell text-center px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Urgence</th>
+          <th scope="col" {% if sort_col == 'monenfant' %}aria-sort="{% if sort_desc %}descending{% else %}ascending{% endif %}"{% endif %} class="hidden xl:table-cell text-center px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] normal-case tracking-[0.03em] text-[var(--color-text-muted)] whitespace-nowrap">{{ sort_links.monenfant }}</th>
+          <th scope="col" {% if sort_col == 'maj' %}aria-sort="{% if sort_desc %}descending{% else %}ascending{% endif %}"{% endif %} class="hidden lg:table-cell text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">{{ sort_links.maj }}</th>
+          <th scope="col" class="text-right px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap w-24">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in page_obj %}
+          <tr class="border-b border-[var(--color-border)] transition-colors duration-150 group hover:bg-[var(--color-primary-soft)]">
+            <td class="text-center px-2 py-3">
+              <input type="checkbox" name="ids" value="{{ s.pk }}" class="batch-check w-4 h-4 accent-[var(--color-primary)]" aria-label="Sélectionner {{ s.nom }}">
+            </td>
+            <td class="px-3 md:px-4 py-3 text-[var(--color-text)]">
+              <div class="flex flex-wrap items-center gap-2">
+                <a class="font-medium text-[var(--color-text)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'dashboard:structure_edit' s.pk %}">{{ s.nom }}</a>
+                {% if not s.afficher %}
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-warning-soft)] text-[var(--color-warning)]">Masquée du site</span>
+                {% endif %}
+              </div>
+              <div class="lg:hidden text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1">
+                {% if s.type %}{{ s.type.nom }}{% else %}Type non renseigné{% endif %}
+              </div>
+              {% if s.commune %}<div class="md:hidden text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-0.5">{{ s.commune.code_postal }} {{ s.commune.nom }}</div>{% endif %}
+              <div class="xl:hidden flex flex-wrap items-center gap-1.5 mt-1.5 text-[length:var(--fs-xs)]">
+                {% if s.accueil_handicap == True %}<span class="text-[var(--color-success)]">Handicap</span>{% endif %}
+                {% if s.accueil_urgence == True %}<span class="text-[var(--color-accent)]">Urgence</span>{% endif %}
+                {% with status=s.monenfant_status %}{% if status.0 %}<span class="text-[var(--color-text-subtle)]">monenfant.fr : {{ status.1 }}</span>{% endif %}{% endwith %}
+                <span class="lg:hidden text-[var(--color-text-subtle)]">Màj le {{ s.date_mise_a_jour|date:"d/m/Y" }}</span>
+              </div>
+            </td>
+            <td class="hidden lg:table-cell px-4 py-3 text-[var(--color-text)]">
+              {% if s.type %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--color-primary-soft)] text-[var(--color-primary)] text-[length:var(--fs-xs)] font-medium">{{ s.type.nom }}</span>
+              {% else %}<span class="text-[var(--color-text-subtle)]">—</span>{% endif %}
+            </td>
+            <td class="hidden md:table-cell px-4 py-3 text-[var(--color-text)] whitespace-nowrap">
+              {% if s.commune %}{{ s.commune.code_postal }} {{ s.commune.nom }}{% else %}<span class="text-[var(--color-text-subtle)]">—</span>{% endif %}
+            </td>
+            <td class="px-3 md:px-4 py-3 text-center">
+              {% if s.places_complet %}
+                <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-danger-soft)] text-[var(--color-danger)]">
+                  <svg class="w-3 h-3 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+                  Complet
+                </span>
+              {% elif s.places_non_communique %}
+                <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]" aria-label="Nombre de places non communiqué" title="Nombre de places non communiqué"><span class="sm:hidden" aria-hidden="true">NC</span><span class="hidden sm:inline" aria-hidden="true">Non communiqué</span></span>
+              {% elif s.places_disponibles is not None %}
+                <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                  <svg class="w-3 h-3 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+                  {{ s.places_disponibles }} dispo.
+                </span>
+              {% else %}
+                <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]" aria-label="Nombre de places non communiqué" title="Nombre de places non communiqué"><span class="sm:hidden" aria-hidden="true">NC</span><span class="hidden sm:inline" aria-hidden="true">Non communiqué</span></span>
+              {% endif %}
+            </td>
+            <td class="hidden xl:table-cell px-4 py-3 text-center">
+              {% if s.accueil_handicap == True %}
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-success-soft)] text-[var(--color-success)]" title="Accueil handicap">
+                  <svg class="w-3.5 h-3.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+                </span>
+              {% elif s.accueil_handicap == False %}
+                <span class="text-[var(--color-text-subtle)] text-[length:var(--fs-xs)]" title="Pas d'accueil handicap">—</span>
+              {% else %}
+                <span class="text-[var(--color-text-subtle)] text-[length:var(--fs-xs)]">—</span>
+              {% endif %}
+            </td>
+            <td class="hidden xl:table-cell px-4 py-3 text-center">
+              {% if s.accueil_urgence == True %}
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)]" title="Accueil d'urgence">
+                  <svg class="w-3.5 h-3.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+                </span>
+              {% elif s.accueil_urgence == False %}
+                <span class="text-[var(--color-text-subtle)] text-[length:var(--fs-xs)]" title="Pas d'accueil d'urgence">—</span>
+              {% else %}
+                <span class="text-[var(--color-text-subtle)] text-[length:var(--fs-xs)]">—</span>
+              {% endif %}
+            </td>
+            <td class="hidden xl:table-cell px-4 py-3 text-center">
+              {% with status=s.monenfant_status %}
+                {% if status.0 == "success" %}
+                  <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]">{{ status.1 }}</span>
+                {% elif status.0 == "warning" %}
+                  <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-warning-soft)] text-[var(--color-warning)]">{{ status.1 }}</span>
+                {% elif status.0 == "danger" %}
+                  <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-danger-soft)] text-[var(--color-danger)]">{{ status.1 }}</span>
+                {% else %}
+                  <span class="text-[var(--color-text-subtle)] text-[length:var(--fs-xs)]">—</span>
+                {% endif %}
+              {% endwith %}
+            </td>
+            <td class="hidden lg:table-cell px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] whitespace-nowrap">{{ s.date_mise_a_jour|date:"d/m/Y" }}</td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1">
+                <a class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] transition-colors duration-150"
+                   href="{% url 'dashboard:structure_edit' s.pk %}"
+                   title="Modifier {{ s.nom }}" aria-label="Modifier {{ s.nom }}">
+                  <svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-edit"></use></svg>
+                </a>
+                <a class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)] transition-colors duration-150"
+                   href="{% url 'dashboard:structure_delete' s.pk %}"
+                   title="Supprimer {{ s.nom }}" aria-label="Supprimer {{ s.nom }}">
+                  <svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  </form>
+
+  <script nonce="{{ csp_nonce }}">
+    (function () {
+      var selectAll = document.getElementById('select-all');
+      var deleteButton = document.getElementById('batch-delete');
+      var summary = document.getElementById('selection-summary');
+      var form = document.getElementById('batch-form');
+      var checkboxes = Array.from(document.querySelectorAll('.batch-check'));
+
+      function updateSelection() {
+        var selectedCount = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
+        selectAll.checked = selectedCount === checkboxes.length;
+        selectAll.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+        deleteButton.disabled = selectedCount === 0;
+        summary.textContent = selectedCount === 0
+          ? 'Aucune sélection'
+          : selectedCount + ' structure' + (selectedCount > 1 ? 's' : '') + ' sélectionnée' + (selectedCount > 1 ? 's' : '');
+      }
+
+      selectAll.addEventListener('change', function () {
+        checkboxes.forEach(function (checkbox) { checkbox.checked = selectAll.checked; });
+        updateSelection();
+      });
+      checkboxes.forEach(function (checkbox) { checkbox.addEventListener('change', updateSelection); });
+      form.addEventListener('submit', function (event) {
+        var selectedCount = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
+        if (selectedCount === 0 || !window.confirm('Supprimer définitivement ' + selectedCount + ' structure' + (selectedCount > 1 ? 's' : '') + ' ?')) {
+          event.preventDefault();
+        }
+      });
+      updateSelection();
+    })();
+  </script>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="flex items-center justify-center gap-3 mt-6" aria-label="Pagination">
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0">
+        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+      </p>
+      <ul class="list-none p-0 m-0 flex items-center gap-1.5" role="list">
+        {% if page_obj.has_previous %}
+          <li>
+            <a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+               rel="prev"
+               href="?page={{ page_obj.previous_page_number }}{% if pagination_query %}&{{ pagination_query }}{% endif %}">
+              <span aria-hidden="true">«</span><span class="visually-hidden">Page précédente</span>
+            </a>
+          </li>
+        {% endif %}
+        {% for p in page_obj.paginator.page_range %}
+          <li>
+            {% if p == page_obj.number %}
+              <span class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-semibold bg-[var(--color-primary)] text-white" aria-current="page">{{ p }}</span>
+            {% elif p > page_obj.number|add:"-3" and p < page_obj.number|add:"3" %}
+              <a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+                 href="?page={{ p }}{% if pagination_query %}&{{ pagination_query }}{% endif %}" aria-label="Page {{ p }}">{{ p }}</a>
+            {% endif %}
+          </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <li>
+            <a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+               rel="next"
+               href="?page={{ page_obj.next_page_number }}{% if pagination_query %}&{{ pagination_query }}{% endif %}">
+              <span class="visually-hidden">Page suivante</span><span aria-hidden="true">»</span>
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% else %}
+  <div class="flex flex-col items-center gap-3 text-center py-14 px-4 text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]">
+    <svg class="w-14 h-14 text-[var(--color-text-subtle)] opacity-70" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-structures"></use></svg>
+    {% if filters.q or filters.type or filters.commune %}
+      <p class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Aucun résultat</p>
+      <p class="m-0">Aucune structure ne correspond aux critères choisis.</p>
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="?" data-reset-filters>Effacer les critères</a>
+    {% else %}
+      <p class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Aucune structure</p>
+      <p class="m-0">Commencez par ajouter la première structure de l’annuaire.</p>
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" href="{% url 'dashboard:structure_add' %}">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>
+        Ajouter la première structure
+      </a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

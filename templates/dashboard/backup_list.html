@@ -1,0 +1,198 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Sauvegardes — Tableau de bord SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Sauvegardes{% endblock %}
+{% block page_title %}Sauvegardes{% endblock %}
+{% block page_subtitle %}Protéger les données et vérifier les copies conservées{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-[75rem] mx-auto flex flex-col gap-6">
+  <section class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 p-5 md:p-6 rounded-[var(--radius-lg)] border border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft)]" aria-labelledby="backup-intro-title">
+    <div class="max-w-[44rem]">
+      <p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.06em] text-[var(--color-primary)] m-0 mb-1">Protection des données</p>
+      <h2 id="backup-intro-title" class="font-display text-[length:var(--fs-xl)] font-bold text-[var(--color-text)] m-0">Gardez une copie fiable de l’annuaire</h2>
+      <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-2 mb-0">Les sauvegardes sont contrôlées avant d’être conservées. Vous pouvez créer une copie manuelle à tout moment, en complément de la sauvegarde automatique quotidienne.</p>
+    </div>
+    <form method="post" action="{% url 'dashboard:backup_create' %}" class="m-0 p-0 shrink-0">
+      {% csrf_token %}
+      <button type="submit" class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-download"></use></svg>
+        Sauvegarder maintenant
+      </button>
+    </form>
+  </section>
+
+  {% if backup_error %}
+    <div class="grid grid-cols-[auto_1fr] items-start gap-3 p-4 rounded-[var(--radius-md)] border text-[length:var(--fs-sm)] leading-[1.6] bg-[var(--color-warning-soft)] border-[var(--color-warning-border)] text-[var(--color-warning)]" role="alert">
+      <svg class="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+      <p class="m-0">{{ backup_error }}</p>
+    </div>
+  {% endif %}
+
+  <section aria-labelledby="backup-status-title">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-3">
+      <div>
+        <h2 id="backup-status-title" class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">État des sauvegardes</h2>
+        <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0">Un aperçu rapide avant de consulter le détail des copies.</p>
+      </div>
+      <span class="inline-flex self-start items-center px-2.5 py-1 rounded-full bg-[var(--color-surface-3)] text-[length:var(--fs-xs)] font-semibold text-[var(--color-text-muted)]">{{ backups|length }} copie{{ backups|length|pluralize }}</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+      <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.05em] text-[var(--color-text-muted)] m-0">Dernière copie</p>
+            {% if newest_backup %}
+              <p class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] leading-tight mt-3 mb-0">{{ newest_backup.created|date:"d/m/Y à H:i" }}</p>
+              <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-1 mb-0 break-all">{{ newest_backup.name }}</p>
+            {% else %}
+              <p class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] leading-tight mt-3 mb-0">Aucune copie</p>
+              <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-1 mb-0">Créez la première sauvegarde.</p>
+            {% endif %}
+          </div>
+          <span class="inline-flex items-center justify-center w-10 h-10 shrink-0 rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]"><svg class="w-5 h-5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-download"></use></svg></span>
+        </div>
+      </article>
+
+      <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.05em] text-[var(--color-text-muted)] m-0">Fraîcheur</p>
+            {% if newest_backup and backup_fresh %}
+              <p class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-success)] leading-tight mt-3 mb-0">À jour</p>
+              <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-1 mb-0">Moins de 26 heures</p>
+            {% elif newest_backup %}
+              <p class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-warning)] leading-tight mt-3 mb-0">À vérifier</p>
+              <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-1 mb-0">La dernière copie date de plus de 26 h.</p>
+            {% else %}
+              <p class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] leading-tight mt-3 mb-0">En attente</p>
+              <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-1 mb-0">Aucune copie à contrôler.</p>
+            {% endif %}
+          </div>
+          <span class="inline-flex items-center justify-center w-10 h-10 shrink-0 rounded-[var(--radius-md)] {% if newest_backup and backup_fresh %}bg-[var(--color-success-soft)] text-[var(--color-success)]{% else %}bg-[var(--color-warning-soft)] text-[var(--color-warning)]{% endif %}"><svg class="w-5 h-5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#{% if newest_backup and backup_fresh %}i-check{% else %}i-clock{% endif %}"></use></svg></span>
+        </div>
+      </article>
+
+      <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.05em] text-[var(--color-text-muted)] m-0">Rétention</p>
+            <p class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-primary)] leading-none mt-3 mb-0">{{ backup_retention }}</p>
+            <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-2 mb-0">copie{{ backup_retention|pluralize }} conservée{{ backup_retention|pluralize }} au maximum</p>
+          </div>
+          <span class="inline-flex items-center justify-center w-10 h-10 shrink-0 rounded-[var(--radius-md)] bg-[var(--color-surface-3)] text-[var(--color-text-muted)]"><svg class="w-5 h-5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-calendar"></use></svg></span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <details class="group rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-xs)]">
+    <summary class="flex items-center justify-between gap-4 min-h-14 px-4 md:px-5 cursor-pointer font-semibold text-[length:var(--fs-sm)] text-[var(--color-text)] list-none [&::-webkit-details-marker]:hidden">
+      <span class="flex items-center gap-3"><span class="inline-flex items-center justify-center w-8 h-8 rounded-[var(--radius-sm)] bg-[var(--color-info-soft)] text-[var(--color-info)]"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-info"></use></svg></span>Comment fonctionne la sauvegarde&nbsp;?</span>
+      <svg class="w-4 h-4 shrink-0 text-[var(--color-text-muted)] transition-transform group-open:rotate-180" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-chevron-down"></use></svg>
+    </summary>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 pb-5 md:px-5 md:pb-6 border-t border-[var(--color-border)] pt-4 text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">
+      <div>
+        <h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Automatique</h3>
+        <p class="mt-2 mb-0">Une sauvegarde quotidienne est déclenchée par une tâche planifiée chez l’hébergeur. Le site conserve uniquement les {{ backup_retention }} copies les plus récentes.</p>
+      </div>
+      <div>
+        <h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Contrôlée à la création</h3>
+        <p class="mt-2 mb-0">Chaque copie est vérifiée avec le contrôle d’intégrité SQLite et une empreinte SHA-256 avant d’être marquée comme valide.</p>
+      </div>
+    </div>
+  </details>
+
+  <section aria-labelledby="backup-list-title">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-3">
+      <div>
+        <h2 id="backup-list-title" class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Copies disponibles</h2>
+        <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0">Vérifiez l’intégrité d’une copie ou retirez celles dont vous n’avez plus besoin.</p>
+      </div>
+    </div>
+
+    {% if backups %}
+      <div class="hidden md:block w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+        <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]" aria-describedby="backup-list-title">
+          <caption class="sr-only">Liste des sauvegardes disponibles</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Fichier</th>
+              <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Date</th>
+              <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Taille</th>
+              <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Statut</th>
+              <th scope="col" class="text-right px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for backup in backups %}
+              <tr class="border-b border-[var(--color-border)] last:border-b-0 transition-colors duration-150 hover:bg-[var(--color-primary-soft)]">
+                <td class="px-4 py-3 text-[var(--color-text)]"><strong class="break-all">{{ backup.name }}</strong></td>
+                <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-muted)] whitespace-nowrap">{{ backup.created|date:"d/m/Y H:i" }}</td>
+                <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-muted)] whitespace-nowrap">{{ backup.size|filesizeformat }}</td>
+                <td class="px-4 py-3">
+                  {% if backup.verified %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]"><svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>Vérifiée</span>
+                  {% else %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]">Non vérifiée</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-1">
+                    <form method="post" action="{% url 'dashboard:backup_verify' backup.name %}" class="m-0 p-0 inline">
+                      {% csrf_token %}
+                      <button class="inline-flex items-center justify-center gap-1.5 min-h-10 px-2.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] transition-colors duration-150 border-none bg-transparent cursor-pointer" type="submit" title="Vérifier {{ backup.name }}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>Vérifier</button>
+                    </form>
+                    <a class="inline-flex items-center justify-center gap-1.5 min-h-10 px-2.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)] transition-colors duration-150 no-underline" href="{% url 'dashboard:backup_delete' backup.name %}" title="Supprimer {{ backup.name }}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>Supprimer</a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="md:hidden list-none m-0 p-0 space-y-3" role="list">
+        {% for backup in backups %}
+          <li class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-xs)]">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.05em] text-[var(--color-text-muted)] m-0">Fichier</p>
+                <p class="font-semibold text-[var(--color-text)] break-all mt-1 mb-0">{{ backup.name }}</p>
+              </div>
+              {% if backup.verified %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]"><svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>Vérifiée</span>
+              {% else %}
+                <span class="inline-flex px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]">Non vérifiée</span>
+              {% endif %}
+            </div>
+            <dl class="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-[var(--color-border)]">
+              <div><dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Date</dt><dd class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0 mt-0.5">{{ backup.created|date:"d/m/Y H:i" }}</dd></div>
+              <div><dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Taille</dt><dd class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0 mt-0.5">{{ backup.size|filesizeformat }}</dd></div>
+            </dl>
+            <div class="flex flex-col sm:flex-row gap-2 mt-4">
+              <form method="post" action="{% url 'dashboard:backup_verify' backup.name %}" class="m-0 p-0 flex-1">
+                {% csrf_token %}
+                <button class="inline-flex items-center justify-center gap-1.5 w-full min-h-11 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-semibold text-[var(--color-primary)] border border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary)] transition-colors duration-150 bg-[var(--color-surface)] cursor-pointer" type="submit"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>Vérifier la copie</button>
+              </form>
+              <a class="inline-flex items-center justify-center gap-1.5 w-full flex-1 min-h-11 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-semibold text-[var(--color-danger)] border border-[var(--color-danger-border)] hover:bg-[var(--color-danger-soft)] transition-colors duration-150 no-underline" href="{% url 'dashboard:backup_delete' backup.name %}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>Supprimer</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="text-center p-6 md:p-10 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)]">
+        <svg class="w-10 h-10 mx-auto mb-3 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-download"></use></svg>
+        <h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Aucune sauvegarde disponible</h3>
+        <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-4">Créez une première copie pour commencer à protéger les données de l’annuaire.</p>
+        <form method="post" action="{% url 'dashboard:backup_create' %}" class="m-0 p-0">
+          {% csrf_token %}
+          <button type="submit" class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-download"></use></svg>Créer la première sauvegarde</button>
+        </form>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

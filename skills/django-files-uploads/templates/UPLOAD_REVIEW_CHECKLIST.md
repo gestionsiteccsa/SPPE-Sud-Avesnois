@@ -1,0 +1,7 @@
+- [ ] Taille
+- [ ] Type/format
+- [ ] Nom/chemin sûr
+- [ ] Permission
+- [ ] Storage
+- [ ] Nettoyage
+- [ ] Tests hostiles

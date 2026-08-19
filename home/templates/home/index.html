@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Accueil — SPPE Sud-Avesnois{% endblock %}
+{% block meta_description %}SPPE Sud-Avesnois est un annuaire partagé des modes d'accueil du territoire, alimenté par les professionnel·les pour informer et orienter les familles.{% endblock %}
+
+{% block content %}
+<section class="py-20 pb-16" style="background: radial-gradient(60% 80% at 90% 0%, var(--color-accent-soft) 0%, transparent 70%), radial-gradient(50% 70% at 10% 10%, var(--color-primary-soft) 0%, transparent 75%);" aria-labelledby="hero-title">
+  <div class="max-w-[var(--container-max)] mx-auto px-4 md:px-6 lg:px-7 grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-7 lg:gap-9 items-center">
+    <div>
+      <p class="text-[length:var(--fs-sm)] font-semibold uppercase tracking-[0.06em] text-[var(--color-primary)] mb-3">Outil partagé des professionnel·les</p>
+      <h1 id="hero-title" class="font-display text-[length:var(--fs-3xl)] font-extrabold leading-[1.15] text-[var(--color-text)] mb-4">
+        Accueil du jeune enfant :<br>
+        recensement des places disponibles pour mieux <span class="text-[var(--color-primary)]">orienter les familles</span>
+      </h1>
+      <p class="text-[length:var(--fs-lg)] text-[var(--color-text-muted)] leading-[1.6] max-w-[36rem] mb-6">
+        {{ total_structures|default:"0" }} structures d'accueil sont déjà référencées. Alimentez la base,
+        consultez les informations utiles et guidez les parents vers les solutions disponibles dans leur commune.
+      </p>
+
+      <form class="mt-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-4 shadow-[var(--shadow-sm)] grid grid-cols-1 md:grid-cols-[1fr_14rem_auto] items-end gap-3 md:gap-2 lg:gap-4 focus-within:border-[var(--color-primary-soft-border)] focus-within:shadow-[0_0_0_3px_var(--color-focus-ring),var(--shadow-sm)] transition-[box-shadow,border-color] duration-200"
+            method="get"
+            action="{% url 'structures:liste' %}"
+            role="search"
+            aria-labelledby="hero-search-title">
+        <p id="hero-search-title" class="visually-hidden">Rechercher une structure d'accueil petite enfance</p>
+
+        <div class="flex flex-col gap-2 min-w-0">
+          <label class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.06em] text-[var(--color-text-muted)] pl-1" for="hero-q">Rechercher</label>
+          <div class="relative flex items-center">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)] pointer-events-none transition-colors duration-200" aria-hidden="true" width="20" height="20">
+              <use href="{% static 'img/icons.svg' %}#i-search"></use>
+            </svg>
+            <input class="w-full pl-[2.75rem] pr-4 py-3 border border-[var(--color-border-strong)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[length:var(--fs-base)] text-[var(--color-text)] min-h-[2.75rem] appearance-none transition-[border-color,box-shadow] duration-200 placeholder:text-[var(--color-text-subtle)] placeholder:opacity-100 hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)]"
+                   type="search"
+                   id="hero-q"
+                   name="q"
+                   placeholder="Nom ou mot-clé…"
+                   autocomplete="off"
+                   spellcheck="false"
+                   enterkeyhint="search"
+                   aria-describedby="hero-q-help">
+          </div>
+          <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] leading-[1.6] pl-1 m-0 md:hidden" id="hero-q-help">
+            Saisissez le nom d'une structure ou un mot-clé (crèche, micro-crèche, assistante maternelle…).
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-2 min-w-0">
+          <label class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.06em] text-[var(--color-text-muted)] pl-1" for="hero-commune">Commune</label>
+          <select class="w-full px-4 py-3 pr-8 border border-[var(--color-border-strong)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[length:var(--fs-base)] text-[var(--color-text)] min-h-[2.75rem] appearance-none transition-[border-color,box-shadow] duration-200 hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)]"
+                  style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2720%27 height=%2720%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%235A6473%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.75rem center;"
+                  id="hero-commune" name="commune">
+            <option value="">Toutes les communes ({{ communes|length }})</option>
+            {% regroup communes by code_postal as communes_par_cp %}
+            {% for groupe in communes_par_cp %}
+              <optgroup label="{{ groupe.grouper }}">
+                {% for c in groupe.list %}
+                  <option value="{{ c.pk }}">{{ c.nom }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="flex gap-2">
+          <button class="inline-flex items-center justify-center gap-2 min-h-[3.25rem] px-6 py-4 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-md)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none w-full md:w-auto justify-center bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+            <svg class="w-[1.1rem] h-[1.1rem] shrink-0" aria-hidden="true" width="20" height="20">
+              <use href="{% static 'img/icons.svg' %}#i-search"></use>
+            </svg>
+            Rechercher
+          </button>
+        </div>
+      </form>
+
+      <div class="flex gap-3 flex-wrap mt-6">
+        <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="{% url 'structures:liste' %}">
+          <svg class="w-[1.1rem] h-[1.1rem] shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-structures"></use></svg>
+          Voir toutes les structures
+        </a>
+      </div>
+    </div>
+
+    <div class="hidden lg:flex lg:justify-center lg:items-center" aria-hidden="true">
+      <img src="{% static 'img/hero.svg' %}" alt="" width="420" height="360" loading="eager" class="w-full max-w-[22rem] h-auto">
+    </div>
+  </div>
+</section>
+
+{% endblock %}

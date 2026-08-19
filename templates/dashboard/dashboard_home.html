@@ -1,0 +1,296 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static csp_tags %}
+
+{% block title %}Tableau de bord — SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Vue d'ensemble{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+{% block page_subtitle %}Suivre et mettre à jour l’annuaire partagé{% endblock %}
+
+{% block content %}
+<section class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 p-5 md:p-6 mb-6 rounded-[var(--radius-lg)] border border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft)]" aria-labelledby="quick-actions-title">
+  <div class="max-w-[42rem]">
+    <p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.06em] text-[var(--color-primary)] m-0 mb-1">Espace de gestion</p>
+    <h2 id="quick-actions-title" class="font-display text-[length:var(--fs-xl)] font-bold text-[var(--color-text)] m-0">Que souhaitez-vous faire ?</h2>
+    <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-2 mb-0">Ajoutez une structure ou retrouvez rapidement les informations à actualiser pour mieux orienter les familles.</p>
+  </div>
+  <div class="flex flex-col sm:flex-row gap-2 shrink-0">
+    <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]" href="{% url 'dashboard:structure_add' %}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>Ajouter une structure</a>
+    <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:border-[var(--color-primary)]" href="{% url 'dashboard:structure_list' %}">Gérer les structures<svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-arrow-right"></use></svg></a>
+  </div>
+</section>
+
+<section class="mb-7" aria-labelledby="indicators-title">
+  <div class="mb-3">
+    <h2 id="indicators-title" class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">L’annuaire en un coup d’œil</h2>
+    <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0">Les chiffres essentiels issus des fiches enregistrées.</p>
+  </div>
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="flex items-start justify-between gap-3"><div><p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.05em] text-[var(--color-text-muted)] m-0">Structures</p><p class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-text)] leading-none mt-3 mb-0">{{ total_structures|default:"0" }}</p></div><span class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]"><svg class="w-5 h-5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-structures"></use></svg></span></div>
+      <a class="inline-flex items-center gap-1 mt-4 text-[length:var(--fs-xs)] font-semibold text-[var(--color-primary)] no-underline hover:underline" href="{% url 'dashboard:structure_list' %}">Voir la liste <span aria-hidden="true">→</span></a>
+    </article>
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="flex items-start justify-between gap-3"><div><p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.05em] text-[var(--color-text-muted)] m-0">Visibles sur le site</p><p class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-success)] leading-none mt-3 mb-0">{{ total_visible|default:"0" }}</p></div><span class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-md)] bg-[var(--color-success-soft)] text-[var(--color-success)]"><svg class="w-5 h-5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg></span></div>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-4 mb-0">Consultables dans l’annuaire public</p>
+    </article>
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="flex items-start justify-between gap-3"><div><p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.05em] text-[var(--color-text-muted)] m-0">Masquées</p><p class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-warning)] leading-none mt-3 mb-0">{{ total_hidden|default:"0" }}</p></div><span class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-md)] bg-[var(--color-warning-soft)] text-[var(--color-warning)]"><svg class="w-5 h-5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg></span></div>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-4 mb-0">Conservées uniquement dans la gestion</p>
+    </article>
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="flex items-start justify-between gap-3"><div><p class="text-[length:var(--fs-xs)] font-semibold uppercase tracking-[0.05em] text-[var(--color-text-muted)] m-0">Places disponibles</p><p class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-primary)] leading-none mt-3 mb-0">{{ total_places|default:"0" }}</p></div><span class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]"><svg class="w-5 h-5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg></span></div>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-4 mb-0">Parmi les structures visibles · {{ offer_stats.availability_known|default:"0" }} fiche{{ offer_stats.availability_known|pluralize }} renseignée{{ offer_stats.availability_known|pluralize }}</p>
+    </article>
+  </div>
+</section>
+
+<section class="mb-7" aria-labelledby="evolution-title">
+  <div class="mb-3">
+    <h2 id="evolution-title" class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Évolution des mises à jour</h2>
+    <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0">Nombre de fiches dont la dernière mise à jour a été effectuée chaque mois.</p>
+  </div>
+  <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5">
+    <div class="relative h-64 md:h-72">
+      <canvas id="chart-evolution" role="img" aria-label="Évolution mensuelle des mises à jour sur les douze derniers mois" aria-describedby="chart-evolution-description">Le détail mensuel est disponible sous le graphique.</canvas>
+    </div>
+    <p id="chart-evolution-description" class="sr-only">Les valeurs exactes sont disponibles dans la liste dépliable qui suit.</p>
+    <details class="mt-3 text-[length:var(--fs-sm)]">
+      <summary class="min-h-11 inline-flex items-center cursor-pointer font-semibold text-[var(--color-primary)] hover:underline">Afficher les données mensuelles</summary>
+      <ul class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-2 list-none mt-2 mb-0 p-0" role="list">
+        {% for item in chart_month_data %}
+          <li class="flex items-center justify-between gap-3 border-b border-[var(--color-border)] py-1"><span>{{ item.label }}</span><strong>{{ item.total }}</strong></li>
+        {% endfor %}
+      </ul>
+    </details>
+  </article>
+</section>
+
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] gap-5 mb-7 items-start">
+  <section class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5" aria-labelledby="recent-title">
+    <div class="flex items-start justify-between gap-3 mb-4"><div><h2 id="recent-title" class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Dernières modifications</h2><p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0">Les cinq fiches mises à jour le plus récemment.</p></div><a class="hidden sm:inline-flex items-center gap-1 text-[length:var(--fs-xs)] font-semibold text-[var(--color-primary)] no-underline hover:underline" href="{% url 'dashboard:structure_list' %}">Toutes les structures <span aria-hidden="true">→</span></a></div>
+    {% if recent_structures %}
+      <ul class="list-none m-0 p-0 divide-y divide-[var(--color-border)]" role="list">
+        {% for s in recent_structures %}
+          <li class="py-3 first:pt-0 last:pb-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><a class="font-semibold text-[var(--color-text)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'dashboard:structure_edit' s.pk %}">{{ s.nom }}</a>{% if not s.afficher %}<span class="inline-flex px-1.5 py-0.5 rounded-[var(--radius-sm)] bg-[var(--color-warning-soft)] text-[var(--color-warning)] text-[length:var(--fs-xs)] font-semibold">Masquée</span>{% endif %}</div><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">{% if s.type %}{{ s.type.nom }}{% else %}Type non renseigné{% endif %}<span aria-hidden="true"> · </span>{% if s.commune %}{{ s.commune.nom }}{% else %}Commune non renseignée{% endif %}</p></div>
+              <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                {% if s.places_complet %}<span class="inline-flex px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--color-danger-soft)] text-[var(--color-danger)] text-[length:var(--fs-xs)] font-semibold">Complet</span>{% elif s.places_non_communique %}<span class="inline-flex px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--color-surface-3)] text-[var(--color-text-muted)] text-[length:var(--fs-xs)] font-semibold">Places non communiquées</span>{% elif s.places_disponibles is not None %}<span class="inline-flex px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--color-success-soft)] text-[var(--color-success)] text-[length:var(--fs-xs)] font-semibold">{{ s.places_disponibles }} dispo.</span>{% endif %}
+                <time class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] whitespace-nowrap" datetime="{{ s.date_mise_a_jour|date:'Y-m-d' }}">{{ s.date_mise_a_jour|date:"d/m/Y" }}</time>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      <a class="sm:hidden inline-flex items-center gap-1 mt-4 text-[length:var(--fs-sm)] font-semibold text-[var(--color-primary)] no-underline" href="{% url 'dashboard:structure_list' %}">Toutes les structures <span aria-hidden="true">→</span></a>
+    {% else %}
+      <div class="text-center py-8 text-[var(--color-text-muted)]"><svg class="w-10 h-10 mx-auto mb-3 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-structures"></use></svg><p class="font-semibold text-[var(--color-text)] m-0">Aucune structure enregistrée</p><p class="text-[length:var(--fs-sm)] mt-1 mb-3">Ajoutez une première fiche pour commencer l’annuaire.</p><a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-semibold no-underline bg-[var(--color-primary)] text-white" href="{% url 'dashboard:structure_add' %}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>Ajouter une structure</a></div>
+    {% endif %}
+  </section>
+
+  <section class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5" aria-labelledby="markers-title">
+    <h2 id="markers-title" class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Repères</h2>
+    <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-4">Quelques informations utiles pour vérifier la qualité des fiches.</p>
+    <dl class="m-0 divide-y divide-[var(--color-border)]">
+      <div class="flex items-center justify-between gap-3 py-3 first:pt-0"><dt class="text-[length:var(--fs-sm)] text-[var(--color-text)]">Structures complètes</dt><dd class="m-0 inline-flex min-w-8 justify-center px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-danger-soft)] text-[var(--color-danger)] text-[length:var(--fs-xs)] font-bold">{{ total_complets|default:"0" }}</dd></div>
+      <div class="flex items-center justify-between gap-3 py-3"><dt class="text-[length:var(--fs-sm)] text-[var(--color-text)]">Places non communiquées</dt><dd class="m-0 inline-flex min-w-8 justify-center px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-warning-soft)] text-[var(--color-warning)] text-[length:var(--fs-xs)] font-bold">{{ total_non_communique|default:"0" }}</dd></div>
+      <div class="flex items-center justify-between gap-3 py-3"><dt class="text-[length:var(--fs-sm)] text-[var(--color-text)]">Accueil handicap</dt><dd class="m-0 font-display font-bold text-[var(--color-text)]">{{ total_handicap|default:"0" }}</dd></div>
+      <div class="flex items-center justify-between gap-3 py-3"><dt class="text-[length:var(--fs-sm)] text-[var(--color-text)]">Accueil d’urgence</dt><dd class="m-0 font-display font-bold text-[var(--color-text)]">{{ total_urgence|default:"0" }}</dd></div>
+      <div class="flex items-center justify-between gap-3 pt-3"><dt class="text-[length:var(--fs-sm)] text-[var(--color-text)]">Recrutement en cours</dt><dd class="m-0 font-display font-bold text-[var(--color-text)]">{{ total_recrutement|default:"0" }}</dd></div>
+    </dl>
+  </section>
+</div>
+
+<section aria-labelledby="distribution-title">
+  <div class="mb-3"><h2 id="distribution-title" class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Répartition des structures visibles</h2><p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0">Les catégories et communes les plus représentées dans l’annuaire consultable.</p></div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5">
+      <div class="flex items-center justify-between gap-3 mb-4"><div><h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Par type</h3><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">{{ total_types|default:"0" }} type{{ total_types|pluralize }} disponible{{ total_types|pluralize }}</p></div><a class="text-[length:var(--fs-xs)] font-semibold text-[var(--color-primary)] no-underline hover:underline" href="{% url 'dashboard:type_list' %}">Gérer les types</a></div>
+      {% if types_count %}
+        <div class="relative h-64"><canvas id="chart-types" role="img" aria-label="Répartition des structures par type" aria-describedby="chart-types-description">Le détail par type est disponible sous le graphique.</canvas></div>
+        <p id="chart-types-description" class="sr-only">Les catégories affichées sont détaillées dans la liste dépliable qui suit.</p>
+        <details class="mt-3 text-[length:var(--fs-sm)]"><summary class="min-h-11 inline-flex items-center cursor-pointer font-semibold text-[var(--color-primary)] hover:underline">Afficher les données par type</summary><ul class="list-none mt-2 mb-0 p-0 space-y-2" role="list">{% for item in types_count %}<li class="flex items-center justify-between gap-3"><span class="truncate">{{ item.label }}</span><span class="inline-flex min-w-8 justify-center px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-primary-soft)] text-[var(--color-primary)] text-[length:var(--fs-xs)] font-bold">{{ item.total }}</span></li>{% endfor %}</ul></details>
+      {% else %}<p class="text-[length:var(--fs-sm)] text-[var(--color-text-subtle)] m-0">Aucune donnée à afficher.</p>{% endif %}
+    </article>
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5">
+      <div class="flex items-center justify-between gap-3 mb-4"><div><h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Par commune</h3><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">{{ total_communes|default:"0" }} commune{{ total_communes|pluralize }} disponible{{ total_communes|pluralize }}</p></div><a class="text-[length:var(--fs-xs)] font-semibold text-[var(--color-primary)] no-underline hover:underline" href="{% url 'dashboard:commune_list' %}">Gérer les communes</a></div>
+      {% if communes_count %}
+        <div class="relative h-64"><canvas id="chart-communes" role="img" aria-label="Répartition des structures par commune" aria-describedby="chart-communes-description">Le détail par commune est disponible sous le graphique.</canvas></div>
+        <p id="chart-communes-description" class="sr-only">Les catégories affichées sont détaillées dans la liste dépliable qui suit.</p>
+        <details class="mt-3 text-[length:var(--fs-sm)]"><summary class="min-h-11 inline-flex items-center cursor-pointer font-semibold text-[var(--color-primary)] hover:underline">Afficher les données par commune</summary><ul class="list-none mt-2 mb-0 p-0 space-y-2" role="list">{% for item in communes_count %}<li class="flex items-center justify-between gap-3"><span class="truncate">{{ item.label }}</span><span class="inline-flex min-w-8 justify-center px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-surface-3)] text-[var(--color-text-muted)] text-[length:var(--fs-xs)] font-bold">{{ item.total }}</span></li>{% endfor %}</ul></details>
+      {% else %}<p class="text-[length:var(--fs-sm)] text-[var(--color-text-subtle)] m-0">Aucune donnée à afficher.</p>{% endif %}
+    </article>
+  </div>
+</section>
+
+<section class="mt-7" aria-labelledby="statistics-title">
+  <div class="mb-3">
+    <h2 id="statistics-title" class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Offre visible et qualité de l’annuaire</h2>
+    <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0">L’offre porte uniquement sur les structures visibles. La fraîcheur et la complétude analysent toutes les fiches internes.</p>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="mb-4">
+        <h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Capacité par type</h3>
+        <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">Somme des places d’accueil déclarées pour les structures visibles.</p>
+      </div>
+      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 m-0">
+        <div class="rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] p-3"><dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Capacité totale</dt><dd class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-primary)] m-0 mt-1">{{ offer_stats.capacity_total|default:"0" }}</dd></div>
+        <div class="rounded-[var(--radius-md)] bg-[var(--color-surface-2)] p-3"><dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Moyenne</dt><dd class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0 mt-1">{% if offer_stats.capacity_average is not None %}{{ offer_stats.capacity_average|floatformat:"1" }}{% else %}—{% endif %}</dd></div>
+        <div class="rounded-[var(--radius-md)] bg-[var(--color-success-soft)] p-3"><dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Renseignées</dt><dd class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-success)] m-0 mt-1">{{ offer_stats.capacity_known|default:"0" }}</dd></div>
+        <div class="rounded-[var(--radius-md)] bg-[var(--color-warning-soft)] p-3"><dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Sans capacité</dt><dd class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-warning)] m-0 mt-1">{{ offer_stats.capacity_missing|default:"0" }}</dd></div>
+      </dl>
+      {% if capacity_by_type %}
+        <div class="relative h-64"><canvas id="chart-capacity-types" role="img" aria-label="Capacité cumulée des structures visibles par type" aria-describedby="chart-capacity-types-description">Le détail des capacités est disponible sous le graphique.</canvas></div>
+        <p id="chart-capacity-types-description" class="sr-only">Les capacités exactes par type sont disponibles dans la liste dépliable qui suit.</p>
+        <details class="mt-3 text-[length:var(--fs-sm)]"><summary class="min-h-11 inline-flex items-center cursor-pointer font-semibold text-[var(--color-primary)] hover:underline">Afficher les capacités par type</summary><ul class="list-none mt-2 mb-0 p-0 space-y-2" role="list">{% for item in capacity_by_type %}<li class="flex items-center justify-between gap-3"><span class="truncate">{{ item.label }}</span><strong>{{ item.total }} place{{ item.total|pluralize }}</strong></li>{% endfor %}</ul></details>
+      {% else %}<p class="text-[length:var(--fs-sm)] text-[var(--color-text-subtle)] m-0">Aucune structure visible à analyser.</p>{% endif %}
+    </article>
+
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="mb-4"><h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Capacité par commune</h3><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">Volume d’accueil déclaré par territoire.</p></div>
+      {% if capacity_by_commune %}
+        <div class="relative h-80"><canvas id="chart-capacity-communes" role="img" aria-label="Capacité cumulée des structures visibles par commune" aria-describedby="chart-capacity-communes-description">Le détail des capacités est disponible sous le graphique.</canvas></div>
+        <p id="chart-capacity-communes-description" class="sr-only">Les capacités exactes par commune sont disponibles dans la liste dépliable qui suit.</p>
+        <details class="mt-3 text-[length:var(--fs-sm)]"><summary class="min-h-11 inline-flex items-center cursor-pointer font-semibold text-[var(--color-primary)] hover:underline">Afficher les capacités par commune</summary><ul class="list-none mt-2 mb-0 p-0 space-y-2" role="list">{% for item in capacity_by_commune %}<li class="flex items-center justify-between gap-3"><span class="truncate">{{ item.label }}</span><strong>{{ item.total }} place{{ item.total|pluralize }}</strong></li>{% endfor %}</ul></details>
+      {% else %}<p class="text-[length:var(--fs-sm)] text-[var(--color-text-subtle)] m-0">Aucune structure visible à analyser.</p>{% endif %}
+    </article>
+
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="mb-4"><h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Jours d’ouverture</h3><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">Nombre de structures visibles ouvertes chaque jour, d’après leurs horaires.</p></div>
+      <div class="relative h-64"><canvas id="chart-opening-days" role="img" aria-label="Nombre de structures visibles ouvertes par jour" aria-describedby="chart-opening-days-description">Le détail des jours d’ouverture est disponible sous le graphique.</canvas></div>
+      <p id="chart-opening-days-description" class="sr-only">Les nombres exacts du lundi au dimanche sont disponibles dans la liste dépliable qui suit.</p>
+      <details class="mt-3 text-[length:var(--fs-sm)]"><summary class="min-h-11 inline-flex items-center cursor-pointer font-semibold text-[var(--color-primary)] hover:underline">Afficher les données par jour</summary><ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2 list-none mt-2 mb-0 p-0" role="list">{% for item in opening_days %}<li class="flex items-center justify-between gap-3 border-b border-[var(--color-border)] py-1"><span>{{ item.label }}</span><strong>{{ item.total }}</strong></li>{% endfor %}</ul></details>
+    </article>
+
+    <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="mb-4"><h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Fraîcheur des données source</h3><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">Âge de la date issue de monenfant.fr pour toutes les fiches internes.</p></div>
+      <div class="flex items-center justify-between gap-4 rounded-[var(--radius-md)] bg-[var(--color-warning-soft)] p-4 mb-3"><div><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0">À vérifier en priorité</p><p class="text-[length:var(--fs-sm)] text-[var(--color-text)] mt-1 mb-0">Date vieille d’au moins 6 mois</p></div><strong class="font-display text-[length:var(--fs-xl)] text-[var(--color-warning)]">{{ freshness_outdated|default:"0" }}</strong></div>
+      <ul class="list-none m-0 p-0 divide-y divide-[var(--color-border)]" role="list">{% for item in freshness_stats %}<li class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"><span class="text-[length:var(--fs-sm)] text-[var(--color-text)]">{{ item.label }}</span><strong class="inline-flex min-w-9 justify-center px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-surface-2)] text-[length:var(--fs-xs)]">{{ item.total }}</strong></li>{% endfor %}</ul>
+    </article>
+
+    <article class="xl:col-span-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
+      <div class="mb-4"><h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Qualité des fiches</h3><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">Complétude de toutes les fiches internes pour chaque information essentielle.</p></div>
+      <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 list-none m-0 p-0" role="list">
+        {% for item in completeness_stats %}
+          <li class="rounded-[var(--radius-md)] border border-[var(--color-border)] p-4">
+            <div class="flex items-baseline justify-between gap-3 mb-2"><span class="font-semibold text-[length:var(--fs-sm)] text-[var(--color-text)]">{{ item.label }}</span><strong class="font-display text-[length:var(--fs-md)] text-[var(--color-primary)]">{{ item.percent }} %</strong></div>
+            <progress class="block w-full h-2 accent-[var(--color-primary)]" value="{{ item.percent }}" max="100" aria-label="{{ item.label }} : {{ item.percent }} %">{{ item.percent }} %</progress>
+            <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-2 mb-0">{{ item.total }} renseignée{{ item.total|pluralize }} · {{ item.missing }} manquante{{ item.missing|pluralize }}</p>
+          </li>
+        {% endfor %}
+      </ul>
+    </article>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% json_script_nonce chart_months "chart-month-labels" %}
+{% json_script_nonce chart_month_counts "chart-month-values" %}
+{% json_script_nonce chart_type_labels "chart-type-labels" %}
+{% json_script_nonce chart_type_data "chart-type-values" %}
+{% json_script_nonce chart_commune_labels "chart-commune-labels" %}
+{% json_script_nonce chart_commune_data "chart-commune-values" %}
+{% json_script_nonce chart_capacity_type_labels "chart-capacity-type-labels" %}
+{% json_script_nonce chart_capacity_type_data "chart-capacity-type-values" %}
+{% json_script_nonce chart_capacity_commune_labels "chart-capacity-commune-labels" %}
+{% json_script_nonce chart_capacity_commune_data "chart-capacity-commune-values" %}
+{% json_script_nonce chart_opening_labels "chart-opening-labels" %}
+{% json_script_nonce chart_opening_data "chart-opening-values" %}
+<script src="{% static 'vendor/chart.js/chart.umd.js' %}" nonce="{{ csp_nonce }}"></script>
+<script nonce="{{ csp_nonce }}">
+(() => {
+  const evolutionCanvas = document.getElementById("chart-evolution");
+  if (!window.Chart || !evolutionCanvas) {
+    return;
+  }
+
+  const readData = (elementId) => JSON.parse(document.getElementById(elementId).textContent);
+  const styles = getComputedStyle(document.documentElement);
+  const color = (token) => styles.getPropertyValue(token).trim();
+  const primary = color("--color-primary");
+  const success = color("--color-success");
+  const warning = color("--color-warning");
+  const danger = color("--color-danger");
+  const info = color("--color-info");
+  const textColor = color("--color-text-muted");
+  const borderColor = color("--color-border");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const animation = reduceMotion ? false : undefined;
+  const chartScales = (horizontal = false) => horizontal ? {
+    x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: borderColor } },
+    y: { ticks: { color: textColor }, grid: { color: borderColor } },
+  } : {
+    x: { ticks: { color: textColor }, grid: { color: borderColor } },
+    y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: borderColor } },
+  };
+  const createBarChart = ({ canvasId, labelsId, valuesId, label, chartColor, horizontal = true }) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+      return;
+    }
+    new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: readData(labelsId),
+        datasets: [{
+          label,
+          data: readData(valuesId),
+          backgroundColor: `${chartColor}33`,
+          borderColor: chartColor,
+          borderWidth: 2,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation,
+        indexAxis: horizontal ? "y" : "x",
+        scales: chartScales(horizontal),
+        plugins: { legend: { display: false } },
+      },
+    });
+  };
+
+  new Chart(evolutionCanvas, {
+    type: "bar",
+    data: {
+      labels: readData("chart-month-labels"),
+      datasets: [{
+        label: "Fiches mises à jour",
+        data: readData("chart-month-values"),
+        backgroundColor: `${primary}33`,
+        borderColor: primary,
+        borderWidth: 2,
+        borderRadius: 4,
+      }],
+    },
+    options: { responsive: true, maintainAspectRatio: false, animation, scales: chartScales(), plugins: { legend: { display: false } } },
+  });
+
+  const typeCanvas = document.getElementById("chart-types");
+  if (typeCanvas) {
+    new Chart(typeCanvas, {
+      type: "doughnut",
+      data: {
+        labels: readData("chart-type-labels"),
+        datasets: [{
+          data: readData("chart-type-values"),
+          backgroundColor: [`${primary}CC`, `${success}CC`, `${warning}CC`, `${danger}CC`, `${info}CC`],
+          borderWidth: 0,
+        }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, animation, plugins: { legend: { position: "bottom", labels: { boxWidth: 12, color: textColor, padding: 12 } } } },
+    });
+  }
+
+  createBarChart({ canvasId: "chart-communes", labelsId: "chart-commune-labels", valuesId: "chart-commune-values", label: "Structures", chartColor: info });
+  createBarChart({ canvasId: "chart-capacity-types", labelsId: "chart-capacity-type-labels", valuesId: "chart-capacity-type-values", label: "Places", chartColor: primary });
+  createBarChart({ canvasId: "chart-capacity-communes", labelsId: "chart-capacity-commune-labels", valuesId: "chart-capacity-commune-values", label: "Places", chartColor: success });
+  createBarChart({ canvasId: "chart-opening-days", labelsId: "chart-opening-labels", valuesId: "chart-opening-values", label: "Structures ouvertes", chartColor: warning, horizontal: false });
+})();
+</script>
+{% endblock %}

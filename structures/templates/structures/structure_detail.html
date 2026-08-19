@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ structure.nom }} — SPPE Sud-Avesnois{% endblock %}
+{% block meta_description %}{{ structure.nom }} — structure d'accueil petite enfance à {{ structure.commune.nom|default:"" }}. {{ structure.type.nom|default:"" }}.{% endblock %}
+
+{% block content %}
+<div class="max-w-[var(--container-max)] mx-auto px-4 md:px-6 lg:px-7 py-6 md:py-8">
+  <nav class="flex items-center gap-3 text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mb-6" aria-label="Fil d'Ariane">
+    <a class="text-[var(--color-text-muted)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'home' %}">Accueil</a>
+    <svg class="w-3.5 h-3.5 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-chevron-down" style="transform:rotate(-90deg)"></use></svg>
+    <a class="text-[var(--color-text-muted)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'structures:liste' %}">Structures</a>
+    <svg class="w-3.5 h-3.5 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-chevron-down" style="transform:rotate(-90deg)"></use></svg>
+    <span class="text-[var(--color-text)] font-medium truncate">{{ structure.nom }}</span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-6 lg:gap-8 items-start">
+    <div class="flex flex-col gap-6">
+      <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] overflow-hidden">
+        <div class="p-6 md:p-8">
+          <header class="flex flex-wrap items-start justify-between gap-4">
+            <div class="min-w-0 flex-1">
+              <h1 id="detail-title" class="font-display text-[length:var(--fs-2xl)] md:text-[length:var(--fs-3xl)] font-extrabold text-[var(--color-text)] m-0 leading-[1.15]">{{ structure.nom }}</h1>
+              <div class="flex flex-wrap gap-2 mt-3">
+                {% if structure.type %}
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-tag"></use></svg>
+                    {{ structure.type.nom }}
+                  </span>
+                {% endif %}
+                {% if structure.places_complet %}
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-danger-bg)] text-[var(--badge-danger-fg)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+                    Complet
+                  </span>
+                {% elif structure.places_disponibles %}
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-success-bg)] text-[var(--badge-success-fg)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+                    {{ structure.places_disponibles }} place{{ structure.places_disponibles|pluralize }}
+                  </span>
+                {% endif %}
+                {% if structure.accueil_handicap %}
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-info-bg)] text-[var(--badge-info-fg)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-accessibility"></use></svg>
+                    Handicap
+                  </span>
+                {% endif %}
+                {% if structure.accueil_urgence %}
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-info-bg)] text-[var(--badge-info-fg)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+                    Urgence
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+            {% if user.is_superuser %}
+              <div class="flex items-center gap-2 shrink-0">
+                <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]"
+                   href="{% url 'dashboard:structure_edit' structure.pk %}">
+                  <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-edit"></use></svg>
+                  <span class="hidden sm:inline">Modifier</span>
+                </a>
+                <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:bg-[var(--color-danger-hover)]"
+                   href="{% url 'dashboard:structure_delete' structure.pk %}">
+                  <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+                  <span class="hidden sm:inline">Supprimer</span>
+                </a>
+              </div>
+            {% endif %}
+          </header>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 mt-7 pt-6 border-t border-[var(--color-border)]">
+            <div>
+              <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-1">Tranche d'âge</p>
+              <p class="text-[length:var(--fs-base)] text-[var(--color-text)] m-0 flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-baby"></use></svg>
+                {{ structure.afficher_age }}
+              </p>
+            </div>
+            <div>
+              <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-1">Capacité</p>
+              <p class="text-[length:var(--fs-base)] text-[var(--color-text)] m-0 flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg>
+                {% if structure.places_complet %}
+                  <span class="text-[var(--color-danger)] font-semibold">Complet</span>
+                {% elif structure.places_non_communique %}
+                  Non communiqué
+                {% elif structure.places_disponibles %}
+                  <span class="text-[var(--color-success)] font-semibold">{{ structure.places_disponibles }} place{{ structure.places_disponibles|pluralize }}</span>{% if structure.nb_places_total %} sur {{ structure.nb_places_total }}{% endif %}
+                {% else %}
+                  Non communiqué
+                {% endif %}
+              </p>
+            </div>
+            <div class="sm:col-span-2">
+              <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-1">Adresse</p>
+              <p class="text-[length:var(--fs-base)] text-[var(--color-text)] m-0 flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-map-pin"></use></svg>
+                {% if structure.adresse %}{{ structure.adresse }}, {% endif %}
+                {% if structure.commune %}{{ structure.commune.code_postal }} {{ structure.commune.nom }}{% endif %}
+                {% if structure.adresse or structure.commune %}
+                  <a class="inline-flex items-center gap-1 text-[length:var(--fs-xs)] font-medium text-[var(--color-primary)] no-underline hover:underline ml-2"
+                     href="https://www.openstreetmap.org/?query={{ structure.adresse|urlencode }}+{{ structure.commune.code_postal|urlencode }}+{{ structure.commune.nom|urlencode }}"
+                     rel="noopener noreferrer" target="_blank">
+                     <svg class="w-3.5 h-3.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-external"></use></svg>
+                     Itinéraire<span class="visually-hidden"> (nouvelle fenêtre)</span>
+                   </a>
+                {% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {% if structure.afficher_horaires %}
+        <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] overflow-hidden">
+          <div class="p-6 md:p-8">
+            <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+              <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+              Horaires d'ouverture
+            </h2>
+            {% if structure.horaires_notes %}
+              <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-3 mb-4">{{ structure.horaires_notes }}</p>
+            {% else %}
+              <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-3 mb-4">Horaires habituels — susceptible de varier selon les périodes.</p>
+            {% endif %}
+            <div class="overflow-x-auto border border-[var(--color-border)] rounded-[var(--radius-lg)]">
+              <table class="w-full border-collapse text-[length:var(--fs-sm)]">
+                <tbody>
+                  {% for entry in structure.horaires %}
+                    <tr class="{% if not forloop.last %}border-b border-[var(--color-border)]{% endif %} {% if entry.est_aujourdhui %}bg-[var(--color-primary-soft)]{% endif %}">
+                      <th scope="row" class="text-left px-4 py-2.5 font-semibold text-[var(--color-text)] whitespace-nowrap {% if entry.est_aujourdhui %}text-[var(--color-primary)]{% endif %}">
+                        {{ entry.jour|capfirst }}
+                      </th>
+                      {% if entry.ferme %}
+                        <td class="px-4 py-2.5 text-[var(--color-danger)] font-semibold" colspan="2">Fermé</td>
+                      {% else %}
+                        <td class="px-4 py-2.5 text-[var(--color-text)]">{{ entry.ouverture|default:"—" }}</td>
+                        <td class="px-4 py-2.5 text-[var(--color-text)]">{{ entry.fermeture|default:"—" }}</td>
+                      {% endif %}
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mt-2 flex items-center gap-1">
+              <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-primary)]"></span>
+              Aujourd'hui
+            </p>
+          </div>
+        </article>
+      {% endif %}
+
+      {% if structure.conditions_places %}
+        <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] overflow-hidden">
+          <div class="p-6 md:p-8">
+            <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+              <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-info"></use></svg>
+              Conditions d'attribution
+            </h2>
+            <p class="text-[length:var(--fs-base)] text-[var(--color-text)] mt-4 leading-[1.6]">{{ structure.conditions_places|linebreaksbr }}</p>
+          </div>
+        </article>
+      {% endif %}
+
+      {% if user.is_superuser %}
+        <article class="bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border-strong)] rounded-[var(--radius-xl)] overflow-hidden">
+          <div class="p-6 md:p-8">
+            <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text-muted)] m-0 flex items-center gap-2 uppercase tracking-[0.06em]">
+              <svg class="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-settings"></use></svg>
+              Administration
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mt-4 pt-4 border-t border-[var(--color-border)]">
+              <div>
+                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Directeur/trice</p>
+                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.directeur|default:"—" }}</p>
+              </div>
+              <div>
+                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Tél. direction</p>
+                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.tel_direction|default:"—" }}</p>
+              </div>
+              <div>
+                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Email direction</p>
+                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{% if structure.email_direction %}<a class="text-[var(--color-primary)] no-underline hover:underline" href="mailto:{{ structure.email_direction }}">{{ structure.email_direction }}</a>{% else %}—{% endif %}</p>
+              </div>
+              <div>
+                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Statut</p>
+                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.statut|default:"—" }}</p>
+              </div>
+              <div>
+                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Aides</p>
+                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.aides|default:"—" }}</p>
+              </div>
+              <div>
+                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Professionnel·les</p>
+                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.nb_professionnels|default:"—" }}</p>
+              </div>
+              <div>
+                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Recrutement</p>
+                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.afficher_recrutement|default:"Non précisé" }}</p>
+              </div>
+              <div>
+                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Référencé monenfant.fr</p>
+                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.reference_monenfant|yesno:"Oui,Non" }}</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      {% endif %}
+    </div>
+
+    <aside class="flex flex-col gap-4">
+      {% if structure.telephone or structure.email or structure.site_web %}
+        <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] overflow-hidden">
+          <div class="p-5">
+            <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+              <svg class="w-4 h-4 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-phone"></use></svg>
+              Contact
+            </h2>
+            <div class="flex flex-col gap-2 mt-4">
+              {% if structure.telephone %}
+                <a class="inline-flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+                   href="tel:{{ structure.telephone|cut:' ' }}">
+                  <span class="flex items-center justify-center w-9 h-9 rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                    <svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-phone"></use></svg>
+                  </span>
+                  <span class="flex flex-col">
+                    <span class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] font-normal">Téléphone</span>
+                    <span class="font-semibold">{{ structure.telephone }}</span>
+                  </span>
+                </a>
+              {% endif %}
+              {% if structure.email %}
+                <a class="inline-flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+                   href="mailto:{{ structure.email }}">
+                  <span class="flex items-center justify-center w-9 h-9 rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                    <svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-mail"></use></svg>
+                  </span>
+                  <span class="flex flex-col">
+                    <span class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] font-normal">Email</span>
+                    <span class="font-semibold truncate max-w-[14rem]">{{ structure.email }}</span>
+                  </span>
+                </a>
+              {% endif %}
+              {% if structure.site_web %}
+                <a class="inline-flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+                   href="{{ structure.site_web }}" target="_blank" rel="noopener noreferrer">
+                  <span class="flex items-center justify-center w-9 h-9 rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                    <svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-external"></use></svg>
+                  </span>
+                    <span class="flex flex-col">
+                     <span class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] font-normal">Site web<span class="visually-hidden"> (nouvelle fenêtre)</span></span>
+                    <span class="font-semibold truncate max-w-[14rem]">{{ structure.site_web }}</span>
+                  </span>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] overflow-hidden">
+        <div class="p-5">
+          <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+            <svg class="w-4 h-4 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+            Informations
+          </h2>
+          <dl class="flex flex-col gap-3 mt-4">
+            <div class="flex items-center justify-between gap-2">
+              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Places totales</dt>
+              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.nb_places_total|default:"—" }}</dd>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
+              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Type</dt>
+              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.type.nom|default:"—" }}</dd>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
+              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Commune</dt>
+              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.commune.nom|default:"—" }}</dd>
+            </div>
+            {% if structure.nb_professionnels %}
+              <div class="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
+                <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Professionnel·les</dt>
+                <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.nb_professionnels }}</dd>
+              </div>
+            {% endif %}
+            <div class="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
+              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Mise à jour</dt>
+              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.date_mise_a_jour|date:"d/m/Y" }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)] hover:border-[var(--color-danger-border)] w-full"
+         href="mailto:{{ DEFAULT_FROM_EMAIL }}?subject=Erreur sur la fiche {% filter urlencode %}{{ structure.nom }}{% endfilter %}&body=Bonjour,%0D%0A%0D%0AJe souhaite signaler une erreur sur la fiche suivante :%0D%0A%0D%0A{{ request.build_absolute_uri }}%0D%0A%0D%0A---%0D%0AMerci de préciser l'erreur ci-dessous :%0D%0A%0D%0A">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+        Signaler une erreur
+      </a>
+
+      <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)] w-full"
+         href="{% url 'structures:liste' %}">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-back"></use></svg>
+        Retour à la liste
+      </a>
+    </aside>
+  </div>
+</div>
+{% endblock %}

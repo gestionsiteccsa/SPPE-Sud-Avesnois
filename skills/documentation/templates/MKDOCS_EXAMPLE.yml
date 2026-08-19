@@ -1,0 +1,16 @@
+site_name: "<NOM_DU_PROJET>"
+docs_dir: docs
+
+nav:
+  - Accueil: index.md
+  - Architecture:
+      - Vue d’ensemble: architecture/overview.md
+      - Décisions: architecture/decisions.md
+  - Fonctionnalités: features/
+  - Modèles: models/
+  - Workflows: workflows/
+  - Sécurité: security/
+  - Glossaire: glossary.md
+
+# Adapter au thème et aux plugins réellement retenus.
+# Ne pas ajouter une dépendance simplement pour compléter ce modèle.

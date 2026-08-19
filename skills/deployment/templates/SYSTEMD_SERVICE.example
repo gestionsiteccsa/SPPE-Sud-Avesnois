@@ -1,0 +1,22 @@
+# Exemple uniquement — adapter au projet.
+
+[Unit]
+Description=<PROJECT_NAME> Django application
+After=network.target
+
+[Service]
+Type=simple
+User=<APP_USER>
+Group=<APP_GROUP>
+WorkingDirectory=<PROJECT_PATH>
+EnvironmentFile=<ENV_FILE>
+ExecStart=<VENV_PATH>/bin/<WSGI_OR_ASGI_SERVER> <APP_TARGET>
+Restart=on-failure
+RestartSec=5
+
+# Renforcement à adapter après validation des besoins d'écriture.
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

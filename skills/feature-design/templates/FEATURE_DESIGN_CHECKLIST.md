@@ -1,0 +1,23 @@
+# Feature Design Review
+
+- [ ] Objectif compris.
+- [ ] Acteurs identifiés.
+- [ ] Existant inspecté.
+- [ ] Entités nécessaires identifiées.
+- [ ] Pas de table inutile.
+- [ ] Relations définies.
+- [ ] Suppressions analysées.
+- [ ] États cohérents.
+- [ ] Règles métier explicites.
+- [ ] Permissions explicites.
+- [ ] Parcours principal.
+- [ ] Erreurs importantes.
+- [ ] Sécurité.
+- [ ] Performance.
+- [ ] Privacy si applicable.
+- [ ] Dépendances justifiées.
+- [ ] Architecture cohérente avec le projet.
+- [ ] Tests pertinents.
+- [ ] Tâches ordonnées.
+- [ ] Pas de surarchitecture.
+- [ ] Definition of Ready atteinte.

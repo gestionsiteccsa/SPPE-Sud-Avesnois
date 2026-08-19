@@ -1,0 +1,99 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Demandes d'inscription — Tableau de bord SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Demandes d'inscription{% endblock %}
+{% block page_title %}Demandes d'inscription{% endblock %}
+{% block page_subtitle %}Valider ou refuser les inscriptions des collaborateurs{% endblock %}
+
+{% block content %}
+<div class="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+  <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]">
+    <thead>
+      <tr class="sticky top-0 z-10">
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Collaborateur</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Demandé le</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Statut</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Décision</th>
+        <th scope="col" class="text-right px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap w-40">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inscription in inscriptions %}
+        <tr class="border-b border-[var(--color-border)] transition-colors duration-150 group hover:bg-[var(--color-primary-soft)]">
+          <td class="px-4 py-3 text-[var(--color-text)]">
+            <strong>{{ inscription.user.get_full_name|default:inscription.user.email }}</strong>
+            <span class="block text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">{{ inscription.user.email }}</span>
+          </td>
+          <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] whitespace-nowrap">
+            {{ inscription.date_demande|date:"d/m/Y H:i" }}
+          </td>
+          <td class="px-4 py-3 text-[var(--color-text)]">
+            {% if inscription.statut == "en_attente" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-warning-soft)] text-[var(--color-warning)]">
+                <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+                En attente
+              </span>
+            {% elif inscription.statut == "validee" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+                Validée
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-danger-soft)] text-[var(--color-danger)]">
+                <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+                Refusée
+              </span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">
+            {% if inscription.date_decision %}
+              {{ inscription.date_decision|date:"d/m/Y H:i" }} par {{ inscription.decideur.email|default:"inconnu" }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            {% if inscription.statut == "en_attente" %}
+              <div class="flex items-center justify-end gap-1.5">
+                <form method="post" action="{% url 'dashboard:inscription_decide' inscription.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="valider">
+                  <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+                    Valider
+                  </button>
+                </form>
+                <form method="post" action="{% url 'dashboard:inscription_decide' inscription.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="refuser">
+                  <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-[var(--color-danger-border)] hover:bg-[var(--color-danger)] hover:text-white hover:border-[var(--color-danger)]" type="submit">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+                    Refuser
+                  </button>
+                </form>
+              </div>
+            {% else %}
+              <span class="text-[var(--color-text-subtle)]">—</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="text-center text-[var(--color-text-muted)] py-8">Aucune demande d'inscription.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+  <nav class="flex items-center justify-center gap-2 mt-6" aria-label="Pagination des demandes">
+    {% if page_obj.has_previous %}
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+    {% endif %}
+    <span class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] px-2">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+    {% endif %}
+  </nav>
+{% endif %}
+{% endblock %}

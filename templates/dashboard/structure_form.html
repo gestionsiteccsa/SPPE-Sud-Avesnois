@@ -1,0 +1,391 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Ajouter{% endif %} une structure — SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}{% if object %}Modifier{% else %}Ajouter{% endif %}{% endblock %}
+{% block page_title %}{% if object %}Modifier&nbsp;: {{ object.nom }}{% else %}Ajouter une structure{% endif %}{% endblock %}
+{% block page_subtitle %}{% if object %}Modifiez les informations ci-dessous{% else %}Renseignez les informations de la nouvelle structure{% endif %}{% endblock %}
+
+{% block content %}
+<form class="max-w-[56rem] mx-auto" method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="grid grid-cols-[auto_1fr] items-start gap-3 p-4 mb-5 rounded-[var(--radius-md)] border text-[length:var(--fs-sm)] bg-[var(--color-danger-soft)] border-[var(--color-danger-border)] text-[var(--color-danger)]" role="alert">
+      <svg class="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+      <div class="[&>p]:m-0">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+    </div>
+  {% endif %}
+
+  {# --- Section : Identité --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-tag"></use></svg>
+      Identité
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nom">Nom <span class="text-[var(--color-danger)]" aria-hidden="true">*</span></label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nom.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="text" name="nom" id="id_nom" required value="{{ form.nom.value|default:'' }}">
+        {% if form.nom.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0">{% for error in form.nom.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_type">Type existant</label>
+        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="type" id="id_type"
+                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+          <option value="" {% if not form.instance.type_id %}selected{% endif %}>—</option>
+          {% for choix in form.fields.type.queryset %}
+            <option value="{{ choix.pk }}" {% if form.instance.type_id == choix.pk %}selected{% endif %}>{{ choix.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_type_nom">Ou créer un nouveau type</label>
+      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="type_nom" id="id_type_nom"
+             value="{{ form.type_nom.value|default:'' }}" placeholder="Ex&nbsp;: Micro-crèche" aria-describedby="id_type_nom-help">
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0" id="id_type_nom-help">{{ form.fields.type_nom.help_text }}</p>
+    </div>
+    <div class="flex flex-row items-center gap-3 mt-4 pt-4 border-t border-[var(--color-border)]">
+      <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="afficher" id="id_afficher"
+             {% if form.afficher.value|default:True %}checked{% endif %}>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_afficher">Afficher sur le site</label>
+    </div>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_date_mise_a_jour_monenfant">Dernière mise à jour monenfant.fr</label>
+      <input class="block w-full max-w-[16rem] px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="date" name="date_mise_a_jour_monenfant" id="id_date_mise_a_jour_monenfant"
+             value="{{ form.date_mise_a_jour_monenfant.value|date:'Y-m-d'|default:'' }}">
+    </div>
+  </div>
+
+  {# --- Section : Tranche d'âge --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-baby"></use></svg>
+      Tranche d'âge
+    </h2>
+    <div class="flex flex-row items-center gap-3 mt-4">
+      <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="age_non_renseigne" id="id_age_non_renseigne"
+             {% if form.age_non_renseigne.value %}checked{% endif %}>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_age_non_renseigne">Âge non renseigné</label>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4" id="age-fields">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_age_min">Âge minimum</label>
+        <div class="flex gap-2">
+          <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="age_min" id="id_age_min" min="0"
+                 value="{{ form.age_min.value|default:'' }}" style="max-width: 7rem">
+          <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="age_min_unite" id="id_age_min_unite"
+                  style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+            <option value="">—</option>
+            <option value="semaine" {% if form.age_min_unite.value == "semaine" %}selected{% endif %}>semaine(s)</option>
+            <option value="mois" {% if form.age_min_unite.value == "mois" %}selected{% endif %}>mois</option>
+            <option value="ans" {% if form.age_min_unite.value == "ans" %}selected{% endif %}>an(s)</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_age_max">Âge maximum</label>
+        <div class="flex gap-2">
+          <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="age_max" id="id_age_max" min="0"
+                 value="{{ form.age_max.value|default:'' }}" style="max-width: 7rem">
+          <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="age_max_unite" id="id_age_max_unite"
+                  style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+            <option value="">—</option>
+            <option value="semaine" {% if form.age_max_unite.value == "semaine" %}selected{% endif %}>semaine(s)</option>
+            <option value="mois" {% if form.age_max_unite.value == "mois" %}selected{% endif %}>mois</option>
+            <option value="ans" {% if form.age_max_unite.value == "ans" %}selected{% endif %}>an(s)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# --- Section : Horaires --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]" id="horaires-fieldset">
+    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+      Horaires (jour par jour)
+    </h2>
+    <div class="overflow-hidden border border-[var(--color-border)] rounded-[var(--radius-lg)] mt-4">
+      <div id="horaires-container-dash" aria-label="Saisie des horaires par jour"></div>
+    </div>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_horaires_notes">Notes horaires</label>
+      <textarea class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 resize-y" name="horaires_notes" id="id_horaires_notes" rows="2"
+                placeholder="Ex&nbsp;: Fermé le mercredi après-midi…">{{ form.horaires_notes.value|default:'' }}</textarea>
+    </div>
+  </div>
+
+  {# --- Section : Adresse & Contact --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-map-pin"></use></svg>
+      Adresse &amp; Contact
+    </h2>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_adresse">Adresse</label>
+      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="adresse" id="id_adresse"
+             value="{{ form.adresse.value|default:'' }}">
+    </div>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_commune">Commune</label>
+      <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="commune" id="id_commune"
+              style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+        <option value="" {% if not form.instance.commune_id %}selected{% endif %}>—</option>
+        {% for c in form.fields.commune.queryset %}
+          <option value="{{ c.pk }}" {% if form.instance.commune_id == c.pk %}selected{% endif %}>{{ c.code_postal }} {{ c.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_telephone">Téléphone</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="tel" name="telephone" id="id_telephone"
+               autocomplete="tel" value="{{ form.telephone.value|default:'' }}">
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_email">Email</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="email" name="email" id="id_email"
+               autocomplete="email" value="{{ form.email.value|default:'' }}">
+      </div>
+    </div>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_site_web">Site web</label>
+      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="url" name="site_web" id="id_site_web"
+             placeholder="https://…" value="{{ form.site_web.value|default:'' }}">
+    </div>
+  </div>
+
+  {# --- Section : Capacité --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg>
+      Capacité d'accueil
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_places_disponibles">Places disponibles</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="places_disponibles" id="id_places_disponibles" min="0"
+               value="{{ form.places_disponibles.value|default:'' }}">
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nb_places_total">Places total</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="nb_places_total" id="id_nb_places_total" min="0"
+               value="{{ form.nb_places_total.value|default:'' }}">
+      </div>
+    </div>
+    <div class="flex flex-row items-center gap-3 mt-4">
+      <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="places_complet" id="id_places_complet"
+             {% if form.places_complet.value %}checked{% endif %}>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_places_complet">Complet</label>
+    </div>
+    <div class="flex flex-row items-center gap-3 mt-3">
+      <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="places_non_communique" id="id_places_non_communique"
+             {% if form.places_non_communique.value %}checked{% endif %}>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_places_non_communique">Non communiqué</label>
+    </div>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_conditions_places">Conditions d'attribution</label>
+      <textarea class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 resize-y" name="conditions_places" id="id_conditions_places" rows="2"
+                placeholder="Ex&nbsp;: sur dossier, entretien préalable…">{{ form.conditions_places.value|default:'' }}</textarea>
+    </div>
+  </div>
+
+  {# --- Section : Accueil spécifique --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-accessibility"></use></svg>
+      Accueil spécifique
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_accueil_handicap">Accueil handicap</label>
+        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="accueil_handicap" id="id_accueil_handicap"
+                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+          <option value="" {% if form.accueil_handicap.value is None %}selected{% endif %}>Non concerné</option>
+          <option value="true" {% if form.accueil_handicap.value == True %}selected{% endif %}>Oui</option>
+          <option value="false" {% if form.accueil_handicap.value == False %}selected{% endif %}>Non</option>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_accueil_urgence">Accueil d'urgence</label>
+        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="accueil_urgence" id="id_accueil_urgence"
+                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+          <option value="" {% if form.accueil_urgence.value is None %}selected{% endif %}>Non concerné</option>
+          <option value="true" {% if form.accueil_urgence.value == True %}selected{% endif %}>Oui</option>
+          <option value="false" {% if form.accueil_urgence.value == False %}selected{% endif %}>Non</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  {# --- Section : Gestion --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-settings"></use></svg>
+      Informations de gestion
+    </h2>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_directeur">Directeur/trice</label>
+      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="directeur" id="id_directeur"
+             value="{{ form.directeur.value|default:'' }}">
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_tel_direction">Tél. direction</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="tel" name="tel_direction" id="id_tel_direction"
+               autocomplete="tel" value="{{ form.tel_direction.value|default:'' }}">
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_email_direction">Email direction</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="email" name="email_direction" id="id_email_direction"
+               autocomplete="email" value="{{ form.email_direction.value|default:'' }}">
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_statut">Statut</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="statut" id="id_statut"
+               value="{{ form.statut.value|default:'' }}">
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_aides">Aides</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="aides" id="id_aides"
+               value="{{ form.aides.value|default:'' }}">
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nb_professionnels">Nb professionnel·les</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="nb_professionnels" id="id_nb_professionnels" min="0"
+               value="{{ form.nb_professionnels.value|default:'' }}">
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_recrutement">Recrutement en cours</label>
+        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="recrutement" id="id_recrutement"
+                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+          <option value="" {% if form.recrutement.value is None %}selected{% endif %}>Non précisé</option>
+          <option value="true" {% if form.recrutement.value == True %}selected{% endif %}>Oui</option>
+          <option value="false" {% if form.recrutement.value == False %}selected{% endif %}>Non</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex flex-row items-center gap-3 mt-4 pt-4 border-t border-[var(--color-border)]">
+      <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="reference_monenfant" id="id_reference_monenfant"
+             {% if form.reference_monenfant.value %}checked{% endif %}>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_reference_monenfant">Référencé sur monenfant.fr</label>
+    </div>
+  </div>
+
+  {{ form.horaires }}
+
+  <div class="flex items-center justify-end gap-2 mt-6 pt-5 border-t border-[var(--color-border)]">
+    <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]"
+       href="{% url 'dashboard:structure_list' %}">Annuler</a>
+    <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-5 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+      <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+      {% if object %}Enregistrer{% else %}Créer{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+(function () {
+  "use strict";
+  var jours = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+  var joursLabelsFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+  var horairesField = document.querySelector('input[name="horaires"]');
+  var container = document.getElementById("horaires-container-dash");
+
+  var currentData = [];
+  try { currentData = JSON.parse(horairesField.value || "[]"); } catch (e) {}
+
+  function render() {
+    container.innerHTML = "";
+    currentData.forEach(function (entry, idx) {
+      var dayLabel = joursLabelsFr[entry._index !== undefined ? entry._index : idx] || entry.jour;
+      var row = document.createElement("div");
+      row.className = "flex items-center gap-3 px-4 py-2.5 border-b border-[var(--color-border)] last:border-b-0 hover:bg-[var(--color-surface-3)] transition-colors duration-150";
+
+      var labelSpan = document.createElement("span");
+      labelSpan.className = "text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] min-w-[6rem]";
+      labelSpan.textContent = dayLabel;
+      row.appendChild(labelSpan);
+
+      var cbLabel = document.createElement("label");
+      cbLabel.className = "inline-flex items-center gap-2 text-[length:var(--fs-sm)] text-[var(--color-text-muted)] cursor-pointer";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.className = "w-4 h-4 accent-[var(--color-primary)]";
+      cb.checked = !!entry.ferme;
+      cb.addEventListener("change", function () { entry.ferme = cb.checked; updateOpen(); syncField(); });
+      cbLabel.appendChild(cb);
+      cbLabel.appendChild(document.createTextNode("Ferm\u00e9"));
+      row.appendChild(cbLabel);
+
+      var og = document.createElement("div");
+      og.className = "flex items-center gap-2 ml-auto";
+      og.id = "dash-og-" + idx;
+
+      var oi = document.createElement("input");
+      oi.type = "time";
+      oi.value = entry.ouverture || "07:30";
+      oi.className = "px-2.5 py-1.5 text-[length:var(--fs-sm)] text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.25rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-150";
+      oi.addEventListener("change", function () { entry.ouverture = oi.value; syncField(); });
+
+      var sep = document.createElement("span");
+      sep.textContent = "\u2192";
+      sep.className = "text-[var(--color-text-subtle)] text-[length:var(--fs-sm)]";
+
+      var ci = document.createElement("input");
+      ci.type = "time";
+      ci.value = entry.fermeture || "18:00";
+      ci.className = "px-2.5 py-1.5 text-[length:var(--fs-sm)] text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.25rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-150";
+      ci.addEventListener("change", function () { entry.fermeture = ci.value; syncField(); });
+
+      og.appendChild(oi);
+      og.appendChild(sep);
+      og.appendChild(ci);
+      row.appendChild(og);
+
+      container.appendChild(row);
+    });
+    updateOpen();
+  }
+
+  function updateOpen() {
+    currentData.forEach(function (entry, idx) {
+      var og = document.getElementById("dash-og-" + idx);
+      if (og) og.style.display = entry.ferme ? "none" : "flex";
+    });
+  }
+
+  function syncField() {
+    var clean = currentData.map(function (e) {
+      return { jour: e.jour, ferme: e.ferme, ouverture: e.ouverture, fermeture: e.fermeture };
+    });
+    horairesField.value = JSON.stringify(clean);
+  }
+
+  if (currentData.length === 0) {
+    currentData = jours.map(function (j, i) {
+      return { jour: j, _index: i, ferme: true, ouverture: "07:30", fermeture: "18:00" };
+    });
+  } else {
+    currentData.forEach(function (entry, i) { entry._index = i; });
+  }
+  render();
+  syncField();
+
+  var ageCb = document.getElementById("id_age_non_renseigne");
+  var ageF = document.getElementById("age-fields");
+  function toggleAge() {
+    if (!ageF || !ageCb) return;
+    ageF.style.display = ageCb.checked ? "none" : "grid";
+  }
+  if (ageCb) { ageCb.addEventListener("change", toggleAge); toggleAge(); }
+})();
+</script>
+{% endblock %}

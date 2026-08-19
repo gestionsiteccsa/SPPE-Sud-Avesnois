@@ -1,0 +1,13 @@
+@import "tailwindcss" source(none);
+
+@source "../../templates/**/*.html";
+@source "../../home/templates/**/*.html";
+@source "../../structures/templates/**/*.html";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --breakpoint-md: 55rem;
+  --font-sans: "Inter Variable", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-display: "Inter Variable", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+}

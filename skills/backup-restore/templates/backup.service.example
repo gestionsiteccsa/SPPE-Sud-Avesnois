@@ -1,0 +1,11 @@
+[Unit]
+Description=<PROJECT> PostgreSQL backup
+
+[Service]
+Type=oneshot
+User=<BACKUP_USER>
+Group=<BACKUP_GROUP>
+EnvironmentFile=<BACKUP_ENV_FILE>
+ExecStart=<BACKUP_SCRIPT_PATH>
+PrivateTmp=true
+NoNewPrivileges=true

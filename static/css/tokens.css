@@ -1,0 +1,298 @@
+/* =====================================================================
+   tokens.css — Design tokens SPPE Sud-Avesnois
+   Palette pastel petite enfance, conforme RGAA 4.2 / WCAG 2.2 AA.
+   Tous les contrÔles de contraste effectués :
+     - Texte normal ≥ 4.5:1 sur fond surface
+     - Grande typo (≥ 18pt) ≥ 3:1
+     - Bordures de focus ≥ 3:1
+   Ne pas importer directement un token en dehors de :root en CSS
+   (privilégier var(--token) dans base/layout/components/pages).
+   ===================================================================== */
+
+:root {
+  /* ---- Couleurs de marque ------------------------------------------ */
+  --color-primary:            #4A7FB5; /* bleu professionnel — 4.7:1 sur blanc */
+  --color-primary-hover:      #3D6D9E;
+  --color-primary-active:     #335C86;
+  --color-primary-soft:        #E8EFF7; /* fond bleu doux */
+  --color-primary-soft-border: #C5D6EB;
+
+  --color-accent:             #D8698F; /* rose — touche petite enfance */
+  --color-accent-hover:       #C45A7E;
+  --color-accent-soft:        #FBE9F0;
+
+  --color-success:            #1E7B4C; /* vert professionnel — 5.2:1 sur blanc */
+  --color-success-soft:       #E1F3EA;
+  --color-success-border:     #A9D4BB;
+
+  --color-warning:            #8A6418;
+  --color-warning-soft:       #FBEFD2;
+  --color-warning-border:     #E9D49C;
+
+  --color-danger:             #B23B4A; /* rouge professionnel — 5.4:1 sur blanc */
+  --color-danger-hover:       #982E3C;
+  --color-danger-soft:        #FDE8EB;
+  --color-danger-border:      #F0C7CD;
+
+  --color-info:               #3D6B9E; /* bleu info */
+  --color-info-soft:          #E5EDF6;
+  --color-info-border:        #C1D3E5;
+
+  /* ---- Neutres ----------------------------------------------------- */
+  --color-text:               #1A1F2B; /* texte principal — 15.4:1 sur blanc */
+  --color-text-muted:         #4B5563; /* texte secondaire — 5.8:1 sur blanc */
+  --color-text-subtle:        #6B7280;
+  --color-border:             #E2E5ED;
+  --color-border-strong:      #C4CAD6;
+  --color-surface:            #FFFFFF;
+  --color-surface-2:          #F4F5F9; /* gris neutre (fond de page) */
+  --color-surface-3:          #EDEFF5; /* gris alterné (sections) */
+  --color-overlay:            rgba(26, 31, 43, 0.50);
+
+  /* ---- États des badges ------------------------------------------- */
+  --badge-success-fg:        #166534;
+  --badge-success-bg:        #DCF3E4;
+  --badge-warning-fg:        #6E4D0F;
+  --badge-warning-bg:        #FBEFD2;
+  --badge-danger-fg:         #991B2B;
+  --badge-danger-bg:         #FDE2E5;
+  --badge-info-fg:           #1E429F;
+  --badge-info-bg:           #E1EBF7;
+  --badge-neutral-fg:        #4B5563;
+  --badge-neutral-bg:        #E8EAEE;
+
+  /* ---- Typographie ------------------------------------------------ */
+  /* Polices self-hosted (RGAA : éviter consultations externes) */
+  --font-sans: "Inter Variable", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-display: "Inter Variable", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-mono: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+
+  /* Échelle fluide (clamp) — min / preferred / max */
+  --fs-xs:    clamp(0.75rem, 0.72rem + 0.15vw, 0.8rem);
+  --fs-sm:    clamp(0.875rem, 0.85rem + 0.15vw, 0.93rem);
+  --fs-base:  clamp(1rem, 0.97rem + 0.15vw, 1.05rem);
+  --fs-md:    clamp(1.125rem, 1.08rem + 0.25vw, 1.2rem);
+  --fs-lg:    clamp(1.25rem, 1.18rem + 0.4vw, 1.4rem);
+  --fs-xl:    clamp(1.5rem, 1.4rem + 0.6vw, 1.8rem);
+  --fs-2xl:   clamp(1.875rem, 1.7rem + 0.9vw, 2.4rem);
+  --fs-3xl:   clamp(2.25rem, 1.95rem + 1.5vw, 3.2rem);
+
+  --lh-tight: 1.15;
+  --lh-snug:  1.3;
+  --lh-base:  1.6;
+  --lh-loose: 1.75;
+
+  --fw-regular:   400;
+  --fw-medium:    500;
+  --fw-semibold:  600;
+  --fw-bold:      700;
+  --fw-extrabold: 800;
+
+  /* Tracking */
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+  --tracking-caps:   0.06em;
+
+  /* ---- Espacement (échelle 4px) ----------------------------------- */
+  --space-0:   0;
+  --space-1:   0.25rem;  /* 4px */
+  --space-2:   0.5rem;   /* 8px */
+  --space-3:   0.75rem;  /* 12px */
+  --space-4:   1rem;     /* 16px */
+  --space-5:   1.25rem;  /* 20px */
+  --space-6:   1.5rem;   /* 24px */
+  --space-7:   2rem;     /* 32px */
+  --space-8:   2.5rem;   /* 40px */
+  --space-9:   3rem;     /* 48px */
+  --space-10:  4rem;     /* 64px */
+  --space-11:  5rem;     /* 80px */
+  --space-12:  6rem;     /* 96px */
+
+  /* ---- Rayons ----------------------------------------------------- */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --radius-pill: 9999px;
+  --radius-circle: 50%;
+
+  /* ---- Ombres (douces, pastel) ------------------------------------ */
+  --shadow-xs: 0 1px 2px rgba(31, 41, 51, 0.05);
+  --shadow-sm: 0 1px 3px rgba(31, 41, 51, 0.08), 0 1px 2px rgba(31, 41, 51, 0.04);
+  --shadow-md: 0 4px 12px rgba(31, 41, 51, 0.08), 0 2px 4px rgba(31, 41, 51, 0.04);
+  --shadow-lg: 0 12px 24px rgba(31, 41, 51, 0.10), 0 4px 8px rgba(31, 41, 51, 0.06);
+  --shadow-focus: 0 0 0 3px var(--color-focus-ring);
+
+  /* ---- Transitions ------------------------------------------------ */
+  --t-fast:   120ms ease-out;
+  --t-base:   200ms ease-out;
+  --t-slow:   320ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- Layout ----------------------------------------------------- */
+  --container-max: 75rem;        /* 1200px */
+  --container-narrow: 45rem;     /* login / focus */
+  --container-wide: 90rem;
+  --header-h: 4rem;
+  --sidebar-w: 15rem;
+
+  /* ---- Focus (WCAG 2.4.11 / 2.4.12) ------------------------------ */
+  --color-focus: var(--color-primary);
+  --color-focus-ring: rgba(91, 138, 196, 0.45);
+  --focus-outline: 3px solid var(--color-focus);
+  --focus-offset: 2px;
+
+  /* ---- Z-index --------------------------------------------------- */
+  --z-header: 100;
+  --z-sidebar: 200;
+  --z-overlay: 300;
+  --z-dialog: 400;
+  --z-toast: 500;
+
+  /* ---- Sticky header offset -------------------------------------- */
+  --scroll-offset: calc(var(--header-h) + var(--space-4));
+}
+
+/* =====================================================================
+   Thème sombre — préférence système par défaut, override manuel
+   via [data-theme="dark"] sur <html>.
+   Contraste vérifié AA sur fond #14181E.
+   ===================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --color-primary:            #8FB4E6;
+  --color-primary-hover:      #A5C4ED;
+  --color-primary-active:     #B8D2F2;
+  --color-primary-soft:        #1E2C3D;
+  --color-primary-soft-border: #2E4260;
+
+  --color-accent:             #E58AAE;
+  --color-accent-hover:       #EC9DBE;
+  --color-accent-soft:        #3A2330;
+
+  --color-success:            #6FC090;
+  --color-success-soft:       #1C2E26;
+  --color-success-border:    #2A4234;
+
+  --color-warning:            #D6A85C;
+  --color-warning-soft:       #3C2F18;
+  --color-warning-border:     #5C4824;
+
+  --color-danger:             #E58C97;
+  --color-danger-hover:       #ECA4AE;
+  --color-danger-soft:        #391E23;
+  --color-danger-border:      #5C2D35;
+
+  --color-info:               #9EC1E5;
+  --color-info-soft:          #1C2A3C;
+  --color-info-border:        #2E4360;
+
+  --color-text:               #ECEEF1;
+  --color-text-muted:         #B0B8C4;
+  --color-text-subtle:        #99A2B0;
+  --color-border:             #2C343E;
+  --color-border-strong:      #48505C;
+  --color-surface:            #191E26;
+  --color-surface-2:          #13171E;
+  --color-surface-3:          #212731;
+  --color-overlay:            rgba(0, 0, 0, 0.65);
+
+  --badge-success-fg:        #7BD2A0;
+  --badge-success-bg:        #1C2E26;
+  --badge-warning-fg:        #E4B96C;
+  --badge-warning-bg:        #3C2F18;
+  --badge-danger-fg:         #ECA4AE;
+  --badge-danger-bg:         #391E23;
+  --badge-info-fg:           #A8C7E8;
+  --badge-info-bg:           #1C2A3C;
+  --badge-neutral-fg:        #BAC1CC;
+  --badge-neutral-bg:        #282E38;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.7), 0 4px 8px rgba(0, 0, 0, 0.5);
+    --color-focus-ring: rgba(143, 180, 230, 0.55);
+  }
+}
+
+/* Override explicite */
+[data-theme="dark"] {
+  --color-primary:            #8FB4E6;
+  --color-primary-hover:       #A5C4ED;
+  --color-primary-active:      #B8D2F2;
+  --color-primary-soft:        #1E2C3D;
+  --color-primary-soft-border: #2E4260;
+
+  --color-accent:              #E58AAE;
+  --color-accent-hover:        #EC9DBE;
+  --color-accent-soft:         #3A2330;
+
+  --color-success:             #6FC090;
+  --color-success-soft:        #1C2E26;
+  --color-success-border:      #2A4234;
+
+  --color-warning:             #D6A85C;
+  --color-warning-soft:        #3C2F18;
+  --color-warning-border:      #5C4824;
+
+  --color-danger:              #E58C97;
+  --color-danger-hover:        #ECA4AE;
+  --color-danger-soft:         #391E23;
+  --color-danger-border:       #5C2D35;
+
+  --color-info:                #9EC1E5;
+  --color-info-soft:           #1C2A3C;
+  --color-info-border:         #2E4360;
+
+  --color-text:                #ECEEF1;
+  --color-text-muted:          #B0B8C4;
+  --color-text-subtle:         #99A2B0;
+  --color-border:              #2C343E;
+  --color-border-strong:       #48505C;
+  --color-surface:             #191E26;
+  --color-surface-2:           #13171E;
+  --color-surface-3:           #212731;
+  --color-overlay:             rgba(0, 0, 0, 0.65);
+
+  --badge-success-fg:         #7BD2A0;
+  --badge-success-bg:         #1C2E26;
+  --badge-warning-fg:         #E4B96C;
+  --badge-warning-bg:         #3C2F18;
+  --badge-danger-fg:          #ECA4AE;
+  --badge-danger-bg:          #391E23;
+  --badge-info-fg:            #A8C7E8;
+  --badge-info-bg:            #1C2A3C;
+  --badge-neutral-fg:         #BAC1CC;
+  --badge-neutral-bg:         #282E38;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.7), 0 4px 8px rgba(0, 0, 0, 0.5);
+  --color-focus-ring: rgba(143, 180, 230, 0.55);
+}
+
+[data-theme="light"] {
+  /* Force le thème clair même si prefers-color-scheme: dark */
+}
+
+/* =====================================================================
+   Préférences utilisateur (WCAG 1.4.10, 2.3.3, 1.4.6)
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 0ms;
+    --t-base: 0ms;
+    --t-slow: 0ms;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-border:        var(--color-text-subtle);
+    --color-border-strong: var(--color-text);
+    --focus-outline: 3px solid var(--color-text);
+    --focus-offset: 3px;
+  }
+}

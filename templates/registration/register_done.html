@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Demande envoyée — SPPE Sud-Avesnois{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-var(--header-h)-var(--header-h))] grid place-items-center px-4">
+  <section class="max-w-[32rem] w-full text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-8 md:p-10 shadow-[var(--shadow-sm)]" aria-labelledby="done-title">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-success-soft)] text-[var(--color-success)] mb-5" aria-hidden="true">
+      <svg class="w-8 h-8" width="32" height="32"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+    </div>
+    <h1 id="done-title" class="font-display text-[length:var(--fs-2xl)] font-bold mb-3">Demande envoyée</h1>
+    <p class="text-[var(--color-text-muted)] text-[length:var(--fs-md)] mb-2">
+      Votre demande d'inscription a bien été transmise à l'administrateur.
+    </p>
+    <p class="text-[var(--color-text-muted)] text-[length:var(--fs-md)] mb-6">
+      Dès qu'elle sera validée, vous recevrez un email et pourrez vous connecter.
+    </p>
+    <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" href="{% url 'home' %}">
+      Retour à l'accueil
+    </a>
+  </section>
+</div>
+{% endblock %}

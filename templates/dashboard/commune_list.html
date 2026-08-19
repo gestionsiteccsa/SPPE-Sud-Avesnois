@@ -1,0 +1,87 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Communes — Tableau de bord SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Communes{% endblock %}
+{% block page_title %}Communes{% endblock %}
+{% block page_subtitle %}Retrouver les communes utilisées pour classer les structures{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+  <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] m-0 md:hidden">Gérez les communes proposées dans l’annuaire.</p>
+  <a class="inline-flex self-start sm:ml-auto items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" href="{% url 'dashboard:commune_add' %}">
+    <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>
+    Ajouter une commune
+  </a>
+</div>
+
+<section class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 mb-5" aria-labelledby="commune-search-title">
+  <h2 id="commune-search-title" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 mb-3">Rechercher une commune</h2>
+  <form class="flex flex-col sm:flex-row sm:items-end gap-3" method="get" role="search" aria-label="Rechercher une commune">
+    <div class="flex flex-col gap-2 flex-1 min-w-0">
+      <label class="font-semibold text-[length:var(--fs-sm)] text-[var(--color-text)]" for="commune-query">Nom ou code postal</label>
+      <input class="block w-full px-4 py-2.5 text-[length:var(--fs-base)] text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] placeholder:text-[var(--color-text-subtle)]" type="search" name="q" id="commune-query" value="{{ query }}" placeholder="Ex. Testville ou 75001" autocomplete="off">
+    </div>
+    <div class="flex gap-2">
+      <button class="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] border bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]" type="submit">
+        <svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-search"></use></svg>
+        Rechercher
+      </button>
+      {% if query %}<a class="inline-flex items-center justify-center min-h-[2.75rem] px-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-3)]" href="?">Effacer</a>{% endif %}
+    </div>
+  </form>
+</section>
+
+{% if communes %}
+  <div class="flex items-end justify-between gap-3 mb-3">
+    <div>
+      <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Communes</h2>
+      <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-1 mb-0"><strong class="text-[var(--color-text)]">{{ communes|length }}</strong> commune{{ communes|length|pluralize }}{% if query %} trouvée{{ communes|length|pluralize }}{% endif %}</p>
+    </div>
+  </div>
+  <div class="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+    <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]">
+      <caption class="visually-hidden">Liste des communes et nombre de structures associées</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Commune</th>
+          <th scope="col" class="hidden sm:table-cell text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Code postal</th>
+          <th scope="col" class="text-left px-3 sm:px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Structures</th>
+          <th scope="col" class="text-right px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] w-24">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in communes %}
+          <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-primary-soft)] transition-colors">
+            <td class="px-4 py-3 text-[var(--color-text)]">
+              <a class="font-semibold text-[var(--color-text)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'dashboard:commune_edit' c.pk %}">{{ c.nom }}</a>
+              <span class="block sm:hidden text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-0.5">{{ c.code_postal }}</span>
+            </td>
+            <td class="hidden sm:table-cell px-4 py-3 text-[var(--color-text)]">{{ c.code_postal }}</td>
+            <td class="px-3 sm:px-4 py-3 text-[var(--color-text)]"><span class="inline-flex px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--color-surface-3)] text-[length:var(--fs-xs)] font-semibold">{{ c.structure_count }} structure{{ c.structure_count|pluralize }}</span></td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1">
+                <a class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)]" href="{% url 'dashboard:commune_edit' c.pk %}" title="Modifier {{ c.nom }}" aria-label="Modifier {{ c.nom }}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-edit"></use></svg></a>
+                <a class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)]" href="{% url 'dashboard:commune_delete' c.pk %}" title="Supprimer {{ c.nom }}" aria-label="Supprimer {{ c.nom }}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg></a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="flex flex-col items-center gap-3 text-center py-14 px-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] text-[var(--color-text-muted)]">
+    <svg class="w-12 h-12 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-map-pin"></use></svg>
+    {% if query %}
+      <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Aucune commune trouvée</h2>
+      <p class="m-0">Essayez un autre nom ou code postal.</p>
+      <a class="inline-flex items-center justify-center min-h-[2.75rem] px-4 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border border-[var(--color-primary-soft-border)] text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]" href="?">Effacer la recherche</a>
+    {% else %}
+      <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)] m-0">Aucune commune</h2>
+      <p class="m-0">Ajoutez la première commune pour pouvoir l’associer aux structures.</p>
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline bg-[var(--color-primary)] text-white" href="{% url 'dashboard:commune_add' %}"><svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>Ajouter la première commune</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

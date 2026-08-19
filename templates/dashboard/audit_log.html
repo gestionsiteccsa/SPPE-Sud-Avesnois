@@ -1,0 +1,161 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Journal d'activité — SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Journal{% endblock %}
+{% block page_title %}Journal d'activité{% endblock %}
+{% block page_subtitle %}Historique des modifications effectuées{% endblock %}
+
+{% block content %}
+<form class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 mb-6 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-xs)]"
+      method="get"
+      role="search"
+      aria-label="Filtrer le journal">
+  <div class="flex flex-col gap-1.5">
+    <label class="text-[length:var(--fs-xs)] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.06em]" for="filter-action">Action</label>
+    <select class="block w-full px-3 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] transition-[border-color,box-shadow] duration-200 hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)]"
+            id="filter-action" name="action">
+      <option value="">Toutes les actions</option>
+      {% for value, label in action_choices %}
+        <option value="{{ value }}" {% if filters.action == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="flex flex-col gap-1.5">
+    <label class="text-[length:var(--fs-xs)] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.06em]" for="filter-model">Objet</label>
+    <select class="block w-full px-3 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] transition-[border-color,box-shadow] duration-200 hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)]"
+            id="filter-model" name="model">
+      <option value="">Tous les objets</option>
+      {% for model in model_names %}
+        <option value="{{ model }}" {% if filters.model == model %}selected{% endif %}>{{ model }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="flex flex-col gap-1.5">
+    <label class="text-[length:var(--fs-xs)] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.06em]" for="filter-user">Utilisateur</label>
+    <select class="block w-full px-3 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] transition-[border-color,box-shadow] duration-200 hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)]"
+            id="filter-user" name="user">
+      <option value="">Tous les utilisateurs</option>
+      {% for u in audited_users %}
+        <option value="{{ u.pk }}" {% if filters.user == u.pk|stringformat:"s" %}selected{% endif %}>{{ u.get_full_name|default:u.email }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="flex items-end gap-2">
+    <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]"
+            type="submit">
+      <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-search"></use></svg>
+      Filtrer
+    </button>
+    {% if filters.action or filters.model or filters.user %}
+      <a class="inline-flex items-center justify-center min-h-[2.5rem] px-3 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-3)] hover:text-[var(--color-text)]"
+         href="{% url 'dashboard:audit_log' %}">Effacer</a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+  <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]">
+    <thead>
+      <tr class="sticky top-0 z-10">
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Date</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Utilisateur</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Action</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Objet</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Détail</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in page_obj %}
+        <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-primary-soft)] transition-colors duration-150">
+          <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] whitespace-nowrap">{{ entry.timestamp|date:"d/m/Y H:i" }}</td>
+          <td class="px-4 py-3 text-[var(--color-text)]">
+            {% if entry.user %}{{ entry.user.get_full_name|default:entry.user.email }}{% else %}<span class="text-[var(--color-text-muted)]">—</span>{% endif %}
+          </td>
+          <td class="px-4 py-3">
+            {% if entry.action == "create" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                <svg class="w-3 h-3" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>
+                Création
+              </span>
+            {% elif entry.action == "update" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold bg-[var(--color-info-soft)] text-[var(--color-info)]">
+                <svg class="w-3 h-3" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-edit"></use></svg>
+                Modification
+              </span>
+            {% elif entry.action == "delete" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold bg-[var(--color-danger-soft)] text-[var(--color-danger)]">
+                <svg class="w-3 h-3" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+                Suppression
+              </span>
+            {% elif entry.action == "import" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold bg-[var(--badge-warning-bg)] text-[var(--badge-warning-fg)]">
+                <svg class="w-3 h-3" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-upload"></use></svg>
+                Import
+              </span>
+            {% elif entry.action == "batch" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold bg-[var(--badge-info-bg)] text-[var(--badge-info-fg)]">
+                <svg class="w-3 h-3" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-list"></use></svg>
+                Groupé
+              </span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-[var(--color-text)]">
+            <span class="font-medium">{{ entry.model_name }}</span>
+            {% if entry.object_id %}
+              <span class="text-[var(--color-text-muted)]">#{{ entry.object_id }}</span>
+            {% endif %}
+            {% if entry.object_repr %}
+              <span class="text-[var(--color-text-subtle)] text-[length:var(--fs-xs)] block">{{ entry.object_repr|truncatechars:40 }}</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-muted)] max-w-[20rem]">
+            {% if entry.changes %}
+              {% for field, vals in entry.changes.items %}
+                {% if field == "_password_changed" %}
+                  <span class="block"><strong>Mot de passe modifié</strong></span>
+                {% elif field == "_created" %}
+                  <span class="block"><strong>Objet créé</strong></span>
+                {% elif field == "_deleted" %}
+                  <span class="block"><strong>Objet supprimé</strong></span>
+                {% elif field == "_count" %}
+                  <span class="block"><strong>Nombre</strong>&nbsp;: {{ vals }}</span>
+                {% elif field|first != "_" %}
+                  <span class="block"><strong>{{ field }}</strong>&nbsp;: {{ vals.old|default:"—" }} → {{ vals.new }}</span>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <span class="text-[var(--color-text-subtle)]">—</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="5" class="px-4 py-10 text-center text-[var(--color-text-muted)]">Aucune entrée dans le journal.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+  <nav class="flex items-center justify-center gap-3 mt-6" aria-label="Pagination">
+    <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</p>
+    <ul class="list-none p-0 m-0 flex items-center gap-1.5" role="list">
+      {% if page_obj.has_previous %}
+        <li><a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)]" rel="prev" href="?page={{ page_obj.previous_page_number }}" aria-label="Page précédente"><span aria-hidden="true">«</span></a></li>
+      {% endif %}
+      {% for p in page_obj.paginator.page_range %}
+        {% if p == page_obj.number %}
+          <li><span class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-semibold bg-[var(--color-primary)] text-white">{{ p }}</span></li>
+        {% elif p > page_obj.number|add:"-3" and p < page_obj.number|add:"3" %}
+          <li><a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)]" href="?page={{ p }}">{{ p }}</a></li>
+        {% endif %}
+      {% endfor %}
+      {% if page_obj.has_next %}
+        <li><a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)]" rel="next" href="?page={{ page_obj.next_page_number }}" aria-label="Page suivante"><span aria-hidden="true">»</span></a></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}

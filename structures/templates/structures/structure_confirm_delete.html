@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Supprimer {{ structure.nom }} — SPPE Sud-Avesnois{% endblock %}
+{% block content %}
+<section class="max-w-lg mx-auto px-4 py-16 text-center" aria-labelledby="delete-title">
+  <h1 id="delete-title" class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-text)] mb-4">Supprimer «&nbsp;{{ structure.nom }}&nbsp;»</h1>
+  <p class="text-[var(--color-text-muted)] mb-8">Êtes-vous sûr de vouloir supprimer cette structure&nbsp;? Cette action est irréversible.</p>
+  <form method="post" class="flex justify-center gap-4">
+    {% csrf_token %}
+    <button type="submit"
+            class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:bg-[var(--color-danger)]/90 hover:border-[var(--color-danger)]/90">
+      Confirmer la suppression
+    </button>
+    <a href="{% url 'structures:detail' structure.pk %}"
+       class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border-strong)] hover:bg-[var(--color-surface-3)] hover:border-[var(--color-primary)]">
+      Annuler
+    </a>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,21 @@
+# Exemple de structure — versions à épingler au moment de l'implémentation.
+FROM python:<PINNED_VERSION>-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Créer un utilisateur non-root.
+RUN addgroup --system django && adduser --system --ingroup django django
+
+# Copier/installer les dépendances selon le gestionnaire réel du projet.
+# COPY ...
+
+COPY . /app
+
+RUN chown -R django:django /app
+USER django
+
+# La commande réelle dépend de WSGI/ASGI.
+CMD ["<SERVER>", "<APP_TARGET>"]

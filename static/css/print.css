@@ -1,0 +1,109 @@
+/* =====================================================================
+   print.css — Impression.
+   Charge en dernier avec media="print".
+   ===================================================================== */
+
+@media print {
+  :root {
+    --color-primary: #000;
+    --color-text: #000;
+    --color-text-muted: #333;
+    --color-surface: #fff;
+    --color-surface-2: #fff;
+    --color-border: #ccc;
+    --shadow-xs: none;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  /* Cacher éléments de navigation et d'interaction */
+  .site-header,
+  .site-footer,
+  .sidebar,
+  .dashboard-header,
+  .dashboard-topbar,
+  .nav-toggle,
+  .filters,
+  .toolbar,
+  .pagination,
+  .menu-overlay,
+  .sidebar-overlay,
+  .structure-detail__actions,
+  .structure-detail__contact-actions,
+  .filters-toggle,
+  .map-card,
+  .hero-search,
+  .home-hero__actions,
+  .home-cta,
+  .auth-illustration,
+  .btn,
+  .form-actions { display: none !important; }
+
+  /* Layout simplifié */
+  .container, .page-section, .dashboard-content { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+  .dashboard-layout { display: block; }
+  .dashboard-main { width: 100%; }
+
+  /* Détail structure : bordures nettes */
+  .structure-detail {
+    border: 1px solid #000;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+  .structure-detail__actions { display: none; }
+
+  /* Liens : afficher l'URL à la suite */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #333;
+  }
+  a[href^="#"], a[href^="javascript:"]::after { content: ""; }
+  a[href^="mailto:"]::after { content: " (" attr(href) ")"; }
+
+  /* Cartes en colonne unique */
+  .structures-grid,
+  .grid--2, .grid--3, .grid--4,
+  .stats, .dash-stats, .dash-shortcuts { display: block !important; }
+  .structures-grid > *,
+  .grid > *,
+  .stats > *,
+  .dash-stats > *,
+  .dash-shortcuts > * {
+    margin-bottom: 0.8rem;
+    page-break-inside: avoid;
+    border: 1px solid #ccc;
+  }
+
+  /* Tableaux : conserver lisibilité */
+  .table { width: 100%; border-collapse: collapse; }
+  .table th, .table td { border: 1px solid #000; padding: 4pt; font-size: 9pt; }
+
+  /* Badges et alertes : noir & blanc */
+  .badge, .alert {
+    border: 1px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Forcer noir pour les textes colorés */
+  h1, h2, h3, h4, h5, h6, p, dt, dd, li { color: #000 !important; }
+
+  /* Page-break helpers */
+  .page-break-before { page-break-before: always; }
+  .page-break-after  { page-break-after: always; }
+  .avoid-break { page-break-inside: avoid; }
+
+  /* H1 sur la première page */
+  h1 { font-size: 18pt; margin-bottom: 6pt; }
+  h2 { font-size: 14pt; margin-top: 12pt; margin-bottom: 4pt; }
+  h3 { font-size: 12pt; margin-top: 10pt; margin-bottom: 3pt; }
+}

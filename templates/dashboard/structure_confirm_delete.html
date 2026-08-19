@@ -1,0 +1,35 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Supprimer — SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Supprimer{% endblock %}
+{% block page_title %}Supprimer «&nbsp;{{ object.nom }}&nbsp;»{% endblock %}
+{% block page_subtitle %}Cette action est irréversible{% endblock %}
+
+{% block content %}
+<div class="max-w-[56rem] mx-auto" style="max-width: 32rem">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 shadow-[var(--shadow-xs)] text-center">
+    <svg class="w-14 h-14 text-[var(--color-text-subtle)] opacity-70 mx-auto mb-4 text-[var(--color-danger)]" aria-hidden="true">
+      <use href="{% static 'img/icons.svg' %}#i-trash"></use>
+    </svg>
+
+    <h2 class="font-display text-[length:var(--fs-xl)] font-bold m-0 mb-3">
+      Confirmer la suppression
+    </h2>
+    <p class="text-[var(--color-text-muted)] m-0 mb-6">
+      Êtes-vous sûr de vouloir supprimer définitivement la structure
+      <strong class="text-[var(--color-text)]">«&nbsp;{{ object.nom }}&nbsp;»</strong>
+      &nbsp;? Cette action est irréversible.
+    </p>
+
+    <form method="post" class="flex gap-2 flex-wrap justify-center mt-6 pt-5 border-t border-[var(--color-border)]">
+      {% csrf_token %}
+      <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="{% url 'dashboard:structure_list' %}">Annuler</a>
+      <button class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:bg-[var(--color-danger-hover)] hover:border-[var(--color-danger-hover)]" type="submit">
+        <svg class="w-[1.1rem] h-[1.1rem] shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+        Confirmer la suppression
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

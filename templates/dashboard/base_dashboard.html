@@ -1,0 +1,230 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#5B8AC4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1B2028" media="(prefers-color-scheme: dark)">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Tableau de bord d'administration — SPPE Sud-Avesnois">
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+  <title>{% block title %}Tableau de bord — SPPE Sud-Avesnois{% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'vendor/inter/inter.css' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/print.css' %}" media="print">
+  <style nonce="{{ csp_nonce }}">
+    .theme-icon--sun { display: block; }
+    .theme-icon--moon { display: none; }
+    [data-theme="dark"] .theme-icon--sun { display: none; }
+    [data-theme="dark"] .theme-icon--moon { display: block; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .theme-icon--sun { display: none; }
+      :root:not([data-theme="light"]) .theme-icon--moon { display: block; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+
+  <script nonce="{{ csp_nonce }}">
+    (function () {
+      try {
+        var t = localStorage.getItem("bddpe-theme");
+        if (t === "dark" || t === "light") {
+          document.documentElement.setAttribute("data-theme", t);
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="flex min-h-screen min-h-[100dvh] bg-[var(--color-surface-2)]">
+  <ul class="skip-links visually-hidden" role="list">
+    <li><a class="skip-link" href="#dashboard-content">Aller au contenu principal</a></li>
+    <li><a class="skip-link" href="#sidebar-nav">Aller à la navigation</a></li>
+  </ul>
+
+  <aside class="sidebar sticky top-0 self-start w-60 h-screen h-[100dvh] bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col shrink-0 z-[var(--z-sidebar)] md:flex max-md:fixed max-md:top-0 max-md:left-0 max-md:h-screen max-md:w-[min(18rem,80vw)] max-md:-translate-x-full max-md:invisible max-md:shadow-[var(--shadow-lg)] max-md:transition-all max-md:duration-[320ms] max-md:data-[open=true]:translate-x-0 max-md:data-[open=true]:visible"
+         aria-label="Navigation du tableau de bord"
+         data-open="false">
+    <div class="px-4 py-5 border-b border-[var(--color-border)]">
+      <a class="inline-flex items-center gap-2 no-underline text-[var(--color-text)] font-display font-extrabold text-[length:var(--fs-md)] tracking-tight rounded-[var(--radius-md)] p-1 hover:text-[var(--color-text)]" href="{% url 'dashboard:home' %}" aria-label="SPPE Sud-Avesnois — Tableau de bord">
+        <img class="w-9 h-9 shrink-0" src="{% static 'img/logo.svg' %}" alt="" width="36" height="36" aria-hidden="true">
+        <span><span class="text-[var(--color-primary)]">SPPE</span>&nbsp;Sud-Avesnois</span>
+      </a>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 pl-2">Tableau de bord</p>
+    </div>
+
+    <nav id="sidebar-nav" class="flex-1 overflow-y-auto p-3 flex flex-col gap-1" aria-label="Menu principal">
+      {% if user.is_superuser %}
+      <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] px-3 py-2 pb-1" aria-hidden="true">Données</p>
+      {% else %}
+      <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] px-3 py-2 pb-1" aria-hidden="true">Mon espace</p>
+      {% endif %}
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'home' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:home' %}" {% if active_tab == 'home' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-home"></use></svg>
+        Vue d'ensemble
+      </a>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'structures' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:structure_list' %}" {% if active_tab == 'structures' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-structures"></use></svg>
+        Structures
+      </a>
+      {% if user.is_superuser %}
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'communes' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:commune_list' %}" {% if active_tab == 'communes' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-map-pin"></use></svg>
+        Communes
+      </a>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'types' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:type_list' %}" {% if active_tab == 'types' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-tag"></use></svg>
+        Types
+      </a>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'import' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:import_data' %}">
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-upload"></use></svg>
+        Importer
+      </a>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'audit' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:audit_log' %}">
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+        Journal
+      </a>
+
+      <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] px-3 py-2 pb-1 mt-2" aria-hidden="true">Comptes</p>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'users' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:user_list' %}">
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg>
+        Utilisateurs
+      </a>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'inscriptions' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:inscription_list' %}" {% if active_tab == 'inscriptions' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg>
+        Demandes d'inscription
+        {% if pending_inscriptions_count %}
+          <span class="ml-auto inline-flex items-center justify-center min-w-[1.5rem] h-[1.5rem] px-1.5 rounded-full bg-[var(--color-warning-soft)] text-[var(--color-warning)] text-[length:var(--fs-xs)] font-bold" aria-label="{{ pending_inscriptions_count }} demande(s) en attente">{{ pending_inscriptions_count }}</span>
+        {% endif %}
+      </a>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'notifications' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:notification_list' %}" {% if active_tab == 'notifications' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-mail"></use></svg>
+        Notifications
+      </a>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'backups' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:backup_list' %}" {% if active_tab == 'backups' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-download"></use></svg>
+        Sauvegardes
+      </a>
+        {% endif %}
+        <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'profile' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:profile' %}" {% if active_tab == 'profile' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg>
+        Mon profil
+      </a>
+        <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'password' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:password_change' %}" {% if active_tab == 'password' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-key"></use></svg>
+        Mon mot de passe
+      </a>
+    </nav>
+
+    <div class="p-3 border-t border-[var(--color-border)]">
+      <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] px-3 pb-1" aria-hidden="true">Connecté·e</p>
+      <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] px-3 py-1">{{ user.get_full_name|default:user.email|default:user.username }}</p>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms]" href="{% url 'home' %}">
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-back"></use></svg>
+        Retour au site
+      </a>
+      <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
+        {% csrf_token %}
+        <button class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline w-full text-[length:var(--fs-sm)] font-medium text-left cursor-pointer border-none bg-transparent hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms]" type="submit">
+          <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-logout"></use></svg>
+          Déconnexion
+        </button>
+      </form>
+    </div>
+  </aside>
+  <div class="sidebar-overlay fixed inset-0 bg-[var(--color-overlay)] opacity-0 invisible transition-opacity duration-200 z-[calc(var(--z-sidebar)-1)] data-[open=true]:opacity-100 data-[open=true]:visible md:hidden"
+       data-open="false" aria-hidden="true" role="presentation"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <header class="sticky top-0 z-[var(--z-header)] flex items-center justify-between gap-4 px-6 py-3 bg-[var(--color-surface)] border-b border-[var(--color-border)] md:hidden" role="banner">
+      <button class="sidebar-toggle group inline-flex items-center justify-center w-11 h-11 border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-surface-3)] hover:border-[var(--color-border-strong)] transition-[background,border-color] duration-200"
+              data-controls="sidebar"
+              type="button"
+              aria-controls="sidebar"
+              aria-expanded="false"
+              aria-label="Ouvrir le menu de navigation">
+        <svg class="w-[1.2rem] h-[1.2rem] group-aria-expanded:hidden" aria-hidden="true">
+          <use href="{% static 'img/icons.svg' %}#i-menu"></use>
+        </svg>
+        <svg class="w-[1.2rem] h-[1.2rem] hidden group-aria-expanded:block" aria-hidden="true">
+          <use href="{% static 'img/icons.svg' %}#i-close"></use>
+        </svg>
+      </button>
+      <h1 class="font-display text-[length:var(--fs-md)] font-bold m-0">{% block mobile_title %}Tableau de bord{% endblock %}</h1>
+      <div class="flex items-center gap-2">
+        <button class="inline-flex items-center justify-center w-11 h-11 border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-3)] hover:text-[var(--color-text)] transition-[background,color] duration-200"
+                data-theme-toggle
+                type="button"
+                aria-pressed="false"
+                title="Basculer le thème">
+          <svg class="w-5 h-5 theme-icon--sun" aria-hidden="true">
+            <use href="{% static 'img/icons.svg' %}#i-sun"></use>
+          </svg>
+          <svg class="w-5 h-5 theme-icon--moon" aria-hidden="true">
+            <use href="{% static 'img/icons.svg' %}#i-moon"></use>
+          </svg>
+        </button>
+        <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
+          {% csrf_token %}
+          <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" type="submit">
+            <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-logout"></use></svg>
+            Déconnexion
+          </button>
+        </form>
+      </div>
+    </header>
+
+    <header class="hidden md:flex bg-[var(--color-surface)] border-b border-[var(--color-border)] px-6 py-4 items-center justify-between gap-4" role="banner">
+      <div>
+        <h1 class="m-0 font-display text-[length:var(--fs-xl)] font-bold">{% block page_title %}Tableau de bord{% endblock %}</h1>
+        <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] mt-1">{% block page_subtitle %}Vue d'ensemble des données{% endblock %}</p>
+      </div>
+      <div class="flex items-center gap-3 text-[length:var(--fs-sm)]">
+        <span>{{ user.get_full_name|default:user.email }}</span>
+        <button class="inline-flex items-center justify-center w-11 h-11 border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-3)] hover:text-[var(--color-text)] transition-[background,color] duration-200"
+                data-theme-toggle
+                type="button"
+                aria-pressed="false"
+                title="Basculer le thème">
+          <svg class="w-5 h-5 theme-icon--sun" aria-hidden="true">
+            <use href="{% static 'img/icons.svg' %}#i-sun"></use>
+          </svg>
+          <svg class="w-5 h-5 theme-icon--moon" aria-hidden="true">
+            <use href="{% static 'img/icons.svg' %}#i-moon"></use>
+          </svg>
+        </button>
+        <a class="text-[var(--color-text-muted)] no-underline px-2 py-1 rounded-[var(--radius-sm)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-3)]" href="{% url 'dashboard:password_change' %}">Mot de passe</a>
+        <form method="post" action="{% url 'logout' %}" class="m-0 p-0 inline">
+          {% csrf_token %}
+          <button class="text-[var(--color-text-muted)] no-underline px-2 py-1 rounded-[var(--radius-sm)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-3)] border-none bg-transparent cursor-pointer font-inherit text-[length:var(--fs-sm)]" type="submit">Déconnexion</button>
+        </form>
+      </div>
+    </header>
+
+    {% if messages %}
+      <div class="px-6 py-4" role="region" aria-label="Messages" aria-live="polite">
+        <ul class="list-none p-0 m-0" style="margin-bottom: var(--space-5)">
+          {% for message in messages %}
+            <li class="grid grid-cols-[auto_1fr_auto] items-start gap-3 p-4 rounded-[var(--radius-md)] border text-[length:var(--fs-sm)] leading-[1.6] relative {% if message.tags == 'error' %}bg-[var(--color-danger-soft)] border-[var(--color-danger-border)] text-[var(--color-danger)]{% elif message.tags == 'success' %}bg-[var(--color-success-soft)] border-[var(--color-success-border)] text-[var(--color-success)]{% elif message.tags == 'warning' %}bg-[var(--color-warning-soft)] border-[var(--color-warning-border)] text-[var(--color-warning)]{% else %}bg-[var(--color-info-soft)] border-[var(--color-info-border)] text-[var(--color-info)]{% endif %}">
+              <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                <use href="{% static 'img/icons.svg' %}#{% if message.tags == 'error' %}i-alert{% elif message.tags == 'success' %}i-check{% elif message.tags == 'warning' %}i-alert{% else %}i-info{% endif %}"></use>
+              </svg>
+              <div>{{ message }}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <main id="dashboard-content" class="flex-1 px-4 py-6 md:px-8 md:py-7" role="main" tabindex="-1">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script src="{% static 'js/bundle.min.js' %}" defer nonce="{{ csp_nonce }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

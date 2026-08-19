@@ -1,0 +1,6 @@
+- [ ] Champs éditables explicites
+- [ ] Validation métier
+- [ ] Erreurs compréhensibles
+- [ ] CSRF
+- [ ] Permissions serveur
+- [ ] Tests pertinents

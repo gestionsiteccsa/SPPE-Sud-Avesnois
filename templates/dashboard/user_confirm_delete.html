@@ -1,0 +1,45 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Supprimer — SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Supprimer{% endblock %}
+{% block page_title %}Supprimer «&nbsp;{{ object.email }}&nbsp;»{% endblock %}
+{% block page_subtitle %}Cette action est irréversible{% endblock %}
+
+{% block content %}
+<div class="max-w-[56rem] mx-auto" style="max-width: 32rem">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 shadow-[var(--shadow-xs)] text-center">
+
+    <div class="w-14 h-14 mx-auto mb-4 inline-flex items-center justify-center rounded-full bg-[var(--color-danger-soft)] text-[var(--color-danger)]">
+      <svg class="w-7 h-7" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+    </div>
+
+    <h2 class="font-display text-[length:var(--fs-xl)] font-bold m-0 mb-3">
+      Confirmer la suppression
+    </h2>
+
+    {% if object == user %}
+      <div class="grid grid-cols-[auto_1fr] items-start gap-3 p-4 rounded-[var(--radius-md)] border text-[length:var(--fs-sm)] leading-[1.6] relative bg-[var(--color-warning-soft)] border-[var(--color-warning-border)] text-[var(--color-warning)] text-left mb-4" role="alert">
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+        <div class="[&>p]:m-0">
+          <p>Vous êtes sur le point de supprimer <strong>votre propre compte</strong>. Vous serez déconnecté·e immédiatement.</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <p class="text-[var(--color-text-muted)] m-0 mb-6">
+      Êtes-vous sûr de vouloir supprimer définitivement l'utilisateur
+      <strong class="text-[var(--color-text)]">«&nbsp;{{ object.email }}&nbsp;»</strong>&nbsp;?
+    </p>
+
+    <form method="post" class="flex gap-1.5 flex-wrap justify-center mt-6 pt-5 border-t border-[var(--color-border)]">
+      {% csrf_token %}
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="{% url 'dashboard:user_list' %}">Annuler</a>
+      <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:bg-[var(--color-danger-hover)] hover:border-[var(--color-danger-hover)]" type="submit">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
+        Confirmer
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

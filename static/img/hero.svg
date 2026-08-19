@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 360" role="img"
+     aria-labelledby="hero-title hero-desc">
+  <title id="hero-title">Illustration douce d'une scène petite enfance</title>
+  <desc id="hero-desc">Un nounours pastel, un building crèche stylisé, des formes douces et des points colorés évoquent la petite enfance.</desc>
+
+  <defs>
+    <linearGradient id="softPink" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#FBE9F0"/>
+      <stop offset="1" stop-color="#FCDCE7"/>
+    </linearGradient>
+    <linearGradient id="softBlue" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#EAF1FA"/>
+      <stop offset="1" stop-color="#D6E5F6"/>
+    </linearGradient>
+    <linearGradient id="softGreen" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#E1F0E8"/>
+      <stop offset="1" stop-color="#CFE7D8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Bulles floues en fond -->
+  <circle cx="80"  cy="80"  r="58" fill="url(#softPink)" opacity="0.85"/>
+  <circle cx="340" cy="100" r="46" fill="url(#softBlue)" opacity="0.85"/>
+  <circle cx="200" cy="300" r="78" fill="url(#softGreen)" opacity="0.7"/>
+
+  <!-- Petits points pastels décoratifs -->
+  <circle cx="60"  cy="220" r="5" fill="#D8698F"/>
+  <circle cx="380" cy="250" r="5" fill="#5B8AC4"/>
+  <circle cx="350" cy="60"  r="4" fill="#C8902C"/>
+  <circle cx="100" cy="50"  r="4" fill="#7AA68C"/>
+  <circle cx="30"  cy="160" r="3" fill="#5B8AC4"/>
+  <circle cx="390" cy="170" r="3" fill="#D8698F"/>
+  <circle cx="170" cy="40"  r="3" fill="#7AA68C"/>
+
+  <!-- Bâtiment crèche stylisé -->
+  <g transform="translate(255,150)">
+    <path d="M0 100 L0 40 Q0 30 10 30 L70 30 Q80 30 80 40 L80 100 Z" fill="url(#softBlue)"/>
+    <path d="M0 40 L40 18 L80 40 L80 32 L40 10 L0 32 Z" fill="#5B8AC4" opacity="0.75"/>
+    <rect x="10" y="50" width="14" height="22" rx="3" fill="#5B8AC4" opacity="0.5"/>
+    <rect x="32" y="50" width="14" height="22" rx="3" fill="#5B8AC4" opacity="0.4"/>
+    <rect x="54" y="50" width="14" height="22" rx="3" fill="#5B8AC4" opacity="0.5"/>
+    <rect x="10" y="80" width="60" height="20" rx="3" fill="#5B8AC4" opacity="0.55"/>
+  </g>
+
+  <!-- Nounours pastel (centre) -->
+  <g transform="translate(80,120)">
+    <!-- Tête + oreilles -->
+    <circle cx="60" cy="60" r="60" fill="#FCDCE7"/>
+    <circle cx="20" cy="20"  r="20" fill="#D8698F" opacity="0.85"/>
+    <circle cx="100" cy="20" r="20" fill="#D8698F" opacity="0.85"/>
+    <circle cx="20" cy="20"  r="10" fill="#FBE9F0"/>
+    <circle cx="100" cy="20" r="10" fill="#FBE9F0"/>
+    <!-- Museau -->
+    <ellipse cx="60" cy="78" rx="28" ry="22" fill="#FBE9F0"/>
+    <ellipse cx="60" cy="65" rx="6" ry="5" fill="#3F2A2E"/>
+    <path d="M50 80 Q60 88 70 80" fill="none" stroke="#3F2A2E" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Yeux -->
+    <circle cx="42" cy="50" r="5" fill="#3F2A2E"/>
+    <circle cx="78" cy="50" r="5" fill="#3F2A2E"/>
+    <circle cx="44" cy="48" r="1.5" fill="#fff"/>
+    <circle cx="80" cy="48" r="1.5" fill="#fff"/>
+    <!-- Joues -->
+    <circle cx="28" cy="72" r="6" fill="#D8698F" opacity="0.45"/>
+    <circle cx="92" cy="72" r="6" fill="#D8698F" opacity="0.45"/>
+  </g>
+</svg>

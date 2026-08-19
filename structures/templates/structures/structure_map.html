@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% load static %}
+{% load csp_tags %}
+
+{% block title %}Carte des structures — SPPE Sud-Avesnois{% endblock %}
+{% block meta_description %}Carte interactive des structures d'accueil petite enfance.{% endblock %}
+
+{% block content %}
+<section class="max-w-[var(--container-wide)] mx-auto px-4 md:px-6 lg:px-7 py-6 md:py-8" aria-labelledby="map-title">
+  <header class="flex flex-col gap-5 mb-5 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-start gap-3 sm:items-center">
+      <span class="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]" aria-hidden="true">
+        <svg class="size-6"><use href="{% static 'img/icons.svg' %}#i-map-pin"></use></svg>
+      </span>
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 id="map-title" class="m-0 font-display text-[length:var(--fs-xl)] font-bold text-[var(--color-text)]">Carte des structures</h1>
+          <span class="inline-flex min-h-7 items-center rounded-full bg-[var(--color-primary-soft)] px-2.5 py-1 text-xs font-bold text-[var(--color-primary)]">
+            {{ structures_count }} structure{{ structures_count|pluralize }}
+          </span>
+        </div>
+        <p id="map-instructions" class="mt-1 text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Cliquez ou touchez un marqueur pour afficher les informations.</p>
+      </div>
+    </div>
+    <a href="{% url 'structures:liste' %}" class="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] no-underline transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] focus-visible:[outline:var(--focus-outline)] focus-visible:outline-offset-[var(--focus-offset)] sm:self-auto">
+      <svg class="size-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-structures"></use></svg>
+      Voir en liste
+    </a>
+  </header>
+
+  {% if structures_count %}
+  <div class="map-shell overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
+    <div class="map-toolbar flex flex-col gap-4 border-b border-[var(--color-border)] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+      <div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3" aria-label="Légende des disponibilités">
+        <span class="shrink-0 text-xs font-bold uppercase tracking-[var(--tracking-caps)] text-[var(--color-text-muted)]">Disponibilité</span>
+        <ul class="m-0 flex list-none flex-wrap gap-2 p-0" role="list">
+          <li class="map-legend map-legend--available"><span aria-hidden="true">✓</span> {{ availability.available.label }} <strong>{{ availability.available.count }}</strong></li>
+          <li class="map-legend map-legend--complete"><span aria-hidden="true">×</span> {{ availability.complete.label }} <strong>{{ availability.complete.count }}</strong></li>
+          <li class="map-legend map-legend--unknown"><span aria-hidden="true">?</span> {{ availability.unknown.label }} <strong>{{ availability.unknown.count }}</strong></li>
+        </ul>
+      </div>
+      <button type="button" id="map-reset" class="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 py-2 text-sm font-semibold text-[var(--color-text)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] focus-visible:[outline:var(--focus-outline)] focus-visible:outline-offset-[var(--focus-offset)] lg:self-auto">
+        <svg class="size-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-compass"></use></svg>
+        Recentrer
+      </button>
+    </div>
+    <div id="map" class="map-canvas" role="region" aria-label="Carte interactive de {{ structures_count }} structures d'accueil petite enfance" aria-describedby="map-instructions"></div>
+  </div>
+  {% else %}
+  <div class="flex min-h-[26rem] flex-col items-center justify-center rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-12 text-center shadow-[var(--shadow-sm)]">
+    <span class="mb-5 flex size-16 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]" aria-hidden="true">
+      <svg class="size-8"><use href="{% static 'img/icons.svg' %}#i-compass"></use></svg>
+    </span>
+    <h2 class="m-0 font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-text)]">Aucune structure géolocalisée</h2>
+    <p class="mt-2 max-w-lg text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">La carte ne contient actuellement aucune structure disposant de coordonnées géographiques.</p>
+    <a href="{% url 'structures:liste' %}" class="mt-5 inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 font-semibold text-white no-underline hover:bg-[var(--color-primary-hover)] focus-visible:[outline:var(--focus-outline)] focus-visible:outline-offset-[var(--focus-offset)]">
+      <svg class="size-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-structures"></use></svg>
+      Voir toutes les structures
+    </a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_head %}
+{% if structures_count %}
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}" />
+<link rel="stylesheet" href="{% static 'vendor/leaflet.markercluster/MarkerCluster.css' %}" />
+<style nonce="{{ csp_nonce }}">
+  .map-canvas {
+    width: 100%;
+    height: clamp(30rem, 68vh, 46rem);
+    z-index: 0;
+    background: var(--color-surface-3);
+  }
+
+  .map-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 1.75rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .map-legend strong { font-weight: 800; }
+  .map-legend > span { display: grid; width: 1rem; height: 1rem; place-items: center; border-radius: 50%; font-weight: 900; }
+  .map-legend--available { color: var(--badge-success-fg); background: var(--badge-success-bg); }
+  .map-legend--complete { color: var(--badge-danger-fg); background: var(--badge-danger-bg); }
+  .map-legend--unknown { color: var(--badge-neutral-fg); background: var(--badge-neutral-bg); }
+
+  .structure-marker {
+    border: 0;
+    background: transparent;
+    filter: drop-shadow(0 3px 3px rgb(31 41 51 / 0.28));
+  }
+
+  .structure-marker__pin { width: 32px; height: 42px; overflow: visible; }
+  .structure-marker__shape { fill: currentColor; stroke: #fff; stroke-width: 1.5; }
+  .structure-marker__disc { fill: #fff; }
+  .structure-marker__symbol { fill: currentColor; font: 900 11px/1 var(--font-sans); text-anchor: middle; }
+  .structure-marker--available { color: var(--color-success); }
+  .structure-marker--complete { color: var(--color-danger); }
+  .structure-marker--unknown { color: var(--color-text-subtle); }
+  .structure-marker:focus { outline: var(--focus-outline); outline-offset: 3px; border-radius: 50%; }
+
+  .structure-cluster {
+    display: grid;
+    place-items: center;
+    border: 3px solid rgb(255 255 255 / 0.9);
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-primary);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-primary) 22%, transparent), var(--shadow-md);
+    font: 800 0.82rem/1 var(--font-sans);
+  }
+
+  .structure-cluster--medium { background: var(--color-info); }
+  .structure-cluster--large { background: var(--color-accent); }
+  .structure-cluster:focus { outline: var(--focus-outline); outline-offset: 4px; }
+
+  .map-popup .leaflet-popup-content-wrapper,
+  .map-popup .leaflet-popup-tip {
+    color: var(--color-text);
+    background: var(--color-surface);
+  }
+
+  .map-popup .leaflet-popup-content-wrapper { border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+  .map-popup .leaflet-popup-content { width: min(20rem, calc(100vw - 4.5rem)) !important; margin: 0; font-family: var(--font-sans); }
+  .structure-popup { padding: 1rem; }
+  .structure-popup__title { max-width: calc(100% - 1.75rem); margin: 0; color: var(--color-text); font-size: 1.05rem; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+  .structure-popup__topline { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 0.65rem; margin-top: 0.65rem; }
+  .structure-popup__type { display: flex; min-width: 0; align-items: flex-start; gap: 0.35rem; color: var(--color-text-muted); font-size: 0.8rem; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+  .structure-popup__icon { width: 1rem; height: 1rem; flex: none; margin-top: 0.05rem; }
+  .structure-popup__status { display: inline-flex; min-height: 1.6rem; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 800; line-height: 1.1; white-space: nowrap; }
+  .structure-popup__status--available { color: var(--badge-success-fg); background: var(--badge-success-bg); }
+  .structure-popup__status--complete { color: var(--badge-danger-fg); background: var(--badge-danger-bg); }
+  .structure-popup__status--unknown { color: var(--badge-neutral-fg); background: var(--badge-neutral-bg); }
+  .structure-popup__meta { display: grid; gap: 0.4rem; margin-top: 0.85rem; color: var(--color-text-muted); font-size: 0.8rem; }
+  .structure-popup__meta-row { display: flex; align-items: flex-start; gap: 0.45rem; line-height: 1.35; }
+  .structure-popup__badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+  .structure-popup__badge { display: inline-flex; min-height: 1.55rem; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; border-radius: var(--radius-pill); color: var(--badge-info-fg); background: var(--badge-info-bg); font-size: 0.7rem; font-weight: 700; }
+  .structure-popup__link { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0.9rem -1rem -1rem; padding: 0.75rem 1rem; border-top: 1px solid var(--color-border); color: var(--color-primary); font-size: 0.82rem; font-weight: 800; text-decoration: none; }
+  .structure-popup__link:hover { background: var(--color-primary-soft); text-decoration: none; }
+  .structure-popup__link:focus-visible { outline: var(--focus-outline); outline-offset: -4px; }
+  .map-popup .leaflet-popup-close-button { top: 0.4rem !important; right: 0.4rem !important; width: 2rem !important; height: 2rem !important; display: grid !important; place-items: center; border-radius: 50%; color: var(--color-text-muted) !important; font-size: 1.4rem !important; }
+  .map-popup .leaflet-popup-close-button:hover,
+  .map-popup .leaflet-popup-close-button:focus { color: var(--color-text) !important; background: var(--color-surface-3); }
+  .leaflet-control-zoom a { color: var(--color-text) !important; background: var(--color-surface) !important; }
+  .leaflet-control-zoom a:hover,
+  .leaflet-control-zoom a:focus { background: var(--color-primary-soft) !important; }
+  .leaflet-control-attribution { color: var(--color-text-muted); background: color-mix(in srgb, var(--color-surface) 88%, transparent) !important; }
+
+  @media (max-width: 639px) {
+    .map-canvas { height: clamp(27rem, 66vh, 36rem); }
+    .map-toolbar { padding-inline: 0.75rem; }
+    .map-legend { padding-inline: 0.45rem; font-size: 0.7rem; }
+    .map-popup .leaflet-popup-content { width: min(18rem, calc(100vw - 4rem)) !important; }
+    .structure-popup__topline { grid-template-columns: 1fr; }
+    .structure-popup__status { justify-self: start; white-space: normal; }
+    .leaflet-control-attribution { max-width: calc(100vw - 4.5rem); font-size: 0.58rem; }
+  }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if structures_count %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}" nonce="{{ csp_nonce }}"></script>
+<script src="{% static 'vendor/leaflet.markercluster/leaflet.markercluster.js' %}" nonce="{{ csp_nonce }}"></script>
+{% json_script_nonce structures_data "structures-data" %}
+<script nonce="{{ csp_nonce }}">
+(function () {
+  var structures = JSON.parse(document.getElementById('structures-data').textContent);
+  if (!structures.length) return;
+
+  var iconSprite = "{% static 'img/icons.svg' %}";
+  var map = L.map('map', { scrollWheelZoom: false }).setView([50.03, 4.07], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18,
+  }).addTo(map);
+
+  var bounds = [];
+  var icons = {};
+  var statusSymbols = { available: '✓', complete: '×', unknown: '?' };
+
+  function svgIcon(id, className) {
+    return '<svg class="' + (className || 'structure-popup__icon') + '" aria-hidden="true" focusable="false"><use href="' + iconSprite + '#' + id + '"></use></svg>';
+  }
+
+  function escapeHtml(value) {
+    var element = document.createElement('div');
+    element.textContent = value == null ? '' : String(value);
+    return element.innerHTML;
+  }
+
+  function getIcon(status) {
+    if (!icons[status]) {
+      icons[status] = L.divIcon({
+        className: 'structure-marker structure-marker--' + status,
+        html: '<svg class="structure-marker__pin" viewBox="0 0 32 42" aria-hidden="true" focusable="false">' +
+          '<path class="structure-marker__shape" d="M16 1C7.72 1 1 7.72 1 16c0 10.7 15 25 15 25s15-14.3 15-25C31 7.72 24.28 1 16 1z"></path>' +
+          '<circle class="structure-marker__disc" cx="16" cy="16" r="8"></circle>' +
+          '<text class="structure-marker__symbol" x="16" y="20">' + statusSymbols[status] + '</text>' +
+        '</svg>',
+        iconSize: [32, 42],
+        iconAnchor: [16, 42],
+        popupAnchor: [0, -40],
+      });
+    }
+    return icons[status];
+  }
+
+  function popupHtml(s) {
+    var typeHtml = s.type
+      ? '<span class="structure-popup__type">' + svgIcon('i-tag') + '<span>' + escapeHtml(s.type) + '</span></span>'
+      : '<span></span>';
+    var metaHtml = '';
+    var badgesHtml = '';
+
+    if (s.age) {
+      metaHtml += '<div class="structure-popup__meta-row">' + svgIcon('i-baby') + '<span>' + escapeHtml(s.age) + '</span></div>';
+    }
+    if (s.commune) {
+      metaHtml += '<div class="structure-popup__meta-row">' + svgIcon('i-map-pin') + '<span>' + escapeHtml(s.code_postal) + ' ' + escapeHtml(s.commune) + '</span></div>';
+    }
+    s.badges.forEach(function (badge) {
+      var icon = badge === 'Handicap' ? 'i-accessibility' : 'i-clock';
+      badgesHtml += '<span class="structure-popup__badge">' + svgIcon(icon) + escapeHtml(badge) + '</span>';
+    });
+
+    return '<article class="structure-popup">' +
+      '<h2 class="structure-popup__title">' + escapeHtml(s.nom) + '</h2>' +
+      '<div class="structure-popup__topline">' +
+        typeHtml +
+        '<span class="structure-popup__status structure-popup__status--' + s.status + '">' +
+          '<span aria-hidden="true">' + statusSymbols[s.status] + '</span>' + escapeHtml(s.status_label) +
+        '</span>' +
+      '</div>' +
+      (metaHtml ? '<div class="structure-popup__meta">' + metaHtml + '</div>' : '') +
+      (badgesHtml ? '<div class="structure-popup__badges">' + badgesHtml + '</div>' : '') +
+      '<a class="structure-popup__link" href="/structures/' + encodeURIComponent(String(s.pk)) + '/"><span>Voir la fiche</span>' + svgIcon('i-arrow-right') + '</a>' +
+    '</article>';
+  }
+
+  var markerGroup = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    spiderfyOnMaxZoom: true,
+    removeOutsideVisibleBounds: true,
+    maxClusterRadius: 48,
+    iconCreateFunction: function (cluster) {
+      var count = cluster.getChildCount();
+      var size = count < 10 ? 38 : count < 25 ? 44 : 50;
+      var sizeClass = count < 10 ? '' : count < 25 ? ' structure-cluster--medium' : ' structure-cluster--large';
+      return L.divIcon({
+        className: 'structure-cluster' + sizeClass,
+        html: '<span>' + count + '</span>',
+        iconSize: [size, size],
+      });
+    },
+  });
+
+  structures.forEach(function (s) {
+    var marker = L.marker([s.lat, s.lng], {
+      icon: getIcon(s.status),
+      keyboard: true,
+      riseOnHover: true,
+      title: s.nom + ' — ' + s.status_label,
+      alt: 'Structure : ' + s.nom + '. Disponibilité : ' + s.status_label,
+    });
+    bounds.push([s.lat, s.lng]);
+    marker.bindPopup(popupHtml(s), {
+      closeButton: true,
+      maxWidth: 340,
+      minWidth: 220,
+      className: 'map-popup',
+    });
+    marker.on('add', function () {
+      if (!marker._icon) return;
+      marker._icon.setAttribute('aria-label', marker.options.alt);
+      marker._icon.setAttribute('role', 'button');
+    });
+    markerGroup.addLayer(marker);
+  });
+
+  map.addLayer(markerGroup);
+
+  function mapPadding() {
+    return window.innerWidth < 640 ? [24, 24] : [48, 48];
+  }
+
+  function recenterMap() {
+    map.fitBounds(bounds, {
+      padding: mapPadding(),
+      maxZoom: 15,
+      animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    });
+  }
+
+  function labelClusters() {
+    map.getContainer().querySelectorAll('.structure-cluster').forEach(function (cluster) {
+      var count = cluster.textContent.trim();
+      cluster.setAttribute('role', 'button');
+      cluster.setAttribute('aria-label', 'Groupe de ' + count + ' structures. Activer pour zoomer.');
+    });
+  }
+
+  recenterMap();
+  document.getElementById('map-reset').addEventListener('click', function () {
+    map.closePopup();
+    recenterMap();
+  });
+  markerGroup.on('animationend', labelClusters);
+  map.on('zoomend moveend layeradd', function () { window.requestAnimationFrame(labelClusters); });
+  window.requestAnimationFrame(labelClusters);
+})();
+</script>
+{% endif %}
+{% endblock %}

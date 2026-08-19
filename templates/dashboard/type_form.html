@@ -1,0 +1,39 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Ajouter{% endif %} un type — SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}{% if object %}Modifier{% else %}Ajouter{% endif %}{% endblock %}
+{% block page_title %}{% if object %}Modifier&nbsp;: {{ object.nom }}{% else %}Ajouter un type{% endif %}{% endblock %}
+{% block page_subtitle %}Les types permettent de catégoriser les structures{% endblock %}
+
+{% block content %}
+<form class="max-w-[56rem] mx-auto" style="max-width: 36rem" method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="grid grid-cols-[auto_1fr] items-start gap-3 p-4 rounded-[var(--radius-md)] border text-[length:var(--fs-sm)] leading-[1.6] relative bg-[var(--color-danger-soft)] border-[var(--color-danger-border)] text-[var(--color-danger)]" role="alert" aria-live="assertive">
+      <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+      <div class="[&>p]:m-0">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="flex flex-col gap-2 mb-4 {% if form.nom.errors %}field--error{% endif %}">
+    <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nom">Nom <span class="text-[var(--color-danger)] ml-0.5" aria-hidden="true">*</span></label>
+    <input class="block w-full px-4 py-3 text-[length:var(--fs-base)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] placeholder:text-[var(--color-text-subtle)] placeholder:opacity-100 transition-[border-color,box-shadow,background] duration-200 {% if form.nom.errors %}bg-[var(--color-danger-soft)]{% endif %}" type="text" name="nom" id="id_nom" required
+           value="{{ form.nom.value|default:'' }}"
+           placeholder="Ex&nbsp;: Micro-crèche">
+    {% if form.nom.errors %}
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] flex items-start gap-1" role="alert">{% for error in form.nom.errors %}{{ error|striptags }}{% endfor %}</p>
+    {% endif %}
+  </div>
+
+  <div class="flex gap-1.5 flex-wrap justify-end mt-6 pt-5 border-t border-[var(--color-border)]">
+    <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="{% url 'dashboard:type_list' %}">Annuler</a>
+    <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+      <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+      {% if object %}Enregistrer{% else %}Créer{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

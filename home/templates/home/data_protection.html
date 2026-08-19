@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Protection des données — SPPE Sud-Avesnois{% endblock %}
+{% block meta_description %}Information interne sur les traitements de données personnelles réalisés dans l'application SPPE Sud-Avesnois.{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<article class="w-full max-w-[var(--container-max)] mx-auto px-4 py-10 md:px-6 md:py-12 lg:px-7" aria-labelledby="data-protection-title">
+  <header class="max-w-[var(--container-narrow)] mb-8">
+    <p class="inline-flex items-center rounded-[var(--radius-pill)] bg-[var(--color-primary-soft)] px-3 py-1 text-[length:var(--fs-sm)] font-semibold text-[var(--color-primary)]">
+      Information interne
+    </p>
+    <h1 id="data-protection-title" class="mt-3 font-display text-[length:var(--fs-3xl)] font-extrabold text-[var(--color-text)]">
+      Protection des données
+    </h1>
+    <p class="mt-4 text-[length:var(--fs-lg)] leading-[1.6] text-[var(--color-text-muted)]">
+      Cette page explique comment la Communauté de Communes Sud-Avesnois traite les données personnelles dans l'application SPPE Sud-Avesnois.
+    </p>
+    <p class="mt-3 text-[length:var(--fs-sm)] text-[var(--color-text-subtle)]">
+      Dernière mise à jour&nbsp;: <time datetime="2026-08-18">18 août 2026</time>
+    </p>
+  </header>
+
+  <aside class="mb-8 rounded-[var(--radius-lg)] border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] p-5 text-[var(--color-text)]" aria-labelledby="validation-title">
+    <h2 id="validation-title" class="text-[length:var(--fs-md)] font-bold">Validation avant mise en production</h2>
+    <p class="mt-2 text-[length:var(--fs-sm)] leading-[1.6]">
+      Cette information doit être validée par le délégué à la protection des données (DPO) ou le responsable compétent. Les personnes externes dont les coordonnées figurent dans l'annuaire doivent recevoir une information séparée, car cette page est réservée aux utilisateurs connectés.
+    </p>
+  </aside>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <section class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] md:p-6" aria-labelledby="controller-title">
+      <h2 id="controller-title" class="text-[length:var(--fs-xl)] font-bold">Responsable du traitement</h2>
+      <p class="mt-3 leading-[1.6]">
+        Le responsable du traitement est la <strong>Communauté de Communes Sud-Avesnois (CCSA)</strong>. SPPE Sud-Avesnois est le nom de l'application utilisée pour le service.
+      </p>
+      <address class="mt-4 not-italic leading-[1.75] text-[var(--color-text-muted)]">
+        Communauté de Communes Sud-Avesnois<br>
+        2 rue du Général Raymond Chomel<br>
+        59610 Fourmies<br>
+        SIRET&nbsp;: 200 044 493 00019<br>
+        Téléphone&nbsp;: <a href="tel:+33327606524">03 27 60 65 24</a><br>
+        Courriel&nbsp;: <a href="mailto:contact@cc-sudavesnois.fr">contact@cc-sudavesnois.fr</a>
+      </address>
+    </section>
+
+    <section class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] md:p-6" aria-labelledby="purposes-title">
+      <h2 id="purposes-title" class="text-[length:var(--fs-xl)] font-bold">Pourquoi ces données sont-elles traitées&nbsp;?</h2>
+      <ul class="mt-4 space-y-2 pl-5 leading-[1.6] text-[var(--color-text-muted)]">
+        <li>gérer et mettre à jour l'annuaire CTG des structures petite enfance&nbsp;;</li>
+        <li>administrer les comptes et habilitations internes&nbsp;;</li>
+        <li>réaliser des imports contrôlés de données&nbsp;;</li>
+        <li>assurer la traçabilité des opérations dans le journal d'audit&nbsp;;</li>
+        <li>protéger l'application, diagnostiquer les incidents et restaurer le service grâce aux sauvegardes.</li>
+      </ul>
+      <div class="mt-5 rounded-[var(--radius-md)] border border-[var(--color-info-border)] bg-[var(--color-info-soft)] p-4">
+        <h3 class="text-[length:var(--fs-md)] font-semibold">Base légale principale</h3>
+        <p class="mt-2 text-[length:var(--fs-sm)] leading-[1.6]">
+          Ces traitements sont principalement nécessaires à l'exécution d'une mission d'intérêt public exercée par la CCSA, conformément à l'article 6, paragraphe 1, point e du RGPD.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <section class="mt-6 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] md:p-6" aria-labelledby="data-title">
+    <h2 id="data-title" class="text-[length:var(--fs-xl)] font-bold">Données traitées, provenance et caractère obligatoire</h2>
+    <p class="mt-3 leading-[1.6] text-[var(--color-text-muted)]">
+      Seules les données utiles au fonctionnement de SPPE Sud-Avesnois doivent être renseignées. Lorsqu'une donnée est indiquée comme obligatoire, son absence empêche l'opération concernée ou dégrade la sécurité et la traçabilité du service.
+    </p>
+    <div class="mt-5 overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)]">
+      <table class="w-full min-w-[44rem] border-collapse text-left text-[length:var(--fs-sm)]">
+        <caption class="visually-hidden">Catégories de données personnelles, leur provenance et leur caractère obligatoire</caption>
+        <thead class="bg-[var(--color-surface-3)] text-[var(--color-text)]">
+          <tr>
+            <th class="px-4 py-3 font-semibold" scope="col">Catégorie</th>
+            <th class="px-4 py-3 font-semibold" scope="col">Données et provenance</th>
+            <th class="px-4 py-3 font-semibold" scope="col">Caractère obligatoire</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--color-border)] text-[var(--color-text-muted)]">
+          <tr class="align-top">
+            <th class="px-4 py-4 font-semibold text-[var(--color-text)]" scope="row">Annuaire CTG</th>
+            <td class="px-4 py-4">Identité et coordonnées professionnelles des responsables ou contacts, adresse, horaires, capacités et caractéristiques de la structure. Données fournies par les structures, partenaires, sources publiques ou agents habilités.</td>
+            <td class="px-4 py-4">Les champs nécessaires à l'identification et au fonctionnement de l'annuaire sont obligatoires&nbsp;; les autres sont facultatifs.</td>
+          </tr>
+          <tr class="align-top">
+            <th class="px-4 py-4 font-semibold text-[var(--color-text)]" scope="row">Comptes internes</th>
+            <td class="px-4 py-4">Nom, adresse électronique, statut du compte et traces d'authentification, fournis par l'agent ou son administrateur.</td>
+            <td class="px-4 py-4">Obligatoires pour créer un compte, se connecter et attribuer les actions.</td>
+          </tr>
+          <tr class="align-top">
+            <th class="px-4 py-4 font-semibold text-[var(--color-text)]" scope="row">Audit et sécurité</th>
+            <td class="px-4 py-4">Actions réalisées, date, compte associé, adresse IP et informations techniques produites automatiquement par l'application et le serveur.</td>
+            <td class="px-4 py-4">Collectées automatiquement et nécessaires à la sécurité, au diagnostic et à la traçabilité.</td>
+          </tr>
+          <tr class="align-top">
+            <th class="px-4 py-4 font-semibold text-[var(--color-text)]" scope="row">Imports</th>
+            <td class="px-4 py-4">Fichiers CSV ou XLSX transmis par un administrateur habilité et données qu'ils contiennent.</td>
+            <td class="px-4 py-4">Nécessaires uniquement lorsqu'un import est demandé.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <section class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] md:p-6" aria-labelledby="recipients-title">
+      <h2 id="recipients-title" class="text-[length:var(--fs-xl)] font-bold">Qui reçoit les données&nbsp;?</h2>
+      <ul class="mt-4 space-y-3 pl-5 leading-[1.6] text-[var(--color-text-muted)]">
+        <li>les agents de la CCSA et partenaires CTG habilités, dans la limite de leurs missions&nbsp;;</li>
+        <li>les administrateurs techniques autorisés de SPPE Sud-Avesnois&nbsp;;</li>
+        <li><strong>o2switch</strong>, en qualité d'hébergeur et de sous-traitant pour l'application, le cache Redis, les courriels techniques, les journaux et les sauvegardes&nbsp;;</li>
+        <li>le prestataire de sauvegarde externe, le cas échéant, pour une copie chiffrée destinée à la reprise d'activité.</li>
+      </ul>
+      <p class="mt-4 leading-[1.6] text-[var(--color-text-muted)]">
+        Lorsque la carte est affichée, le navigateur contacte les services d'<strong>OpenStreetMap</strong> pour charger les tuiles. OpenStreetMap reçoit alors des métadonnées réseau, notamment l'adresse IP, les caractéristiques du navigateur, la date de la requête et la zone cartographique demandée.
+      </p>
+    </section>
+
+    <section class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] md:p-6" aria-labelledby="retention-title">
+      <h2 id="retention-title" class="text-[length:var(--fs-xl)] font-bold">Combien de temps les données sont-elles conservées&nbsp;?</h2>
+      <dl class="mt-4 divide-y divide-[var(--color-border)]">
+        <div class="py-3 first:pt-0">
+          <dt class="font-semibold text-[var(--color-text)]">Comptes internes</dt>
+          <dd class="mt-1 text-[var(--color-text-muted)]">Pendant la durée de l'habilitation, puis suppression sous 30 jours après son retrait.</dd>
+        </div>
+        <div class="py-3">
+          <dt class="font-semibold text-[var(--color-text)]">Journal d'audit</dt>
+          <dd class="mt-1 text-[var(--color-text-muted)]">12 mois.</dd>
+        </div>
+        <div class="py-3">
+          <dt class="font-semibold text-[var(--color-text)]">Journaux techniques</dt>
+          <dd class="mt-1 text-[var(--color-text-muted)]">3 mois.</dd>
+        </div>
+        <div class="py-3">
+          <dt class="font-semibold text-[var(--color-text)]">Sauvegardes</dt>
+          <dd class="mt-1 text-[var(--color-text-muted)]">6 mois. Une donnée supprimée de la base active disparaît des sauvegardes à l'expiration de cette durée.</dd>
+        </div>
+        <div class="py-3">
+          <dt class="font-semibold text-[var(--color-text)]">Fichiers d'import</dt>
+          <dd class="mt-1 text-[var(--color-text-muted)]">Uniquement pendant la requête d'import, sans archivage par l'application.</dd>
+        </div>
+        <div class="py-3 last:pb-0">
+          <dt class="font-semibold text-[var(--color-text)]">Fiches de l'annuaire</dt>
+          <dd class="mt-1 text-[var(--color-text-muted)]">Révision au moins annuelle et suppression ou rectification lorsqu'elles ne sont plus utiles ou exactes.</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+
+  <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <section class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] md:p-6" aria-labelledby="rights-title">
+      <h2 id="rights-title" class="text-[length:var(--fs-xl)] font-bold">Vos droits</h2>
+      <p class="mt-3 leading-[1.6] text-[var(--color-text-muted)]">
+        Selon votre situation et dans les limites prévues par les textes, vous pouvez demander l'accès à vos données, leur rectification ou leur effacement, la limitation du traitement et vous opposer au traitement pour des raisons tenant à votre situation particulière.
+      </p>
+      <p class="mt-4 leading-[1.6] text-[var(--color-text-muted)]">
+        Pour exercer vos droits, contactez provisoirement la CCSA à <a href="mailto:contact@cc-sudavesnois.fr">contact@cc-sudavesnois.fr</a> ou par courrier à l'adresse indiquée plus haut. Une preuve d'identité ne sera demandée qu'en cas de doute raisonnable sur l'identité du demandeur.
+      </p>
+      <p class="mt-4 leading-[1.6] text-[var(--color-text-muted)]">
+        Si vous estimez, après avoir contacté la CCSA, que vos droits ne sont pas respectés, vous pouvez <a href="https://www.cnil.fr/fr/plaintes" rel="noopener noreferrer" target="_blank">adresser une réclamation à la CNIL<span class="visually-hidden"> (nouvelle fenêtre)</span></a>.
+      </p>
+    </section>
+
+    <section class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] md:p-6" aria-labelledby="storage-title">
+      <h2 id="storage-title" class="text-[length:var(--fs-xl)] font-bold">Cookies et préférence de thème</h2>
+      <p class="mt-3 leading-[1.6] text-[var(--color-text-muted)]">
+        SPPE Sud-Avesnois utilise uniquement les mécanismes nécessaires à son fonctionnement&nbsp;:
+      </p>
+      <ul class="mt-3 space-y-2 pl-5 leading-[1.6] text-[var(--color-text-muted)]">
+        <li>un cookie de session pour maintenir la connexion&nbsp;;</li>
+        <li>un cookie CSRF pour protéger les formulaires contre les envois frauduleux&nbsp;;</li>
+        <li>la préférence locale <code>bddpe-theme</code>, enregistrée dans le navigateur pour conserver le thème clair ou sombre.</li>
+      </ul>
+      <p class="mt-4 leading-[1.6] text-[var(--color-text-muted)]">
+        Aucun outil de mesure d'audience, traceur publicitaire ou cookie optionnel n'est actuellement intégré. Aucun bandeau de consentement n'est donc affiché. L'ajout futur d'un traceur optionnel nécessitera une analyse préalable et, si requis, le recueil du consentement.
+      </p>
+    </section>
+  </div>
+</article>
+{% endblock %}

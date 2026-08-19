@@ -1,0 +1,60 @@
+name: Quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  django:
+    runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: development
+      DEBUG: "False"
+      SECRET_KEY: ci-only-secret-key-long-enough-for-django-checks-2026
+      ALLOWED_HOSTS: 127.0.0.1,localhost
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Installer les dépendances Python
+        run: python -m pip install --requirement requirements.txt --requirement requirements-dev.txt
+      - name: Installer les dépendances frontend
+        run: npm ci
+      - name: Vérifier les dépendances
+        run: |
+          python -m pip check
+          npm audit --audit-level=high
+      - name: Lint Python
+        run: ruff check .
+      - name: Reconstruire les ressources statiques
+        run: python build_assets.py
+      - name: Vérifier les ressources versionnées
+        run: git diff --exit-code -- static
+      - name: Contrôles Django
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+          python manage.py collectstatic --dry-run --noinput --verbosity 0
+      - name: Contrôle de la configuration de production
+        env:
+          ENVIRONMENT: production
+          DEBUG: "False"
+          SECRET_KEY: "CheckOnly-7Kp2zN9vQ4mR8xT1cW6aB3dF5hJ0sL2uY9eG4iP7oX1"
+          ALLOWED_HOSTS: example.test
+          CSRF_TRUSTED_ORIGINS: https://example.test
+          DATABASE_PATH: /tmp/bdd-pe-check.sqlite3
+          STATIC_ROOT: /tmp/bdd-pe-staticfiles
+          REDIS_URL: redis://127.0.0.1:6379/0
+          EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+          EMAIL_HOST: smtp.example.test
+          DEFAULT_FROM_EMAIL: noreply@example.test
+        run: python manage.py check --deploy
+      - name: Tests
+        run: python manage.py test

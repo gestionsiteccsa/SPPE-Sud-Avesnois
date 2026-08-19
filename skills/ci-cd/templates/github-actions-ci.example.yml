@@ -1,0 +1,58 @@
+# Exemple minimal GitHub Actions — adapter les versions et commandes au projet.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:<PINNED_VERSION>
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d test_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@<PINNED_VERSION>
+
+      - name: Setup Python
+        uses: actions/setup-python@<PINNED_VERSION>
+        with:
+          python-version: "<PROJECT_PYTHON>"
+
+      - name: Install
+        run: <PROJECT_INSTALL_COMMAND>
+
+      - name: Lint
+        run: <PROJECT_LINT_COMMAND>
+
+      - name: Format check
+        run: <PROJECT_FORMAT_CHECK_COMMAND>
+
+      - name: Django checks
+        run: <PROJECT_DJANGO_CHECK_COMMAND>
+
+      - name: Migration check
+        run: <PROJECT_MIGRATION_CHECK_COMMAND>
+
+      - name: Apply migrations
+        run: <PROJECT_MIGRATE_COMMAND>
+
+      - name: Tests
+        run: <PROJECT_TEST_COMMAND>
