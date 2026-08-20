@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Page introuvable — SPPE Sud-Avesnois{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100dvh-var(--header-h))] flex items-center justify-center px-4 py-12">
+  <div class="max-w-[var(--container-narrow)] w-full text-center">
+    <span class="inline-flex items-center justify-center w-16 h-16 rounded-[var(--radius-circle)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]" aria-hidden="true">
+      <svg class="w-8 h-8"><use href="{% static 'img/icons.svg' %}#i-compass"></use></svg>
+    </span>
+    <p class="font-display font-extrabold text-[length:var(--fs-3xl)] text-[var(--color-primary)] mt-6" aria-hidden="true">404</p>
+    <h1 class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-text)] mt-2">Page introuvable</h1>
+    <p class="text-[var(--color-text-muted)] text-[length:var(--fs-base)] mt-3">
+      La page que vous cherchez n'existe pas ou a été déplacée. Vérifiez l'adresse ou repartez de l'accueil.
+    </p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-7">
+      <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px w-full sm:w-auto bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" href="{% url 'home' %}">Accueil</a>
+      <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px w-full sm:w-auto bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary)]" href="{% url 'structures:liste' %}">Structures</a>
+      <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px w-full sm:w-auto bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary)]" href="{% url 'structures:carte' %}">Carte</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

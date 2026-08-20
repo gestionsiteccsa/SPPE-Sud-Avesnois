@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#5B8AC4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1B2028" media="(prefers-color-scheme: dark)">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Erreur interne — SPPE Sud-Avesnois</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+  <link rel="stylesheet" href="{% static 'vendor/inter/inter.css' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.min.css' %}">
+</head>
+<body class="min-h-screen flex items-center justify-center px-4 py-12 bg-[var(--color-surface)] text-[var(--color-text)]">
+  <main class="max-w-[var(--container-narrow)] w-full text-center" role="main">
+    <img class="w-14 h-14 mx-auto" src="{% static 'img/logo.svg' %}" alt="" width="56" height="56" aria-hidden="true">
+    <p class="font-display font-extrabold text-[length:var(--fs-3xl)] text-[var(--color-primary)] mt-6" aria-hidden="true">500</p>
+    <h1 class="font-display text-[length:var(--fs-2xl)] font-bold mt-2">Une erreur interne est survenue</h1>
+    <p class="text-[var(--color-text-muted)] text-[length:var(--fs-base)] mt-3">
+      La page n'a pas pu être affichée. Merci de réessayer dans quelques instants.
+    </p>
+    <a class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 mt-7 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" href="/">Retour à l'accueil</a>
+  </main>
+</body>
+</html>

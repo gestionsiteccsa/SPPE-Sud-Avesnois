@@ -35,6 +35,7 @@
 - page « Journal » enrichie de filtres par action, objet et utilisateur, et d'un libellé lisible pour les actions spéciales (mot de passe modifié, objet créé ou supprimé) ; l'accès reste réservé aux superadmins.
 - page « Mon profil » dans le tableau de bord (tous les comptes connectés) pour modifier le prénom, le nom et l'adresse email ; le changement d'email est confirmé par le mot de passe actuel, reste unique et est tracé dans le journal d'audit.
 - WhiteNoise (`whitenoise.middleware.WhiteNoiseMiddleware` + `CompressedStaticFilesStorage`) pour servir `/static/` depuis `STATIC_ROOT` en production, sans configuration Apache/Passenger dédiée.
+- pages d'erreur personnalisées aux couleurs du site : 404 (page introuvable), 403 (accès refusé), 400 (requête invalide) et 500 (erreur interne, page autonome pour rester affichable même en cas de panne).
 
 ### Modifié
 

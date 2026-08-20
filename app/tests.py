@@ -1,8 +1,9 @@
 import re
 
 from django.core.cache import caches
-from django.test import Client, TestCase, override_settings
+from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
+from django.views.defaults import bad_request, permission_denied, server_error
 
 
 class ContentSecurityPolicyTests(TestCase):
@@ -130,3 +131,32 @@ class SecurityHeadersTests(TestCase):
         self.assertEqual(response["X-Content-Type-Options"], "nosniff")
         self.assertEqual(response["X-Frame-Options"], "DENY")
         self.assertEqual(response["Strict-Transport-Security"], "max-age=3600")
+
+
+class CustomErrorPagesTests(TestCase):
+    def test_404_uses_custom_template(self):
+        with override_settings(DEBUG=False, ALLOWED_HOSTS=["testserver"]):
+            response = self.client.get("/chemin-qui-nexiste-pas/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, "404.html")
+        self.assertContains(response, "Page introuvable", status_code=404)
+
+    def test_403_uses_custom_template(self):
+        response = permission_denied(RequestFactory().get("/"), None)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "Accès refusé", status_code=403)
+
+    def test_400_uses_custom_template(self):
+        response = bad_request(RequestFactory().get("/"), Exception("Requête suspecte"))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, "Requête invalide", status_code=400)
+
+    def test_500_uses_custom_template(self):
+        with override_settings(DEBUG=False):
+            response = server_error(RequestFactory().get("/"))
+
+        self.assertEqual(response.status_code, 500)
+        self.assertContains(response, "Une erreur interne est survenue", status_code=500)
