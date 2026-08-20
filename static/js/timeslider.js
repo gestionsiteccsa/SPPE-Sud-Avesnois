@@ -28,6 +28,8 @@
   var MIN_RANGE = 15;      /* duree minimale d'une plage */
   var CLICK_THRESHOLD = 4; /* px de mouvement avant de considerer un drag */
 
+  var ICON_COPY = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+
   function pad(n) { return n < 10 ? '0' + n : String(n); }
   function fmt(t) { return pad(Math.floor(t / 60)) + ':' + pad(t % 60); }
   function parse(s) {
@@ -83,10 +85,11 @@
 
   /* ---------- construction DOM ---------- */
 
-  TimeSlider.prototype._btn = function (label, title, cls) {
-    var b = el('button', 'ts-btn ' + cls, label);
+  TimeSlider.prototype._btn = function (label, title, cls, html) {
+    var b = el('button', 'ts-btn ' + cls);
     b.type = 'button';
-    b.title = title;
+    if (html) { b.innerHTML = html; } else { b.textContent = label; }
+    b.setAttribute('data-tooltip', title);
     return b;
   };
 
@@ -112,15 +115,12 @@
       var toggle = el('label', 'ts-toggle');
       var cb = document.createElement('input');
       cb.type = 'checkbox';
-      cb.title = 'Journee fermee';
+      toggle.setAttribute('data-tooltip', 'Journée fermée');
       toggle.appendChild(cb);
       toggle.appendChild(document.createTextNode('Fermé'));
       controls.appendChild(toggle);
 
-      controls.appendChild(self._btn('+', 'Zoom avant (molette sur la colonne)', 'ts-zoom-in'));
-      controls.appendChild(self._btn('−', 'Zoom arrière', 'ts-zoom-out'));
-      controls.appendChild(self._btn('⤢', 'Vue complète 24 h', 'ts-fit'));
-      controls.appendChild(self._btn('⧉', 'Copier ce jour vers d\'autres jours', 'ts-copy'));
+      controls.appendChild(self._btn('', 'Copier ce jour vers d\'autres jours', 'ts-copy', ICON_COPY));
       header.appendChild(controls);
       col.appendChild(header);
 
@@ -150,9 +150,6 @@
 
       wrap.appendChild(col);
 
-      var btnIn = header.querySelector('.ts-zoom-in');
-      var btnOut = header.querySelector('.ts-zoom-out');
-      var btnFit = header.querySelector('.ts-fit');
       var btnCopy = header.querySelector('.ts-copy');
 
       self._els[d.key] = {
@@ -165,9 +162,6 @@
         preview: preview,
         popover: popover,
         list: list,
-        btnIn: btnIn,
-        btnOut: btnOut,
-        btnFit: btnFit,
         btnCopy: btnCopy,
         btnAll: btnAll,
         btnOk: btnOk,
@@ -192,9 +186,6 @@
         self._commit();
       });
 
-      E.btnIn.addEventListener('click', function () { self.zoomDay(d, 0.6); });
-      E.btnOut.addEventListener('click', function () { self.zoomDay(d, 1 / 0.6); });
-      E.btnFit.addEventListener('click', function () { self.fitDay(d); });
       E.btnCopy.addEventListener('click', function (e) {
         e.stopPropagation();
         self._openPopover(d);
@@ -266,13 +257,6 @@
     var newScale = E.track.clientHeight / newSpan;
     var maxScroll = Math.max(0, DAY_MIN * newScale - E.track.clientHeight);
     E.track.scrollTop = clamp(t * newScale - y, 0, maxScroll);
-  };
-
-  TimeSlider.prototype.fitDay = function (d) {
-    var E = this._els[d.key];
-    d.view.span = DAY_MIN;
-    E.track.scrollTop = 0;
-    this._renderDay(d);
   };
 
   /* ---------- creation / manipulation des plages ---------- */

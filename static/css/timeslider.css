@@ -88,6 +88,7 @@
   flex-wrap: wrap;
 }
 .ts-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -103,6 +104,7 @@
   cursor: pointer;
 }
 .ts-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -117,6 +119,66 @@
   line-height: 1;
   cursor: pointer;
   transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+/* ----- infobulles stylisees (remplacement des titres natifs) ----- */
+
+.ts-btn[data-tooltip]::after,
+.ts-toggle[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: #0f172a;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  padding: 5px 9px;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.28);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 60;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+.ts-btn[data-tooltip]::before,
+.ts-toggle[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 7px;
+  height: 7px;
+  background: #0f172a;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 60;
+  transition: opacity 0.15s ease, visibility 0.15s;
+}
+.ts-btn[data-tooltip]:hover::after,
+.ts-btn[data-tooltip]:hover::before,
+.ts-btn[data-tooltip]:focus-visible::after,
+.ts-btn[data-tooltip]:focus-visible::before,
+.ts-toggle[data-tooltip]:hover::after,
+.ts-toggle[data-tooltip]:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+.ts-btn[data-tooltip]:hover::after,
+.ts-btn[data-tooltip]:focus-visible::after,
+.ts-toggle[data-tooltip]:hover::after {
+  transform: translateX(-50%) translateY(0);
+}
+.ts-btn[data-tooltip]:hover::before,
+.ts-btn[data-tooltip]:focus-visible::before,
+.ts-toggle[data-tooltip]:hover::before {
+  transform: translateX(-50%) rotate(45deg);
 }
 .ts-btn:hover {
   background: #eff6ff;
@@ -390,3 +452,12 @@
 .ts-widget .ts-popover-item { color: var(--color-text-muted); }
 .ts-widget .ts-popover-item:hover { color: var(--color-text); }
 .ts-widget .ts-popover-item input { accent-color: var(--color-primary); }
+.ts-widget .ts-btn[data-tooltip]::after,
+.ts-widget .ts-toggle[data-tooltip]::after {
+  background: var(--color-text);
+  color: var(--color-surface);
+}
+.ts-widget .ts-btn[data-tooltip]::before,
+.ts-widget .ts-toggle[data-tooltip]::before {
+  background: var(--color-text);
+}
