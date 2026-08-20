@@ -72,6 +72,8 @@
 - délai de validité des liens de réinitialisation ramené de 24 h à 3 h ;
 - template de formulaire public redondant et inutilisé supprimé ;
 - envoi réel de l'email de réinitialisation de mot de passe (templates de sujet et de contenu manquants : la demande affichait une erreur serveur).
+- affichage des erreurs de validation du formulaire de structure : résumé global en tête de formulaire et messages sous les champs concernés (auparavant, seules les erreurs du champ « nom » étaient visibles) ;
+- conservation de la commune et du type sélectionnés après une erreur de validation du formulaire de structure.
 
 ### Sécurité
 

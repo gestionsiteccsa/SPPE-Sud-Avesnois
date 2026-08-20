@@ -9,10 +9,18 @@
 {% block content %}
 <form class="max-w-[56rem] mx-auto" method="post" novalidate>
   {% csrf_token %}
-  {% if form.non_field_errors %}
-    <div class="grid grid-cols-[auto_1fr] items-start gap-3 p-4 mb-5 rounded-[var(--radius-md)] border text-[length:var(--fs-sm)] bg-[var(--color-danger-soft)] border-[var(--color-danger-border)] text-[var(--color-danger)]" role="alert">
+  {% if form.errors %}
+    <div class="grid grid-cols-[auto_1fr] items-start gap-3 p-4 mb-5 rounded-[var(--radius-md)] border text-[length:var(--fs-sm)] bg-[var(--color-danger-soft)] border-[var(--color-danger-border)] text-[var(--color-danger)]" role="alert" aria-live="assertive">
       <svg class="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
-      <div class="[&>p]:m-0">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+      <div>
+        <p class="font-semibold m-0">Le formulaire contient des erreurs :</p>
+        <ul class="list-disc pl-5 m-0 mt-1 [&>li]:my-0.5">
+          {% for field in form %}
+            {% for error in field.errors %}<li>{{ field.label }} : {{ error }}</li>{% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+      </div>
     </div>
   {% endif %}
 
@@ -30,13 +38,14 @@
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_type">Type existant</label>
-        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="type" id="id_type"
+        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none {% if form.type.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" name="type" id="id_type"
                 style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
-          <option value="" {% if not form.instance.type_id %}selected{% endif %}>—</option>
+          <option value="" {% if not form.type.value %}selected{% endif %}>—</option>
           {% for choix in form.fields.type.queryset %}
-            <option value="{{ choix.pk }}" {% if form.instance.type_id == choix.pk %}selected{% endif %}>{{ choix.nom }}</option>
+            <option value="{{ choix.pk }}" {% if form.type.value|stringformat:'s' == choix.pk|stringformat:'s' %}selected{% endif %}>{{ choix.nom }}</option>
           {% endfor %}
         </select>
+        {% if form.type.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.type.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
     <div class="flex flex-col gap-1.5 mt-4">
@@ -52,8 +61,9 @@
     </div>
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_date_mise_a_jour_monenfant">Dernière mise à jour monenfant.fr</label>
-      <input class="block w-full max-w-[16rem] px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="date" name="date_mise_a_jour_monenfant" id="id_date_mise_a_jour_monenfant"
+      <input class="block w-full max-w-[16rem] px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.date_mise_a_jour_monenfant.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="date" name="date_mise_a_jour_monenfant" id="id_date_mise_a_jour_monenfant"
              value="{{ form.date_mise_a_jour_monenfant.value|date:'Y-m-d'|default:'' }}">
+      {% if form.date_mise_a_jour_monenfant.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.date_mise_a_jour_monenfant.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
     </div>
   </div>
 
@@ -68,13 +78,14 @@
              {% if form.age_non_renseigne.value %}checked{% endif %}>
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_age_non_renseigne">Âge non renseigné</label>
     </div>
+    {% if form.age_non_renseigne.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.age_non_renseigne.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4" id="age-fields">
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_age_min">Âge minimum</label>
         <div class="flex gap-2">
-          <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="age_min" id="id_age_min" min="0"
+          <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.age_min.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="age_min" id="id_age_min" min="0"
                  value="{{ form.age_min.value|default:'' }}" style="max-width: 7rem">
-          <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="age_min_unite" id="id_age_min_unite"
+          <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none {% if form.age_min_unite.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" name="age_min_unite" id="id_age_min_unite"
                   style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
             <option value="">—</option>
             <option value="semaine" {% if form.age_min_unite.value == "semaine" %}selected{% endif %}>semaine(s)</option>
@@ -82,13 +93,15 @@
             <option value="ans" {% if form.age_min_unite.value == "ans" %}selected{% endif %}>an(s)</option>
           </select>
         </div>
+        {% if form.age_min.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.age_min.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+        {% if form.age_min_unite.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.age_min_unite.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_age_max">Âge maximum</label>
         <div class="flex gap-2">
-          <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="age_max" id="id_age_max" min="0"
+          <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.age_max.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="age_max" id="id_age_max" min="0"
                  value="{{ form.age_max.value|default:'' }}" style="max-width: 7rem">
-          <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="age_max_unite" id="id_age_max_unite"
+          <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none {% if form.age_max_unite.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" name="age_max_unite" id="id_age_max_unite"
                   style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
             <option value="">—</option>
             <option value="semaine" {% if form.age_max_unite.value == "semaine" %}selected{% endif %}>semaine(s)</option>
@@ -96,6 +109,8 @@
             <option value="ans" {% if form.age_max_unite.value == "ans" %}selected{% endif %}>an(s)</option>
           </select>
         </div>
+        {% if form.age_max.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.age_max.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+        {% if form.age_max_unite.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.age_max_unite.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
   </div>
@@ -129,13 +144,14 @@
     </div>
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_commune">Commune</label>
-      <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="commune" id="id_commune"
+      <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none {% if form.commune.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" name="commune" id="id_commune"
               style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
-        <option value="" {% if not form.instance.commune_id %}selected{% endif %}>—</option>
+        <option value="" {% if not form.commune.value %}selected{% endif %}>—</option>
         {% for c in form.fields.commune.queryset %}
-          <option value="{{ c.pk }}" {% if form.instance.commune_id == c.pk %}selected{% endif %}>{{ c.code_postal }} {{ c.nom }}</option>
+          <option value="{{ c.pk }}" {% if form.commune.value|stringformat:'s' == c.pk|stringformat:'s' %}selected{% endif %}>{{ c.code_postal }} {{ c.nom }}</option>
         {% endfor %}
       </select>
+      {% if form.commune.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.commune.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
       <div class="flex flex-col gap-1.5">
@@ -145,14 +161,16 @@
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_email">Email</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="email" name="email" id="id_email"
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.email.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="email" name="email" id="id_email"
                autocomplete="email" value="{{ form.email.value|default:'' }}">
+        {% if form.email.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.email.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_site_web">Site web</label>
-      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="url" name="site_web" id="id_site_web"
+      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.site_web.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="url" name="site_web" id="id_site_web"
              placeholder="https://…" value="{{ form.site_web.value|default:'' }}">
+      {% if form.site_web.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.site_web.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
     </div>
   </div>
 
@@ -165,13 +183,15 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_places_disponibles">Places disponibles</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="places_disponibles" id="id_places_disponibles" min="0"
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.places_disponibles.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="places_disponibles" id="id_places_disponibles" min="0"
                value="{{ form.places_disponibles.value|default:'' }}">
+        {% if form.places_disponibles.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.places_disponibles.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nb_places_total">Places total</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="nb_places_total" id="id_nb_places_total" min="0"
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nb_places_total.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="nb_places_total" id="id_nb_places_total" min="0"
                value="{{ form.nb_places_total.value|default:'' }}">
+        {% if form.nb_places_total.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.nb_places_total.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
     <div class="flex flex-row items-center gap-3 mt-4">
@@ -179,6 +199,7 @@
              {% if form.places_complet.value %}checked{% endif %}>
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_places_complet">Complet</label>
     </div>
+    {% if form.places_complet.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.places_complet.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
     <div class="flex flex-row items-center gap-3 mt-3">
       <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="places_non_communique" id="id_places_non_communique"
              {% if form.places_non_communique.value %}checked{% endif %}>
@@ -257,8 +278,9 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nb_professionnels">Nb professionnel·les</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="number" name="nb_professionnels" id="id_nb_professionnels" min="0"
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nb_professionnels.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="nb_professionnels" id="id_nb_professionnels" min="0"
                value="{{ form.nb_professionnels.value|default:'' }}">
+        {% if form.nb_professionnels.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.nb_professionnels.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_recrutement">Recrutement en cours</label>

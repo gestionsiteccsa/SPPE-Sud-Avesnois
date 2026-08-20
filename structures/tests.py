@@ -1167,6 +1167,80 @@ class DashboardOverviewAndReferenceTests(TestCase):
         self.assertEqual(len(expanded_queries), len(initial_queries))
 
 
+class StructureFormErrorDisplayTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="admin-erreurs@example.test",
+            email="admin-erreurs@example.test",
+            password="Un-mot-de-passe-tres-long-2026",
+        )
+        self.client.force_login(self.admin)
+        self.commune = Commune.objects.create(nom="Testville", code_postal="75001")
+        self.horaires = json.dumps([{"jour": "lundi", "ferme": True}])
+
+    def _post_invalid(self, **extra):
+        data = {"nom": "Structure invalide", "horaires": self.horaires}
+        data.update(extra)
+        return self.client.post(reverse("dashboard:structure_add"), data)
+
+    def test_negative_age_error_is_displayed(self):
+        response = self._post_invalid(age_min="-3", age_min_unite="ans")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "L&#x27;âge ne peut pas être négatif.", html=False)
+        self.assertFalse(Structure.objects.filter(nom="Structure invalide").exists())
+
+    def test_max_below_min_error_is_displayed(self):
+        response = self._post_invalid(
+            age_min="5", age_min_unite="ans", age_max="1", age_max_unite="ans"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "L&#x27;âge maximum doit être supérieur ou égal à l&#x27;âge minimum.",
+            html=False,
+        )
+
+    def test_places_exceeding_capacity_error_is_displayed(self):
+        response = self._post_invalid(places_disponibles="20", nb_places_total="10")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Le nombre de places disponibles ne peut pas dépasser la capacité totale.",
+            html=False,
+        )
+
+    def test_invalid_email_error_is_displayed(self):
+        response = self._post_invalid(email="pas-un-email")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "adresse de courriel valide", html=False)
+
+    def test_conflicting_places_statuses_error_is_displayed(self):
+        response = self._post_invalid(places_complet="on", places_non_communique="on")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Une structure ne peut pas être à la fois complète et non communiquée.",
+            html=False,
+        )
+
+    def test_commune_selection_is_preserved_after_error(self):
+        response = self._post_invalid(
+            commune=str(self.commune.pk), age_min="-3", age_min_unite="ans"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'<option value="{self.commune.pk}" selected>{self.commune.code_postal} {self.commune.nom}</option>',
+            html=False,
+        )
+
+
 class DashboardCrudTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(
