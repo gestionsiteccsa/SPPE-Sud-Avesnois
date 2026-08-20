@@ -34,6 +34,7 @@
 - journal d'activité étendu à l'ensemble des ajouts, modifications et suppressions : communes, types, comptes utilisateurs (avec communes liées), décisions d'inscription, configuration des notifications et changements de mot de passe (jamais le mot de passe lui-même), en plus des structures, des imports, des suppressions groupées et des sauvegardes ;
 - page « Journal » enrichie de filtres par action, objet et utilisateur, et d'un libellé lisible pour les actions spéciales (mot de passe modifié, objet créé ou supprimé) ; l'accès reste réservé aux superadmins.
 - page « Mon profil » dans le tableau de bord (tous les comptes connectés) pour modifier le prénom, le nom et l'adresse email ; le changement d'email est confirmé par le mot de passe actuel, reste unique et est tracé dans le journal d'audit.
+- script `setup_static_link.sh` et documentation associée pour servir `STATIC_ROOT` sous `/static/` sur o2switch (lien symbolique dans le dossier du domaine), sans passer par Django.
 
 ### Modifié
 

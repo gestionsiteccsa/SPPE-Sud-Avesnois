@@ -46,7 +46,32 @@ python manage.py collectstatic --noinput
 
 Node.js n'est pas nécessaire sur o2switch : `static/css`, `static/js` et `static/vendor` contiennent les artefacts construits. `collectstatic` les rassemble dans `STATIC_ROOT`.
 
-Configurez le domaine pour servir le contenu de `STATIC_ROOT` sous `/static/`, via le mécanisme cPanel adapté au domaine. Ne rendez ni la base SQLite, ni les sauvegardes, ni `.env` accessibles par HTTP.
+### Servir les statiques
+
+L'Application Root (où vivent les sources) et le dossier du domaine (qui contient le `.htaccess` généré par cPanel) sont deux dossiers distincts. Sans configuration, la requête `/static/...` sur le domaine est transmise à Django, qui renvoie 404 en production (`DEBUG=False`) : le site s'affiche sans style.
+
+Le correctif consiste à faire servir le contenu de `STATIC_ROOT` sous `/static/` directement par Apache. Depuis SSH ou le terminal cPanel, exécutez le script fourni (idempotent et vérifié) :
+
+```bash
+bash setup_static_link.sh <dossier-du-domaine> <racine-application>
+```
+
+Exemple :
+
+```bash
+bash setup_static_link.sh ~/bddpe.fr ~/bdd_pe
+```
+
+Le script crée le lien symbolique `<dossier-du-domaine>/static -> <racine-application>/staticfiles`, vérifie que les assets principaux sont accessibles et refuse de fonctionner si `collectstatic` n'a pas été lancé. Aucun redémarrage Passenger n'est nécessaire pour les statiques.
+
+Alternative sans lien symbolique : ajouter dans le `.htaccess` du dossier du domaine
+
+```
+RewriteEngine On
+RewriteRule ^static/(.*)$ /chemin/absolu/racine-application/staticfiles/$1 [L]
+```
+
+Ne rendez ni la base SQLite, ni les sauvegardes, ni `.env` accessibles par HTTP.
 
 ## 4. Variables cPanel
 
