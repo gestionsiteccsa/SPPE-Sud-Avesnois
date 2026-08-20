@@ -1241,6 +1241,106 @@ class StructureFormErrorDisplayTests(TestCase):
         )
 
 
+class StructureScheduleEditorTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="admin-horaires@example.test",
+            email="admin-horaires@example.test",
+            password="Un-mot-de-passe-tres-long-2026",
+        )
+        self.client.force_login(self.admin)
+
+    def test_form_exposes_timeslider_widget_full_width(self):
+        response = self.client.get(reverse("dashboard:structure_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="hours-picker"')
+        self.assertContains(response, 'css/timeslider.css')
+        self.assertContains(response, 'js/timeslider.js')
+        self.assertContains(response, 'name="horaires"')
+        self.assertContains(response, 'class="w-full"')
+        self.assertContains(response, "xl:grid-cols-2")
+        self.assertNotContains(response, 'type="time"')
+
+    def test_schedule_json_is_saved_without_changing_its_shape(self):
+        schedule = [
+            {
+                "jour": day,
+                "ferme": day == "dimanche",
+                "ouverture": "08:00",
+                "fermeture": "18:00",
+            }
+            for day in ("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche")
+        ]
+
+        response = self.client.post(
+            reverse("dashboard:structure_add"),
+            {"nom": "Structure horaires", "horaires": json.dumps(schedule)},
+        )
+
+        self.assertRedirects(response, reverse("dashboard:structure_list"))
+        structure = Structure.objects.get(nom="Structure horaires")
+        self.assertEqual(structure.horaires, schedule)
+
+    def test_existing_schedule_is_available_when_editing(self):
+        schedule = [
+            {"jour": "lundi", "ferme": False, "ouverture": "08:07", "fermeture": "17:53"},
+            {"jour": "mardi", "ferme": True, "ouverture": "07:30", "fermeture": "18:00"},
+        ]
+        structure = Structure.objects.create(nom="Structure à modifier", horaires=schedule)
+
+        response = self.client.get(reverse("dashboard:structure_edit", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="horaires"')
+        self.assertContains(response, "08:07")
+        self.assertContains(response, "17:53")
+
+
+class StructureFlashMessageTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="admin-flash@example.test",
+            email="admin-flash@example.test",
+            password="Un-mot-de-passe-tres-long-2026",
+        )
+        self.client.force_login(self.admin)
+        self.horaires = json.dumps([{"jour": "lundi", "ferme": True}])
+
+    def test_create_structure_shows_flash_message(self):
+        response = self.client.post(
+            reverse("dashboard:structure_add"),
+            {"nom": "Crèche flash", "horaires": self.horaires},
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("dashboard:structure_list"))
+        self.assertContains(response, "La structure « Crèche flash » a été créée.")
+
+    def test_update_structure_shows_flash_message(self):
+        structure = Structure.objects.create(nom="Avant")
+
+        response = self.client.post(
+            reverse("dashboard:structure_edit", args=[structure.pk]),
+            {"nom": "Après", "horaires": self.horaires},
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("dashboard:structure_list"))
+        self.assertContains(response, "La structure « Après » a été mise à jour.")
+
+    def test_delete_structure_shows_flash_message(self):
+        structure = Structure.objects.create(nom="À supprimer")
+
+        response = self.client.post(
+            reverse("dashboard:structure_delete", args=[structure.pk]),
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("dashboard:structure_list"))
+        self.assertContains(response, "La structure « À supprimer » a été supprimée.")
+
+
 class DashboardCrudTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(

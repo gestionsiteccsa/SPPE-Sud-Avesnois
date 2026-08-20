@@ -1,0 +1,392 @@
+/* TimeSlider - selecteur d'horaires (style autonome, independant de Tailwind) */
+
+.ts-widget {
+  --ts-primary: #2563eb;
+  --ts-primary-soft: #60a5fa;
+  --ts-track: #f8fafc;
+  --ts-line: #e2e8f0;
+  --ts-line-minor: #eef2f7;
+  --ts-label: #94a3b8;
+  --ts-text: #0f172a;
+  --ts-muted: #64748b;
+  --ts-radius: 12px;
+  --ts-day-height: 480px;
+
+  font-family: inherit;
+  color: var(--ts-text);
+  min-width: 1080px;
+  background: #fff;
+  border: 1px solid var(--ts-line);
+  border-radius: var(--ts-radius);
+  padding: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ts-widget * { box-sizing: border-box; }
+.ts-widget button { font-family: inherit; }
+
+.ts-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* ----- colonne jour ----- */
+
+.ts-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--ts-line);
+  border-radius: 10px;
+  overflow: visible;
+  transition: background 0.15s ease;
+}
+.ts-day.is-closed { background: #f1f5f9; }
+.ts-day.is-closed .ts-track {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.ts-day.is-closed .ts-day-summary { font-style: italic; }
+
+/* ----- entete ----- */
+
+.ts-day-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--ts-line);
+  background: linear-gradient(180deg, #ffffff, #fbfcfe);
+  border-radius: 9px 9px 0 0;
+}
+.ts-day-head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+}
+.ts-day-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.ts-day-summary {
+  font-size: 10px;
+  color: var(--ts-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  text-align: right;
+}
+.ts-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ts-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: var(--ts-muted);
+  cursor: pointer;
+}
+.ts-toggle input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--ts-primary);
+  cursor: pointer;
+}
+.ts-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--ts-line);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--ts-muted);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.ts-btn:hover {
+  background: #eff6ff;
+  color: var(--ts-primary);
+  border-color: #bfdbfe;
+}
+.ts-btn:active { background: #dbeafe; }
+.ts-btn-primary {
+  background: var(--ts-primary);
+  border-color: var(--ts-primary);
+  color: #fff;
+  font-weight: 600;
+}
+.ts-btn-primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+/* ----- piste (axe 24h) ----- */
+
+.ts-track {
+  position: relative;
+  height: var(--ts-day-height);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--ts-track);
+  border-radius: 0 0 9px 9px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.ts-track::-webkit-scrollbar { width: 8px; }
+.ts-track::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.ts-track::-webkit-scrollbar-track { background: transparent; }
+.ts-canvas { position: relative; width: 100%; }
+
+.ts-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+.ts-gridline.major { border-top: 1px solid var(--ts-line); }
+.ts-gridline.minor { border-top: 1px solid var(--ts-line-minor); }
+.ts-timelabel {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--ts-label);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----- plages ----- */
+
+.ts-range {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  background: var(--ts-range-bg);
+  border-radius: 6px;
+  cursor: grab;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+  z-index: 2;
+}
+.ts-range:hover { box-shadow: 0 2px 10px rgba(76, 175, 80, 0.45); }
+.ts-range.ts-replacing { opacity: 0.3; }
+.ts-range.selected {
+  outline: 2px solid var(--ts-range-edge);
+  outline-offset: 1px;
+  z-index: 3;
+}
+.ts-range.dragging { cursor: grabbing; }
+
+.ts-range-label {
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ts-range-text);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ----- poignees de redimensionnement (onglets toujours visibles) ----- */
+
+.ts-handle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 14px;
+  cursor: ns-resize;
+  background: #1e293b;
+  border-radius: 4px;
+  z-index: 5;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.45);
+  transition: background 0.1s;
+}
+.ts-handle::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 1px;
+}
+.ts-handle:hover { background: #0f172a; }
+.ts-handle-top { top: -7px; }
+.ts-handle-bottom { bottom: -7px; }
+
+.ts-range-del {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 10px;
+  line-height: 15px;
+  text-align: center;
+  cursor: pointer;
+  display: none;
+}
+.ts-range:hover .ts-range-del,
+.ts-range.selected .ts-range-del { display: block; }
+.ts-range-del:hover { background: #dc2626; }
+
+/* ----- apercu de selection (fantome avec heures en direct) ----- */
+
+.ts-preview {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  background: rgba(165, 214, 167, 0.55);
+  border: 2px solid var(--ts-range-edge);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 4;
+}
+.ts-preview-label {
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ts-range-text);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----- popover de copie ----- */
+
+.ts-popover {
+  position: absolute;
+  top: calc(100% - 2px);
+  right: 4px;
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid var(--ts-line);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+  padding: 10px;
+  width: 190px;
+  font-size: 12px;
+}
+.ts-popover-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ts-text);
+}
+.ts-popover-list { max-height: 180px; overflow-y: auto; }
+.ts-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  cursor: pointer;
+  color: var(--ts-muted);
+}
+.ts-popover-item:hover { color: var(--ts-text); }
+.ts-popover-item input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--ts-primary);
+  cursor: pointer;
+}
+.ts-popover-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+/* ----- intégration au thème du dashboard (tokens --color-*) ----- */
+
+.ts-widget {
+  --ts-primary: var(--color-primary);
+  --ts-primary-soft: var(--color-primary-soft);
+  --ts-track: var(--color-surface-2);
+  --ts-line: var(--color-border);
+  --ts-line-minor: var(--color-surface-3);
+  --ts-label: var(--color-text-subtle);
+  --ts-text: var(--color-text);
+  --ts-muted: var(--color-text-muted);
+  --ts-range-bg: #A5D6A7;
+  --ts-range-edge: #66BB6A;
+  --ts-range-text: #1B5E20;
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+.ts-widget .ts-day {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.ts-widget .ts-day.is-closed { background: var(--color-surface-3); }
+.ts-widget .ts-day-header {
+  background: var(--color-surface);
+  border-bottom-color: var(--color-border);
+}
+.ts-widget .ts-day-summary { color: var(--color-text-muted); }
+.ts-widget .ts-toggle { color: var(--color-text-muted); }
+.ts-widget .ts-toggle input { accent-color: var(--color-primary); }
+.ts-widget .ts-btn {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-muted);
+}
+.ts-widget .ts-btn:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.ts-widget .ts-btn:active { background: var(--color-primary-soft); }
+.ts-widget .ts-btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.ts-widget .ts-btn-primary:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: #fff;
+}
+.ts-widget .ts-track { scrollbar-color: var(--color-border-strong) transparent; }
+.ts-widget .ts-track::-webkit-scrollbar-thumb { background: var(--color-border-strong); }
+.ts-widget .ts-popover {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.ts-widget .ts-popover-title { color: var(--color-text); }
+.ts-widget .ts-popover-item { color: var(--color-text-muted); }
+.ts-widget .ts-popover-item:hover { color: var(--color-text); }
+.ts-widget .ts-popover-item input { accent-color: var(--color-primary); }

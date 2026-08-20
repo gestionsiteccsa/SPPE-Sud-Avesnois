@@ -7,7 +7,7 @@
 {% block page_subtitle %}{% if object %}Modifiez les informations ci-dessous{% else %}Renseignez les informations de la nouvelle structure{% endif %}{% endblock %}
 
 {% block content %}
-<form class="max-w-[56rem] mx-auto" method="post" novalidate>
+<form class="w-full" method="post" novalidate>
   {% csrf_token %}
   {% if form.errors %}
     <div class="grid grid-cols-[auto_1fr] items-start gap-3 p-4 mb-5 rounded-[var(--radius-md)] border text-[length:var(--fs-sm)] bg-[var(--color-danger-soft)] border-[var(--color-danger-border)] text-[var(--color-danger)]" role="alert" aria-live="assertive">
@@ -24,8 +24,9 @@
     </div>
   {% endif %}
 
-  {# --- Section : Identité --- #}
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+  {# --- Ligne : Identité + Tranche d'âge --- #}
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5 items-start">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-tag"></use></svg>
       Identité
@@ -68,7 +69,7 @@
   </div>
 
   {# --- Section : Tranche d'âge --- #}
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-baby"></use></svg>
       Tranche d'âge
@@ -114,16 +115,23 @@
       </div>
     </div>
   </div>
+  </div>
 
   {# --- Section : Horaires --- #}
   <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]" id="horaires-fieldset">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
-      Horaires (jour par jour)
+      Horaires d'ouverture
     </h2>
-    <div class="overflow-hidden border border-[var(--color-border)] rounded-[var(--radius-lg)] mt-4">
-      <div id="horaires-container-dash" aria-label="Saisie des horaires par jour"></div>
+    <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-2 mb-0" id="horaires-help">
+      Glissez verticalement dans une colonne pour tracer les heures d'ouverture du jour. Les plages se calent au quart d'heure ; une nouvelle plage remplace la précédente.
+    </p>
+    <div class="overflow-x-auto mt-5" data-hours-scroll>
+      <div id="hours-picker" aria-label="Saisie des horaires d'ouverture par jour"></div>
     </div>
+    <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-3 mb-0" id="hours-grid-help">
+      Déplacez une plage ou utilisez ses poignées pour l'ajuster ; le bouton « ⧉ » copie l'horaire vers d'autres jours, la case « Fermé » ferme le jour.
+    </p>
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_horaires_notes">Notes horaires</label>
       <textarea class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 resize-y" name="horaires_notes" id="id_horaires_notes" rows="2"
@@ -131,8 +139,9 @@
     </div>
   </div>
 
-  {# --- Section : Adresse & Contact --- #}
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+  {# --- Ligne : Adresse & Contact + Capacité d'accueil --- #}
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5 items-start">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-map-pin"></use></svg>
       Adresse &amp; Contact
@@ -175,7 +184,7 @@
   </div>
 
   {# --- Section : Capacité --- #}
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg>
       Capacité d'accueil
@@ -211,9 +220,11 @@
                 placeholder="Ex&nbsp;: sur dossier, entretien préalable…">{{ form.conditions_places.value|default:'' }}</textarea>
     </div>
   </div>
+  </div>
 
-  {# --- Section : Accueil spécifique --- #}
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+  {# --- Ligne : Accueil spécifique + Informations de gestion --- #}
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5 items-start">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-accessibility"></use></svg>
       Accueil spécifique
@@ -241,7 +252,7 @@
   </div>
 
   {# --- Section : Gestion --- #}
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-settings"></use></svg>
       Informations de gestion
@@ -298,6 +309,7 @@
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_reference_monenfant">Référencé sur monenfant.fr</label>
     </div>
   </div>
+  </div>
 
   {{ form.horaires }}
 
@@ -313,93 +325,56 @@
 {% endblock %}
 
 {% block extra_js %}
+<link rel="stylesheet" href="{% static 'css/timeslider.css' %}">
+<script src="{% static 'js/timeslider.js' %}" nonce="{{ csp_nonce }}"></script>
 <script nonce="{{ csp_nonce }}">
 (function () {
   "use strict";
-  var jours = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
-  var joursLabelsFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+  var JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
   var horairesField = document.querySelector('input[name="horaires"]');
-  var container = document.getElementById("horaires-container-dash");
+  var pickerEl = document.getElementById("hours-picker");
+  if (!horairesField || !pickerEl) return;
 
-  var currentData = [];
-  try { currentData = JSON.parse(horairesField.value || "[]"); } catch (e) {}
-
-  function render() {
-    container.innerHTML = "";
-    currentData.forEach(function (entry, idx) {
-      var dayLabel = joursLabelsFr[entry._index !== undefined ? entry._index : idx] || entry.jour;
-      var row = document.createElement("div");
-      row.className = "flex items-center gap-3 px-4 py-2.5 border-b border-[var(--color-border)] last:border-b-0 hover:bg-[var(--color-surface-3)] transition-colors duration-150";
-
-      var labelSpan = document.createElement("span");
-      labelSpan.className = "text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] min-w-[6rem]";
-      labelSpan.textContent = dayLabel;
-      row.appendChild(labelSpan);
-
-      var cbLabel = document.createElement("label");
-      cbLabel.className = "inline-flex items-center gap-2 text-[length:var(--fs-sm)] text-[var(--color-text-muted)] cursor-pointer";
-      var cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.className = "w-4 h-4 accent-[var(--color-primary)]";
-      cb.checked = !!entry.ferme;
-      cb.addEventListener("change", function () { entry.ferme = cb.checked; updateOpen(); syncField(); });
-      cbLabel.appendChild(cb);
-      cbLabel.appendChild(document.createTextNode("Ferm\u00e9"));
-      row.appendChild(cbLabel);
-
-      var og = document.createElement("div");
-      og.className = "flex items-center gap-2 ml-auto";
-      og.id = "dash-og-" + idx;
-
-      var oi = document.createElement("input");
-      oi.type = "time";
-      oi.value = entry.ouverture || "07:30";
-      oi.className = "px-2.5 py-1.5 text-[length:var(--fs-sm)] text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.25rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-150";
-      oi.addEventListener("change", function () { entry.ouverture = oi.value; syncField(); });
-
-      var sep = document.createElement("span");
-      sep.textContent = "\u2192";
-      sep.className = "text-[var(--color-text-subtle)] text-[length:var(--fs-sm)]";
-
-      var ci = document.createElement("input");
-      ci.type = "time";
-      ci.value = entry.fermeture || "18:00";
-      ci.className = "px-2.5 py-1.5 text-[length:var(--fs-sm)] text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.25rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-150";
-      ci.addEventListener("change", function () { entry.fermeture = ci.value; syncField(); });
-
-      og.appendChild(oi);
-      og.appendChild(sep);
-      og.appendChild(ci);
-      row.appendChild(og);
-
-      container.appendChild(row);
+  function toTimeSlider(djangoData) {
+    var out = {};
+    (djangoData || []).forEach(function (entry) {
+      var key = entry.jour;
+      if (JOURS.indexOf(key) === -1) return;
+      if (entry.ferme) {
+        out[key] = { closed: true, slots: [] };
+      } else {
+        out[key] = {
+          closed: false,
+          slots: [[entry.ouverture || "07:30", entry.fermeture || "18:00"]]
+        };
+      }
     });
-    updateOpen();
+    return out;
   }
 
-  function updateOpen() {
-    currentData.forEach(function (entry, idx) {
-      var og = document.getElementById("dash-og-" + idx);
-      if (og) og.style.display = entry.ferme ? "none" : "flex";
+  function toDjango(tsValue) {
+    return JOURS.map(function (key) {
+      var day = tsValue[key] || { closed: true, slots: [] };
+      var slot = (day.slots && day.slots[0]) || [];
+      return {
+        jour: key,
+        ferme: day.closed || slot.length === 0,
+        ouverture: slot[0] || "07:30",
+        fermeture: slot[1] || "18:00"
+      };
     });
   }
 
-  function syncField() {
-    var clean = currentData.map(function (e) {
-      return { jour: e.jour, ferme: e.ferme, ouverture: e.ouverture, fermeture: e.fermeture };
-    });
-    horairesField.value = JSON.stringify(clean);
-  }
+  var initial = [];
+  try { initial = JSON.parse(horairesField.value || "[]"); } catch (e) {}
+  if (!Array.isArray(initial)) initial = [];
 
-  if (currentData.length === 0) {
-    currentData = jours.map(function (j, i) {
-      return { jour: j, _index: i, ferme: true, ouverture: "07:30", fermeture: "18:00" };
-    });
-  } else {
-    currentData.forEach(function (entry, i) { entry._index = i; });
-  }
-  render();
-  syncField();
+  new TimeSlider(pickerEl, {
+    value: toTimeSlider(initial),
+    onChange: function (value) {
+      horairesField.value = JSON.stringify(toDjango(value));
+    }
+  });
 
   var ageCb = document.getElementById("id_age_non_renseigne");
   var ageF = document.getElementById("age-fields");

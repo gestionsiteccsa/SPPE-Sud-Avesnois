@@ -300,11 +300,12 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
         return ctx
 
 
-class DashboardStructureCreateView(StructureManageAccessMixin, CreateView):
+class DashboardStructureCreateView(SuccessMessageMixin, StructureManageAccessMixin, CreateView):
     template_name = "dashboard/structure_form.html"
     model = Structure
     form_class = StructureForm
     success_url = reverse_lazy("dashboard:structure_list")
+    success_message = 'La structure « %(nom)s » a été créée.'
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -323,11 +324,12 @@ class DashboardStructureCreateView(StructureManageAccessMixin, CreateView):
         return ctx
 
 
-class DashboardStructureUpdateView(StructureManageAccessMixin, UpdateView):
+class DashboardStructureUpdateView(SuccessMessageMixin, StructureManageAccessMixin, UpdateView):
     template_name = "dashboard/structure_form.html"
     model = Structure
     form_class = StructureForm
     success_url = reverse_lazy("dashboard:structure_list")
+    success_message = 'La structure « %(nom)s » a été mise à jour.'
 
     def get_queryset(self):
         qs = super().get_queryset()
