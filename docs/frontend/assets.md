@@ -1,6 +1,6 @@
 # Ressources frontend
 
-Les dépendances visibles en production sont auto-hébergées afin d'éviter les CDN et l'exécution de Tailwind dans le navigateur.
+Les dépendances visibles en production sont auto-hébergées afin d'éviter les CDN et l'exécution de Tailwind dans le navigateur. En production, les fichiers de `STATIC_ROOT` sont servis par WhiteNoise (`whitenoise.middleware.WhiteNoiseMiddleware`) sous `/static/`, sans configuration Apache/Passenger dédiée.
 
 ## Source et build
 

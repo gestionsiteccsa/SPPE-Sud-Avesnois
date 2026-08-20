@@ -48,30 +48,11 @@ Node.js n'est pas nécessaire sur o2switch : `static/css`, `static/js` et `stati
 
 ### Servir les statiques
 
-L'Application Root (où vivent les sources) et le dossier du domaine (qui contient le `.htaccess` généré par cPanel) sont deux dossiers distincts. Sans configuration, la requête `/static/...` sur le domaine est transmise à Django, qui renvoie 404 en production (`DEBUG=False`) : le site s'affiche sans style.
+WhiteNoise sert les fichiers de `STATIC_ROOT` sous `/static/` depuis l'application elle-même, via le middleware ajouté dans `settings.py`. Aucune configuration Apache/Passenger, lien symbolique ou règle `.htaccess` n'est nécessaire. La production doit simplement avoir exécuté `collectstatic` (voir plus haut) et l'application redémarrée.
 
-Le correctif consiste à faire servir le contenu de `STATIC_ROOT` sous `/static/` directement par Apache. Depuis SSH ou le terminal cPanel, exécutez le script fourni (idempotent et vérifié) :
+Le stockage `CompressedStaticFilesStorage` sert des versions compressées (`.gz`/`.br`) des fichiers statiques. Les URLs restent identiques entre déploiements : un simple rechargement de page suffit après une mise à jour des assets.
 
-```bash
-bash setup_static_link.sh <dossier-du-domaine> <racine-application>
-```
-
-Exemple :
-
-```bash
-bash setup_static_link.sh ~/bddpe.fr ~/bdd_pe
-```
-
-Le script crée le lien symbolique `<dossier-du-domaine>/static -> <racine-application>/staticfiles`, vérifie que les assets principaux sont accessibles et refuse de fonctionner si `collectstatic` n'a pas été lancé. Aucun redémarrage Passenger n'est nécessaire pour les statiques.
-
-Alternative sans lien symbolique : ajouter dans le `.htaccess` du dossier du domaine
-
-```
-RewriteEngine On
-RewriteRule ^static/(.*)$ /chemin/absolu/racine-application/staticfiles/$1 [L]
-```
-
-Ne rendez ni la base SQLite, ni les sauvegardes, ni `.env` accessibles par HTTP.
+Aucune configuration cPanel supplémentaire n'est requise pour les statiques. Ne rendez ni la base SQLite, ni les sauvegardes, ni `.env` accessibles par HTTP.
 
 ## 4. Variables cPanel
 

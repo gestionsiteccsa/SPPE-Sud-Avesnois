@@ -58,6 +58,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'app.csp.ContentSecurityPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -141,6 +142,19 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = Path(config("STATIC_ROOT", default=str(BASE_DIR / "staticfiles")))
+
+# WhiteNoise sert les statiques depuis STATIC_ROOT en production, sans
+# configuration Apache/Passenger dédiée. Le stockage compressé sert des
+# fichiers .gz/.br ; le manifeste n'est pas utilisé pour ne pas exiger les
+# sourcemaps absentes des bibliothèques vendored (chart.js, leaflet).
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 AUTHENTICATION_BACKENDS = ["authentication.backends.EmailBackend"]
 
