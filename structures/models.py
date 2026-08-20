@@ -58,7 +58,11 @@ class Structure(models.Model):
     longitude = models.FloatField(null=True, blank=True, verbose_name="Longitude")
     afficher = models.BooleanField(default=True, verbose_name="Afficher sur le site")
 
-    nom = models.CharField(max_length=255, verbose_name="Nom")
+    nom = models.CharField(max_length=255, blank=True, verbose_name="Nom")
+    prenom = models.CharField(max_length=255, blank=True, verbose_name="Prénom")
+    nom_structure = models.CharField(
+        max_length=255, blank=True, verbose_name="Nom de la structure"
+    )
     type = models.ForeignKey(
         TypeStructure,
         on_delete=models.SET_NULL,
@@ -116,7 +120,7 @@ class Structure(models.Model):
     class Meta:
         verbose_name = "Structure"
         verbose_name_plural = "Structures"
-        ordering = ["nom"]
+        ordering = ["nom_structure", "nom", "prenom"]
         indexes = [
             models.Index(
                 fields=["afficher", "date_mise_a_jour"],
@@ -160,7 +164,13 @@ class Structure(models.Model):
         ]
 
     def __str__(self):
-        return self.nom
+        return self.nom_affiche
+
+    @property
+    def nom_affiche(self):
+        if self.nom_structure.strip():
+            return self.nom_structure
+        return " ".join(part for part in (self.prenom, self.nom) if part.strip()) or self.nom
 
     @classmethod
     def from_db(cls, db, field_names, values):
@@ -173,6 +183,12 @@ class Structure(models.Model):
     def clean(self):
         super().clean()
         errors = {}
+        has_structure_name = bool(self.nom_structure.strip())
+        has_individual_name = bool(self.nom.strip()) or bool(self.prenom.strip())
+        if has_structure_name and has_individual_name:
+            errors["nom_structure"] = (
+                "Choisissez un nom de structure ou un nom/prénom, pas les deux."
+            )
         if self.age_non_renseigne and (
             self.age_min is not None or self.age_max is not None
         ):

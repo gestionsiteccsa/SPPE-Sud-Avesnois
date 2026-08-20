@@ -3,7 +3,7 @@
 
 {% block title %}{% if object %}Modifier{% else %}Ajouter{% endif %} une structure — SPPE Sud-Avesnois{% endblock %}
 {% block mobile_title %}{% if object %}Modifier{% else %}Ajouter{% endif %}{% endblock %}
-{% block page_title %}{% if object %}Modifier&nbsp;: {{ object.nom }}{% else %}Ajouter une structure{% endif %}{% endblock %}
+{% block page_title %}{% if object %}Modifier&nbsp;: {{ object.nom_affiche }}{% else %}Ajouter une structure{% endif %}{% endblock %}
 {% block page_subtitle %}{% if object %}Modifiez les informations ci-dessous{% else %}Renseignez les informations de la nouvelle structure{% endif %}{% endblock %}
 
 {% block content %}
@@ -31,12 +31,32 @@
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-tag"></use></svg>
       Identité
     </h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nom">Nom <span class="text-[var(--color-danger)]" aria-hidden="true">*</span></label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nom.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="text" name="nom" id="id_nom" required value="{{ form.nom.value|default:'' }}">
-        {% if form.nom.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0">{% for error in form.nom.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+    <div class="flex flex-row items-center gap-3 mt-4">
+      <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="est_structure" id="id_est_structure"
+             {% if form.est_structure.value %}checked{% endif %}>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_est_structure">Vous êtes une structure ?</label>
+    </div>
+    <div id="structure-fields" class="flex flex-col gap-1.5 mt-4" hidden>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nom_structure">Nom de la structure</label>
+      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nom_structure.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="text" name="nom_structure" id="id_nom_structure" value="{{ form.nom_structure.value|default:'' }}" aria-describedby="id_identite-help">
+      {% if form.nom_structure.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0">{% for error in form.nom_structure.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+    </div>
+    <div id="personne-fields" class="mt-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nom">Nom (personne)</label>
+          <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nom.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="text" name="nom" id="id_nom" value="{{ form.nom.value|default:'' }}">
+          {% if form.nom.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0">{% for error in form.nom.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_prenom">Prénom (personne)</label>
+          <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.prenom.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="text" name="prenom" id="id_prenom" value="{{ form.prenom.value|default:'' }}">
+          {% if form.prenom.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0">{% for error in form.prenom.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+        </div>
       </div>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0 mt-3" id="id_identite-help">Renseignez le nom et le prénom de la personne.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_type">Type existant</label>
         <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none {% if form.type.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" name="type" id="id_type"
@@ -312,6 +332,8 @@
   </div>
 
   {{ form.horaires }}
+  {{ form.latitude }}
+  {{ form.longitude }}
 
   <div class="flex items-center justify-end gap-2 mt-6 pt-5 border-t border-[var(--color-border)]">
     <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]"
@@ -383,6 +405,35 @@
     ageF.style.display = ageCb.checked ? "none" : "grid";
   }
   if (ageCb) { ageCb.addEventListener("change", toggleAge); toggleAge(); }
+
+  var structCb = document.getElementById("id_est_structure");
+  var structF = document.getElementById("structure-fields");
+  var persF = document.getElementById("personne-fields");
+  function applyIdentityVisibility() {
+    if (!structCb || !structF || !persF) return;
+    structF.hidden = !structCb.checked;
+    persF.hidden = structCb.checked;
+  }
+  function clearInactiveIdentityFields() {
+    if (!structCb) return;
+    if (structCb.checked) {
+      var nom = document.getElementById("id_nom");
+      var prenom = document.getElementById("id_prenom");
+      if (nom) nom.value = "";
+      if (prenom) prenom.value = "";
+    } else {
+      var nomStructure = document.getElementById("id_nom_structure");
+      if (nomStructure) nomStructure.value = "";
+    }
+  }
+  function toggleIdentity() {
+    applyIdentityVisibility();
+    clearInactiveIdentityFields();
+  }
+  if (structCb) {
+    structCb.addEventListener("change", toggleIdentity);
+    applyIdentityVisibility();
+  }
 })();
 </script>
 {% endblock %}

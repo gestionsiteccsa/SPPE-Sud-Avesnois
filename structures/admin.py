@@ -13,8 +13,8 @@ class TypeStructureAdmin(admin.ModelAdmin):
 
 @register(Structure, site=admin_site)
 class StructureAdmin(admin.ModelAdmin):
-    list_display = ["nom", "type", "commune", "afficher_places", "afficher_handicap", "date_mise_a_jour"]
+    list_display = ["nom_affiche", "type", "commune", "afficher_places", "afficher_handicap", "date_mise_a_jour"]
     list_filter = ["type", "commune", "accueil_handicap", "accueil_urgence", "places_complet"]
-    search_fields = ["nom", "adresse", "email", "telephone"]
+    search_fields = ["nom", "prenom", "nom_structure", "adresse", "email", "telephone"]
     autocomplete_fields = ["commune", "type"]
     readonly_fields = ["date_mise_a_jour"]

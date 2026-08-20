@@ -8,8 +8,15 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import PasswordChangeView, redirect_to_login
-from django.db.models import Count, Q
-from django.db.models.functions import TruncMonth
+from django.db.models import Count, Q, Value
+from django.db.models.functions import (
+    Coalesce,
+    Concat,
+    Lower,
+    NullIf,
+    Trim,
+    TruncMonth,
+)
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -199,7 +206,7 @@ class DashboardHomeView(StructureManageAccessMixin, TemplateView):
 
 
 SORT_MAP = {
-    "nom": "nom",
+    "nom": "nom_affichage_lower",
     "type": "type__nom",
     "commune": "commune__nom",
     "places": "places_disponibles",
@@ -213,7 +220,19 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related("type", "commune")
+        qs = (
+            super()
+            .get_queryset()
+            .select_related("type", "commune")
+            .annotate(
+                nom_affichage_lower=Lower(
+                    Coalesce(
+                        NullIf(Trim("nom_structure"), Value("")),
+                        Trim(Concat("prenom", Value(" "), "nom")),
+                    )
+                )
+            )
+        )
         q = self.request.GET.get("q")
         type_ = self.request.GET.get("type")
         commune = self.request.GET.get("commune")
@@ -221,6 +240,8 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
         if q:
             qs = qs.filter(
                 Q(nom__icontains=q)
+                | Q(prenom__icontains=q)
+                | Q(nom_structure__icontains=q)
                 | Q(type__nom__icontains=q)
                 | Q(commune__nom__icontains=q)
                 | Q(directeur__icontains=q)
@@ -305,7 +326,10 @@ class DashboardStructureCreateView(SuccessMessageMixin, StructureManageAccessMix
     model = Structure
     form_class = StructureForm
     success_url = reverse_lazy("dashboard:structure_list")
-    success_message = 'La structure « %(nom)s » a été créée.'
+    success_message = 'La structure « %(nom_affiche)s » a été créée.'
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % {"nom_affiche": self.object.nom_affiche}
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -329,7 +353,10 @@ class DashboardStructureUpdateView(SuccessMessageMixin, StructureManageAccessMix
     model = Structure
     form_class = StructureForm
     success_url = reverse_lazy("dashboard:structure_list")
-    success_message = 'La structure « %(nom)s » a été mise à jour.'
+    success_message = 'La structure « %(nom_affiche)s » a été mise à jour.'
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % {"nom_affiche": self.object.nom_affiche}
 
     def get_queryset(self):
         qs = super().get_queryset()

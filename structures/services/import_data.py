@@ -1,6 +1,7 @@
 import csv
 import io
 import re
+import unicodedata
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -21,6 +22,12 @@ REQUIRED_COLUMNS = frozenset({"NOM"})
 
 class ImportDataError(ValueError):
     """Erreur de validation destinée à être présentée sans détail technique."""
+
+
+def _normalize_name(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    stripped = "".join(c for c in normalized if not unicodedata.combining(c))
+    return " ".join(stripped.lower().split())
 
 
 @dataclass(frozen=True, slots=True)
@@ -205,7 +212,7 @@ def _prepare_row(row: Mapping[str, object], *, line_number: int) -> PreparedStru
         )
         raw_schedule = normalized.get("Horaires", "")
         values: dict[str, object] = {
-            "nom": name,
+            "nom_structure": name,
             "reference_monenfant": True if raw_reference.strip() == "" else bool(referenced),
             "date_mise_a_jour_monenfant": _parse_date(normalized.get("Date mise à jour", "")),
             "adresse": normalized.get("adresse", ""),
@@ -349,6 +356,7 @@ def import_rows(
     if not prepared:
         raise ImportDataError("Le fichier ne contient aucune structure exploitable.")
 
+    skipped = 0
     with transaction.atomic(), audit_actor(actor):
         if replace:
             Structure.objects.all().delete()
@@ -366,6 +374,19 @@ def import_rows(
             elif item.postal_code:
                 commune = Commune.objects.filter(code_postal=item.postal_code).first()
 
+            if not replace and commune is not None:
+                identity = item.values.get("nom_structure", "").strip()
+                if identity:
+                    duplicates = Structure.objects.filter(commune=commune)
+                    candidate_normalized = _normalize_name(identity)
+                    already_exists = any(
+                        _normalize_name(existing.nom_structure) == candidate_normalized
+                        for existing in duplicates
+                    )
+                    if already_exists:
+                        skipped += 1
+                        continue
+
             structure = Structure(type=type_object, commune=commune, **item.values)
             structure.full_clean()
             structure.save()
@@ -376,6 +397,10 @@ def import_rows(
                 action="import",
                 model_name="Structure",
                 object_repr=f"Import de {len(prepared)} structure(s)",
-                changes={"count": len(prepared), "replace": replace},
+                changes={
+                    "count": len(prepared),
+                    "replace": replace,
+                    "ignored_duplicates": skipped,
+                },
             )
-    return len(prepared)
+    return len(prepared) - skipped

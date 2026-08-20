@@ -1,6 +1,9 @@
+import unicodedata
+
 from django import forms
 
 from .models import JOURS_SEM, Structure, TypeStructure
+from .services.geocode import geocode_structure
 
 
 JOURS_SEM_DICT = dict(JOURS_SEM)
@@ -31,7 +34,18 @@ class TriStateSelect(forms.Select):
         super().__init__(attrs=attrs, choices=choices)
 
 
+def _normalize_name(value: str) -> str:
+    """Minuscules, sans accents ni espaces superflus, pour comparer des noms."""
+    normalized = unicodedata.normalize("NFKD", value)
+    stripped = "".join(c for c in normalized if not unicodedata.combining(c))
+    return " ".join(stripped.lower().split())
+
+
 class StructureForm(forms.ModelForm):
+    est_structure = forms.BooleanField(
+        required=False,
+        label="Vous êtes une structure ?",
+    )
     type_nom = forms.CharField(
         required=False,
         label="Nouveau type",
@@ -45,6 +59,8 @@ class StructureForm(forms.ModelForm):
             "horaires": forms.HiddenInput(),
             "horaires_notes": forms.Textarea(attrs={"rows": 2}),
             "conditions_places": forms.Textarea(attrs={"rows": 2}),
+            "latitude": forms.HiddenInput(),
+            "longitude": forms.HiddenInput(),
             "accueil_handicap": TriStateSelect(),
             "accueil_urgence": TriStateSelect(),
             "recrutement": TriStateSelect(),
@@ -67,11 +83,53 @@ class StructureForm(forms.ModelForm):
 
         if self.instance and self.instance.type_id:
             self.fields["type_nom"].initial = ""
+        if self.instance and self.instance.pk:
+            self.fields["est_structure"].initial = bool(self.instance.nom_structure)
 
     def clean(self):
         cleaned = super().clean()
         type_nom = cleaned.get("type_nom", "").strip()
         self._new_type_name = type_nom
+
+        est_structure = cleaned.get("est_structure", False)
+        nom_structure = cleaned.get("nom_structure", "").strip()
+        nom = cleaned.get("nom", "").strip()
+        prenom = cleaned.get("prenom", "").strip()
+        commune = cleaned.get("commune")
+
+        if est_structure:
+            cleaned["nom"] = ""
+            cleaned["prenom"] = ""
+            if not nom_structure:
+                self.add_error("nom_structure", "Renseignez le nom de la structure.")
+        else:
+            cleaned["nom_structure"] = ""
+            if not nom and not prenom:
+                self.add_error("nom", "Renseignez au moins un nom ou un prénom.")
+
+        if commune is not None and (nom_structure or nom or prenom):
+            candidate_identity = nom_structure or f"{prenom} {nom}".strip()
+            queryset = Structure.objects.filter(commune=commune)
+            if self.instance.pk:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            candidate_normalized = _normalize_name(candidate_identity)
+            duplicate = next(
+                (
+                    existing
+                    for existing in queryset
+                    if _normalize_name(
+                        existing.nom_structure
+                        or f"{existing.prenom} {existing.nom}".strip()
+                    )
+                    == candidate_normalized
+                ),
+                None,
+            )
+            if duplicate is not None:
+                self.add_error(
+                    "nom_structure" if est_structure else "nom",
+                    f"Une fiche « {duplicate.nom_affiche} » existe déjà dans cette commune.",
+                )
         return cleaned
 
     def save(self, commit=True):
@@ -80,6 +138,7 @@ class StructureForm(forms.ModelForm):
             instance.type, _created = TypeStructure.objects.get_or_create(
                 nom=self._new_type_name
             )
+        geocode_structure(instance)
         if commit:
             instance.save()
             self.save_m2m()

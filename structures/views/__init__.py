@@ -95,7 +95,7 @@ class StructureMapView(LoginRequiredMixin, TemplateView):
                 badges.append("Urgence")
             features.append({
                 "pk": s.pk,
-                "nom": s.nom,
+                "nom": s.nom_affiche,
                 "type": s.type.nom if s.type else "",
                 "commune": s.commune.nom if s.commune else "",
                 "code_postal": s.commune.code_postal if s.commune else "",

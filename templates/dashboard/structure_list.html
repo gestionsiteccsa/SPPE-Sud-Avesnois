@@ -113,11 +113,11 @@
         {% for s in page_obj %}
           <tr class="border-b border-[var(--color-border)] transition-colors duration-150 group hover:bg-[var(--color-primary-soft)]">
             <td class="text-center px-2 py-3">
-              <input type="checkbox" name="ids" value="{{ s.pk }}" class="batch-check w-4 h-4 accent-[var(--color-primary)]" aria-label="Sélectionner {{ s.nom }}">
+              <input type="checkbox" name="ids" value="{{ s.pk }}" class="batch-check w-4 h-4 accent-[var(--color-primary)]" aria-label="Sélectionner {{ s.nom_affiche }}">
             </td>
             <td class="px-3 md:px-4 py-3 text-[var(--color-text)]">
               <div class="flex flex-wrap items-center gap-2">
-                <a class="font-medium text-[var(--color-text)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'dashboard:structure_edit' s.pk %}">{{ s.nom }}</a>
+                <a class="font-medium text-[var(--color-text)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'dashboard:structure_edit' s.pk %}">{{ s.nom_affiche }}</a>
                 {% if not s.afficher %}
                   <span class="inline-flex items-center px-1.5 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-warning-soft)] text-[var(--color-warning)]">Masquée du site</span>
                 {% endif %}
@@ -198,12 +198,12 @@
               <div class="flex items-center justify-end gap-1">
                 <a class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] transition-colors duration-150"
                    href="{% url 'dashboard:structure_edit' s.pk %}"
-                   title="Modifier {{ s.nom }}" aria-label="Modifier {{ s.nom }}">
+                   title="Modifier {{ s.nom_affiche }}" aria-label="Modifier {{ s.nom_affiche }}">
                   <svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-edit"></use></svg>
                 </a>
                 <a class="inline-flex items-center justify-center w-10 h-10 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)] transition-colors duration-150"
                    href="{% url 'dashboard:structure_delete' s.pk %}"
-                   title="Supprimer {{ s.nom }}" aria-label="Supprimer {{ s.nom }}">
+                   title="Supprimer {{ s.nom_affiche }}" aria-label="Supprimer {{ s.nom_affiche }}">
                   <svg class="w-4 h-4" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
                 </a>
               </div>
