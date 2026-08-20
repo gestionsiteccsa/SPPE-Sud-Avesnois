@@ -3,7 +3,7 @@
 
 {% block title %}Supprimer — SPPE Sud-Avesnois{% endblock %}
 {% block mobile_title %}Supprimer{% endblock %}
-{% block page_title %}Supprimer «&nbsp;{{ object.nom }}&nbsp;»{% endblock %}
+{% block page_title %}Supprimer «&nbsp;{{ object.nom_affiche }}&nbsp;»{% endblock %}
 {% block page_subtitle %}Cette action est irréversible{% endblock %}
 
 {% block content %}
@@ -18,7 +18,7 @@
     </h2>
     <p class="text-[var(--color-text-muted)] m-0 mb-6">
       Êtes-vous sûr de vouloir supprimer définitivement la structure
-      <strong class="text-[var(--color-text)]">«&nbsp;{{ object.nom }}&nbsp;»</strong>
+      <strong class="text-[var(--color-text)]">«&nbsp;{{ object.nom_affiche }}&nbsp;»</strong>
       &nbsp;? Cette action est irréversible.
     </p>
 

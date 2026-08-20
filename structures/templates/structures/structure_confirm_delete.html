@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Supprimer {{ structure.nom }} — SPPE Sud-Avesnois{% endblock %}
+{% block title %}Supprimer {{ structure.nom_affiche }} — SPPE Sud-Avesnois{% endblock %}
 {% block content %}
 <section class="max-w-lg mx-auto px-4 py-16 text-center" aria-labelledby="delete-title">
-  <h1 id="delete-title" class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-text)] mb-4">Supprimer «&nbsp;{{ structure.nom }}&nbsp;»</h1>
+  <h1 id="delete-title" class="font-display text-[length:var(--fs-2xl)] font-bold text-[var(--color-text)] mb-4">Supprimer «&nbsp;{{ structure.nom_affiche }}&nbsp;»</h1>
   <p class="text-[var(--color-text-muted)] mb-8">Êtes-vous sûr de vouloir supprimer cette structure&nbsp;? Cette action est irréversible.</p>
   <form method="post" class="flex justify-center gap-4">
     {% csrf_token %}

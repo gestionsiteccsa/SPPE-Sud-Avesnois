@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ structure.nom }} — SPPE Sud-Avesnois{% endblock %}
-{% block meta_description %}{{ structure.nom }} — structure d'accueil petite enfance à {{ structure.commune.nom|default:"" }}. {{ structure.type.nom|default:"" }}.{% endblock %}
+{% block title %}{{ structure.nom_affiche }} — SPPE Sud-Avesnois{% endblock %}
+{% block meta_description %}{{ structure.nom_affiche }} — structure d'accueil petite enfance à {{ structure.commune.nom|default:"" }}. {{ structure.type.nom|default:"" }}.{% endblock %}
 
 {% block content %}
 <div class="max-w-[var(--container-max)] mx-auto px-4 md:px-6 lg:px-7 py-6 md:py-8">
@@ -11,7 +11,7 @@
     <svg class="w-3.5 h-3.5 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-chevron-down" style="transform:rotate(-90deg)"></use></svg>
     <a class="text-[var(--color-text-muted)] no-underline hover:text-[var(--color-primary-hover)]" href="{% url 'structures:liste' %}">Structures</a>
     <svg class="w-3.5 h-3.5 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-chevron-down" style="transform:rotate(-90deg)"></use></svg>
-    <span class="text-[var(--color-text)] font-medium truncate">{{ structure.nom }}</span>
+    <span class="text-[var(--color-text)] font-medium truncate">{{ structure.nom_affiche }}</span>
   </nav>
 
   <div class="grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-6 lg:gap-8 items-start">
@@ -20,7 +20,7 @@
         <div class="p-6 md:p-8">
           <header class="flex flex-wrap items-start justify-between gap-4">
             <div class="min-w-0 flex-1">
-              <h1 id="detail-title" class="font-display text-[length:var(--fs-2xl)] md:text-[length:var(--fs-3xl)] font-extrabold text-[var(--color-text)] m-0 leading-[1.15]">{{ structure.nom }}</h1>
+              <h1 id="detail-title" class="font-display text-[length:var(--fs-2xl)] md:text-[length:var(--fs-3xl)] font-extrabold text-[var(--color-text)] m-0 leading-[1.15]">{{ structure.nom_affiche }}</h1>
               <div class="flex flex-wrap gap-2 mt-3">
                 {% if structure.type %}
                   <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
@@ -293,7 +293,7 @@
       </div>
 
       <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)] hover:border-[var(--color-danger-border)] w-full"
-         href="mailto:{{ DEFAULT_FROM_EMAIL }}?subject=Erreur sur la fiche {% filter urlencode %}{{ structure.nom }}{% endfilter %}&body=Bonjour,%0D%0A%0D%0AJe souhaite signaler une erreur sur la fiche suivante :%0D%0A%0D%0A{{ request.build_absolute_uri }}%0D%0A%0D%0A---%0D%0AMerci de préciser l'erreur ci-dessous :%0D%0A%0D%0A">
+         href="mailto:{{ DEFAULT_FROM_EMAIL }}?subject=Erreur sur la fiche {% filter urlencode %}{{ structure.nom_affiche }}{% endfilter %}&body=Bonjour,%0D%0A%0D%0AJe souhaite signaler une erreur sur la fiche suivante :%0D%0A%0D%0A{{ request.build_absolute_uri }}%0D%0A%0D%0A---%0D%0AMerci de préciser l'erreur ci-dessous :%0D%0A%0D%0A">
         <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
         Signaler une erreur
       </a>

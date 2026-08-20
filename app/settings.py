@@ -181,6 +181,9 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@bddpe.fr")
 SERVER_EMAIL = config("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 SITE_URL = config("SITE_URL", default="https://bddpe.fr").rstrip("/")
 
+GEOCODE_ENABLED = True
+GEOCODE_TIMEOUT = config("GEOCODE_TIMEOUT", default=4, cast=int)
+
 _backup_dir_env = config("BACKUP_DIR", default=None)
 if IS_PRODUCTION and not _backup_dir_env:
     raise ImproperlyConfigured("BACKUP_DIR est obligatoire en production.")

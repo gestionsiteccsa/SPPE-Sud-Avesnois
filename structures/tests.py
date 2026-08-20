@@ -27,7 +27,13 @@ from authentication.models import (
 )
 from communes.models import Commune
 from structures.audit import audit_actor
+from structures.forms import StructureForm
 from structures.models import AuditLog, Structure, TypeStructure
+from structures.services.geocode import (
+    _lookup,
+    build_query,
+    geocode_structure,
+)
 from structures.services.import_data import ImportDataError, import_rows
 from structures.services.sqlite_backup import (
     SQLiteBackupError,
@@ -289,6 +295,343 @@ class StructureImportTests(TestCase):
 
         structure = Structure.objects.get()
         self.assertEqual(structure.date_mise_a_jour_monenfant.isoformat(), "2026-02-03")
+
+    def test_import_maps_nom_column_to_nom_structure(self):
+        import_rows([{"NOM": "Crèche Exemple"}], replace=False, actor=None)
+
+        structure = Structure.objects.get()
+        self.assertEqual(structure.nom_structure, "Crèche Exemple")
+        self.assertEqual(structure.nom, "")
+
+    def test_import_skips_duplicate_in_same_commune(self):
+        commune = Commune.objects.create(nom="Doublonville", code_postal="75001")
+        Structure.objects.create(nom_structure="Crèche Déjà là", commune=commune)
+
+        count = import_rows(
+            [
+                {"NOM": "Crèche Déjà là", "commune": "Doublonville", "code postal": "75001"},
+                {"NOM": "Nouvelle structure", "commune": "Doublonville", "code postal": "75001"},
+            ],
+            replace=False,
+            actor=None,
+        )
+
+        self.assertEqual(count, 1)
+        self.assertTrue(Structure.objects.filter(nom_structure="Nouvelle structure").exists())
+
+
+@override_settings(GEOCODE_ENABLED=False)
+class StructureIdentityTests(TestCase):
+    def setUp(self):
+        self.commune = Commune.objects.create(nom="Testville", code_postal="75001")
+        self.autre_commune = Commune.objects.create(nom="Autreville", code_postal="75002")
+        self.horaires = json.dumps([{"jour": "lundi", "ferme": True}])
+
+    def test_form_requires_person_name_when_unchecked(self):
+        form = StructureForm(
+            data={"nom": "", "prenom": "", "nom_structure": "", "horaires": self.horaires}
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("au moins un nom ou un prénom", form.errors.get("nom", [""])[0])
+
+    def test_form_requires_structure_name_when_checked(self):
+        form = StructureForm(
+            data={"est_structure": "on", "nom_structure": "", "horaires": self.horaires}
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("Renseignez le nom de la structure", form.errors.get("nom_structure", [""])[0])
+
+    def test_structure_mode_ignores_person_fields(self):
+        form = StructureForm(
+            data={
+                "est_structure": "on",
+                "nom_structure": "Crèche Les Lutins",
+                "nom": "Dupont",
+                "prenom": "Marie",
+                "horaires": self.horaires,
+            }
+        )
+        self.assertTrue(form.is_valid())
+        instance = form.save()
+        self.assertEqual(instance.nom_structure, "Crèche Les Lutins")
+        self.assertEqual(instance.nom, "")
+        self.assertEqual(instance.prenom, "")
+
+    def test_person_mode_ignores_structure_name(self):
+        form = StructureForm(
+            data={
+                "nom": "Dupont",
+                "prenom": "Marie",
+                "nom_structure": "Crèche Des Coquilles",
+                "horaires": self.horaires,
+            }
+        )
+        self.assertTrue(form.is_valid())
+        instance = form.save()
+        self.assertEqual(instance.nom, "Dupont")
+        self.assertEqual(instance.prenom, "Marie")
+        self.assertEqual(instance.nom_structure, "")
+
+    def test_form_accepts_structure_only_identity(self):
+        form = StructureForm(
+            data={
+                "est_structure": "on",
+                "nom_structure": "Crèche Les Lutins",
+                "horaires": self.horaires,
+            }
+        )
+        self.assertTrue(form.is_valid())
+
+    def test_form_accepts_person_identity(self):
+        form = StructureForm(data={"nom": "Dupont", "prenom": "Marie", "horaires": self.horaires})
+        self.assertTrue(form.is_valid())
+
+    def test_est_structure_initial_state_in_edit_mode(self):
+        structure_record = Structure.objects.create(
+            nom_structure="Crèche Les Lutins", commune=self.commune
+        )
+        person_record = Structure.objects.create(nom="Dupont", commune=self.commune)
+
+        form_structure = StructureForm(instance=structure_record)
+        form_person = StructureForm(instance=person_record)
+
+        self.assertTrue(form_structure.fields["est_structure"].initial)
+        self.assertFalse(form_person.fields["est_structure"].initial)
+
+    def test_duplicate_structure_in_same_commune_is_rejected(self):
+        Structure.objects.create(nom_structure="Crèche Les Lutins", commune=self.commune)
+
+        form = StructureForm(
+            data={
+                "est_structure": "on",
+                "nom_structure": "Crèche Les Lutins",
+                "commune": self.commune.pk,
+                "horaires": self.horaires,
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("existe déjà dans cette commune", form.errors.get("nom_structure", [""])[0])
+
+    def test_duplicate_structure_in_other_commune_is_allowed(self):
+        Structure.objects.create(nom_structure="Crèche Les Lutins", commune=self.commune)
+
+        form = StructureForm(
+            data={
+                "est_structure": "on",
+                "nom_structure": "Crèche Les Lutins",
+                "commune": self.autre_commune.pk,
+                "horaires": self.horaires,
+            }
+        )
+        self.assertTrue(form.is_valid())
+
+    def test_duplicate_is_case_and_accent_insensitive(self):
+        Structure.objects.create(nom_structure="Crèche Les Lutins", commune=self.commune)
+
+        form = StructureForm(
+            data={
+                "est_structure": "on",
+                "nom_structure": "creche les lutins",
+                "commune": self.commune.pk,
+                "horaires": self.horaires,
+            }
+        )
+        self.assertFalse(form.is_valid())
+
+    def test_duplicate_person_in_same_commune_is_rejected(self):
+        Structure.objects.create(nom="Dupont", prenom="Marie", commune=self.commune)
+
+        form = StructureForm(
+            data={
+                "nom": "Dupont",
+                "prenom": "Marie",
+                "commune": self.commune.pk,
+                "horaires": self.horaires,
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("existe déjà dans cette commune", form.errors.get("nom", [""])[0])
+
+    def test_editing_own_record_is_not_a_duplicate(self):
+        existing = Structure.objects.create(nom_structure="Crèche Les Lutins", commune=self.commune)
+
+        form = StructureForm(
+            data={
+                "est_structure": "on",
+                "nom_structure": "Crèche Les Lutins",
+                "commune": self.commune.pk,
+                "horaires": self.horaires,
+            },
+            instance=existing,
+        )
+        self.assertTrue(form.is_valid())
+
+    def test_edit_preserves_latitude_and_longitude(self):
+        existing = Structure.objects.create(
+            nom="Dupont",
+            prenom="Marie",
+            commune=self.commune,
+            latitude=50.2841,
+            longitude=3.7887,
+        )
+
+        form = StructureForm(
+            data={
+                "nom": "Dupont",
+                "prenom": "Marie",
+                "commune": self.commune.pk,
+                "horaires": self.horaires,
+                "latitude": 50.2841,
+                "longitude": 3.7887,
+            },
+            instance=existing,
+        )
+        self.assertTrue(form.is_valid())
+        saved = form.save()
+        saved.refresh_from_db()
+        self.assertEqual(saved.latitude, 50.2841)
+        self.assertEqual(saved.longitude, 3.7887)
+
+    def test_nom_affiche_uses_structure_name_first(self):
+        structure = Structure(nom_structure="Crèche Les Lutins", nom="Dupont", prenom="Marie")
+        self.assertEqual(structure.nom_affiche, "Crèche Les Lutins")
+
+    def test_nom_affiche_joins_person_name(self):
+        structure = Structure(nom="Dupont", prenom="Marie")
+        self.assertEqual(structure.nom_affiche, "Marie Dupont")
+
+    def test_nom_affiche_falls_back_to_legacy_nom(self):
+        structure = Structure(nom="Ancienne valeur")
+        self.assertEqual(structure.nom_affiche, "Ancienne valeur")
+
+
+class GeocodeServiceTests(TestCase):
+    def setUp(self):
+        self.commune = Commune.objects.create(nom="Fourmies", code_postal="59610")
+        _lookup.cache_clear()
+
+    def test_lookup_parses_coordinates(self):
+        response = mock.MagicMock()
+        response.read.return_value = b'[{"lat": "50.123", "lon": "3.456"}]'
+        response.__enter__.return_value = response
+        with (
+            mock.patch("structures.services.geocode.urllib.request.urlopen", return_value=response),
+            mock.patch("structures.services.geocode._respect_rate_limit"),
+        ):
+            self.assertEqual(_lookup("adresse unique 1"), (50.123, 3.456))
+
+    def test_lookup_returns_none_when_no_result(self):
+        response = mock.MagicMock()
+        response.read.return_value = b"[]"
+        response.__enter__.return_value = response
+        with (
+            mock.patch("structures.services.geocode.urllib.request.urlopen", return_value=response),
+            mock.patch("structures.services.geocode._respect_rate_limit"),
+        ):
+            self.assertIsNone(_lookup("adresse introuvable 2"))
+
+    def test_lookup_returns_none_on_network_error(self):
+        with (
+            mock.patch(
+                "structures.services.geocode.urllib.request.urlopen",
+                side_effect=OSError("réseau indisponible"),
+            ),
+            mock.patch("structures.services.geocode._respect_rate_limit"),
+        ):
+            self.assertIsNone(_lookup("adresse sans réseau 3"))
+
+    def test_geocode_structure_sets_coordinates(self):
+        structure = Structure(adresse="2 Rue Raymond Chomel", commune=self.commune)
+        with mock.patch("structures.services.geocode._lookup", return_value=(50.1, 3.2)):
+            geocode_structure(structure)
+        self.assertEqual((structure.latitude, structure.longitude), (50.1, 3.2))
+
+    def test_geocode_structure_skips_when_already_set(self):
+        structure = Structure(adresse="2 Rue Raymond Chomel", latitude=1.0, longitude=2.0)
+        with mock.patch("structures.services.geocode._lookup") as fake:
+            geocode_structure(structure)
+        fake.assert_not_called()
+
+    def test_geocode_structure_respects_disabled_setting(self):
+        structure = Structure(adresse="2 Rue Raymond Chomel")
+        with (
+            mock.patch("structures.services.geocode._lookup") as fake,
+            override_settings(GEOCODE_ENABLED=False),
+        ):
+            geocode_structure(structure)
+        fake.assert_not_called()
+
+    def test_build_query_uses_address_and_commune(self):
+        structure = Structure(adresse="2 Rue Raymond Chomel", commune=self.commune)
+        query = build_query(structure)
+        self.assertIn("2 Rue Raymond Chomel", query)
+        self.assertIn("59610", query)
+        self.assertIn("Fourmies", query)
+
+
+class StructureFormGeocodeTests(TestCase):
+    def setUp(self):
+        self.horaires = json.dumps([{"jour": "lundi", "ferme": True}])
+
+    def test_save_geocodes_when_coordinates_missing(self):
+        form = StructureForm(
+            data={"est_structure": "on", "nom_structure": "Crèche Les Lutins", "horaires": self.horaires}
+        )
+        self.assertTrue(form.is_valid())
+        called = []
+
+        def fake_geocode(instance):
+            if instance.latitude is None or instance.longitude is None:
+                called.append(instance)
+
+        with mock.patch("structures.forms.geocode_structure", side_effect=fake_geocode):
+            form.save()
+        self.assertEqual(len(called), 1)
+
+    def test_save_does_not_geocode_when_coordinates_present(self):
+        form = StructureForm(
+            data={
+                "est_structure": "on",
+                "nom_structure": "Crèche Les Lutins",
+                "horaires": self.horaires,
+                "latitude": 50.1,
+                "longitude": 3.2,
+            }
+        )
+        self.assertTrue(form.is_valid())
+        called = []
+
+        def fake_geocode(instance):
+            if instance.latitude is None or instance.longitude is None:
+                called.append(instance)
+
+        with mock.patch("structures.forms.geocode_structure", side_effect=fake_geocode):
+            instance = form.save()
+        self.assertEqual(called, [])
+        self.assertEqual((instance.latitude, instance.longitude), (50.1, 3.2))
+
+
+class GeocodeCommandTests(TestCase):
+    def test_command_geocodes_structures_without_coordinates(self):
+        commune = Commune.objects.create(nom="Fourmies", code_postal="59610")
+        missing = Structure.objects.create(
+            nom_structure="Crèche A", adresse="2 Rue X", commune=commune
+        )
+        Structure.objects.create(nom_structure="Crèche B", adresse="3 Rue Y", commune=commune)
+        with mock.patch("structures.services.geocode._lookup", return_value=(50.1, 3.2)):
+            call_command("geocode_structures")
+        missing.refresh_from_db()
+        self.assertEqual((missing.latitude, missing.longitude), (50.1, 3.2))
+
+    def test_command_dry_run_does_not_save(self):
+        commune = Commune.objects.create(nom="Fourmies", code_postal="59610")
+        missing = Structure.objects.create(
+            nom_structure="Crèche A", adresse="2 Rue X", commune=commune
+        )
+        with mock.patch("structures.services.geocode._lookup", return_value=(50.1, 3.2)):
+            call_command("geocode_structures", dry_run=True)
+        missing.refresh_from_db()
+        self.assertIsNone(missing.latitude)
 
 
 class StructureConstraintTests(TestCase):
@@ -1241,6 +1584,7 @@ class StructureFormErrorDisplayTests(TestCase):
         )
 
 
+@override_settings(GEOCODE_ENABLED=False)
 class StructureScheduleEditorTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(
@@ -1297,6 +1641,7 @@ class StructureScheduleEditorTests(TestCase):
         self.assertContains(response, "17:53")
 
 
+@override_settings(GEOCODE_ENABLED=False)
 class StructureFlashMessageTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(
@@ -1442,6 +1787,7 @@ class DashboardCrudTests(TestCase):
         )
 
 
+@override_settings(GEOCODE_ENABLED=False)
 class CollaboratorStructureScopeTests(TestCase):
     password = "Un-mot-de-passe-tres-long-2026"
 
