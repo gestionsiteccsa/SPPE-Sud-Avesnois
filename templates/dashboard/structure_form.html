@@ -185,13 +185,15 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_telephone">Téléphone</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="tel" name="telephone" id="id_telephone"
-               autocomplete="tel" value="{{ form.telephone.value|default:'' }}">
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.telephone.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="tel" name="telephone" id="id_telephone"
+               autocomplete="tel" inputmode="tel" autocapitalize="none" spellcheck="false" placeholder="01 23 45 67 89"
+               pattern="^(?:\+33|0033|0)[1-9](?:\d{2}){4}$" value="{{ form.telephone.value|default:'' }}">
+        {% if form.telephone.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.telephone.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_email">Email</label>
         <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.email.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="email" name="email" id="id_email"
-               autocomplete="email" value="{{ form.email.value|default:'' }}">
+               autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="contact@exemple.fr" value="{{ form.email.value|default:'' }}">
         {% if form.email.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.email.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
@@ -285,13 +287,16 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_tel_direction">Tél. direction</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="tel" name="tel_direction" id="id_tel_direction"
-               autocomplete="tel" value="{{ form.tel_direction.value|default:'' }}">
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.tel_direction.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="tel" name="tel_direction" id="id_tel_direction"
+               autocomplete="tel" inputmode="tel" autocapitalize="none" spellcheck="false" placeholder="01 23 45 67 89"
+               pattern="^(?:\+33|0033|0)[1-9](?:\d{2}){4}$" value="{{ form.tel_direction.value|default:'' }}">
+        {% if form.tel_direction.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.tel_direction.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_email_direction">Email direction</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="email" name="email_direction" id="id_email_direction"
-               autocomplete="email" value="{{ form.email_direction.value|default:'' }}">
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.email_direction.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="email" name="email_direction" id="id_email_direction"
+               autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="direction@exemple.fr" value="{{ form.email_direction.value|default:'' }}">
+        {% if form.email_direction.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.email_direction.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">

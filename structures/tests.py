@@ -1561,6 +1561,76 @@ class StructureFormErrorDisplayTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "adresse de courriel valide", html=False)
 
+    @override_settings(GEOCODE_ENABLED=False)
+    def test_phone_number_is_normalized_and_stored(self):
+        response = self._post_invalid(
+            telephone="06.12.34.56.78",
+            nom="Structure normale",
+            prenom="",
+        )
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure normale")
+        self.assertEqual(structure.telephone, "06 12 34 56 78")
+
+    def test_invalid_phone_number_error_is_displayed(self):
+        response = self._post_invalid(telephone="1234")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "numéro de téléphone français valide",
+            html=False,
+        )
+        self.assertFalse(Structure.objects.filter(nom="Structure invalide").exists())
+
+    @override_settings(GEOCODE_ENABLED=False)
+    def test_email_is_normalized_to_lowercase(self):
+        response = self._post_invalid(
+            email="  USER@Example.FR ",
+            nom="Structure normalisée",
+            prenom="",
+        )
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure normalisée")
+        self.assertEqual(structure.email, "user@example.fr")
+
+    @override_settings(GEOCODE_ENABLED=False)
+    def test_direction_contact_fields_are_normalized(self):
+        response = self._post_invalid(
+            nom="Structure direction",
+            prenom="",
+            tel_direction="+33 6 12 34 56 78",
+            email_direction=" Direction@Example.FR ",
+        )
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure direction")
+        self.assertEqual(structure.tel_direction, "06 12 34 56 78")
+        self.assertEqual(structure.email_direction, "direction@example.fr")
+
+    @override_settings(GEOCODE_ENABLED=False)
+    def test_international_phone_format_is_accepted(self):
+        response = self._post_invalid(
+            telephone="+33 1 23 45 67 89",
+            nom="Structure internationale",
+            prenom="",
+        )
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure internationale")
+        self.assertEqual(structure.telephone, "01 23 45 67 89")
+
+    @override_settings(GEOCODE_ENABLED=False)
+    def test_blank_contact_fields_are_allowed(self):
+        response = self._post_invalid(
+            nom="Structure sans contact",
+            prenom="",
+            telephone="",
+            email="",
+        )
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure sans contact")
+        self.assertEqual(structure.telephone, "")
+        self.assertEqual(structure.email, "")
+
     def test_conflicting_places_statuses_error_is_displayed(self):
         response = self._post_invalid(places_complet="on", places_non_communique="on")
 

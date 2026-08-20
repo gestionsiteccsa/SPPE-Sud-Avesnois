@@ -1,3 +1,4 @@
+import re
 import unicodedata
 
 from django import forms
@@ -7,6 +8,8 @@ from .services.geocode import geocode_structure
 
 
 JOURS_SEM_DICT = dict(JOURS_SEM)
+
+PHONE_RE = re.compile(r"^(?:\+33|0033|0)([1-9])(?:\d{2}){4}$")
 
 INPUT_CLASS = "field__input"
 SELECT_CLASS = "field__select"
@@ -39,6 +42,30 @@ def _normalize_name(value: str) -> str:
     normalized = unicodedata.normalize("NFKD", value)
     stripped = "".join(c for c in normalized if not unicodedata.combining(c))
     return " ".join(stripped.lower().split())
+
+
+def _normalize_email(value: str) -> str:
+    """Espace, minuscules : stocke les emails de façon homogène."""
+    if value is None:
+        return ""
+    return str(value).strip().lower()
+
+
+def _normalize_phone(value: str) -> str:
+    """Normalise un numéro de téléphone français au format national 0X XX XX XX XX."""
+    digits = re.sub(r"[^\d+]", "", str(value or ""))
+    if not digits:
+        return ""
+    if not PHONE_RE.match(digits):
+        raise forms.ValidationError(
+            "Saisissez un numéro de téléphone français valide, "
+            "par exemple 01 23 45 67 89 ou +33 1 23 45 67 89."
+        )
+    if digits.startswith("+33"):
+        digits = "0" + digits[3:]
+    elif digits.startswith("0033"):
+        digits = "0" + digits[4:]
+    return " ".join([digits[0:2]] + [digits[i : i + 2] for i in range(2, 10, 2)])
 
 
 class StructureForm(forms.ModelForm):
@@ -149,6 +176,18 @@ class StructureForm(forms.ModelForm):
         if val is not None and val < 0:
             raise forms.ValidationError("L'âge ne peut pas être négatif.")
         return val
+
+    def clean_email(self):
+        return _normalize_email(self.cleaned_data.get("email", ""))
+
+    def clean_email_direction(self):
+        return _normalize_email(self.cleaned_data.get("email_direction", ""))
+
+    def clean_telephone(self):
+        return _normalize_phone(self.cleaned_data.get("telephone", ""))
+
+    def clean_tel_direction(self):
+        return _normalize_phone(self.cleaned_data.get("tel_direction", ""))
 
     def clean_age_max(self):
         val = self.cleaned_data.get("age_max")
