@@ -39,3 +39,9 @@ cache/
 # Outil interne perch
 .perch/
 
+# Config locale de l'agent (LM Studio, chemins machine)
+opencode.json
+
+# Outil local openfox
+.openfox/
+
