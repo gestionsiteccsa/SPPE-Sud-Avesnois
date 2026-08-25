@@ -5,7 +5,7 @@
 Ce projet utilise un ensemble de skills spécialisés sous :
 
 ```text
-skills/
+.opencode/skills/
 ```
 
 Le point d’entrée principal est :

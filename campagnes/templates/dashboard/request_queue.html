@@ -1,0 +1,254 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+{% load campaign_tags %}
+
+{% block title %}File de validation — Tableau de bord SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}File de validation{% endblock %}
+{% block page_title %}File de validation{% endblock %}
+{% block page_subtitle %}Demandes de mise à jour soumises par les personnes{% endblock %}
+
+{% block content %}
+<section class="mb-6" aria-labelledby="saisie-titre">
+  <h2 id="saisie-titre" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] mb-3">Saisir une demande au nom d'une personne</h2>
+  <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] mb-3">
+    Pour les personnes sans e-mail ou peu à l'aise avec le numérique : l'agent saisit
+    la demande (canal téléphone ou accueil), le même workflow de validation s'applique.
+  </p>
+  <form method="post" action="{% url 'dashboard_campagnes:assisted_request' %}" class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for field in assisted_form %}
+        <div class="{% if field.name == 'conditions_places' %}lg:col-span-3{% endif %}">
+          <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+        </div>
+      {% endfor %}
+    </div>
+    {% if assisted_invitation_count > assisted_invitation_limit %}
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mb-3">
+        Seules les {{ assisted_invitation_limit }} fiches les plus récentes sont proposées
+        dans la liste ({{ assisted_invitation_count }} au total). Pour retrouver une fiche
+        plus ancienne, utilisez le champ « Fiche concernée » ci-dessus ou la file de validation.
+      </p>
+    {% endif %}
+    <button class="mt-4 inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+      Enregistrer la demande
+    </button>
+  </form>
+</section>
+
+<section class="mb-6" aria-labelledby="filtres-titre">
+  <h2 id="filtres-titre" class="sr-only">Filtres</h2>
+  <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+    <div>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="filtre-categorie">Catégorie</label>
+      <select id="filtre-categorie" name="categorie" class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none">
+        <option value="">Toutes</option>
+        {% for value, label in categories %}
+          <option value="{{ value }}" {% if filters.categorie == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="filtre-statut">Statut</label>
+      <select id="filtre-statut" name="statut" class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none">
+        <option value="">Toutes</option>
+        <option value="en_attente" {% if filters.statut == "en_attente" %}selected{% endif %}>En attente</option>
+        <option value="acceptee" {% if filters.statut == "acceptee" %}selected{% endif %}>Acceptée</option>
+        <option value="refusee" {% if filters.statut == "refusee" %}selected{% endif %}>Refusée</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="filtre-campagne">Campagne</label>
+      <select id="filtre-campagne" name="campagne" class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none">
+        <option value="">Toutes</option>
+        {% for campaign in campaigns %}
+          <option value="{{ campaign.pk }}" {% if filters.campagne == campaign.pk|stringformat:"s" %}selected{% endif %}>{{ campaign.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="filtre-q">Recherche</label>
+      <input id="filtre-q" name="q" type="search" value="{{ filters.q }}" placeholder="Nom de la personne" class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200">
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">Filtrer</button>
+      <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="{% url 'dashboard_campagnes:request_queue' %}">Réinitialiser</a>
+    </div>
+  </form>
+</section>
+
+{% for section in sections %}
+<section class="mb-8" aria-labelledby="section-{{ section.type }}">
+  <div class="flex items-baseline justify-between gap-3 mb-3">
+    <h2 id="section-{{ section.type }}" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">
+      {{ section.label }} ({{ section.count }})
+    </h2>
+  </div>
+  {% if section.requests %}
+    <div class="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+      <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]">
+        <thead>
+          <tr class="sticky top-0 z-10">
+            <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Personne</th>
+            <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Canal</th>
+            <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Soumis le</th>
+            <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Modifications</th>
+            <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Statut</th>
+            <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Traitée</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for review in section.requests %}
+            <tr class="border-b border-[var(--color-border)] transition-colors duration-150 group hover:bg-[var(--color-primary-soft)]">
+              <td class="px-4 py-3 text-[var(--color-text)]">
+                <strong>{{ review.invitation.structure.nom_affiche }}</strong>
+                <span class="block text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">
+                  {{ review.invitation.structure.commune.nom|default:"—" }}
+                  · {{ review.invitation.campaign.name }}
+                </span>
+                {% if review.created_by %}
+                  <span class="block text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">saisi par {{ review.created_by.email }}</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] whitespace-nowrap">{{ review.get_channel_display }}</td>
+              <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] whitespace-nowrap">{{ review.submitted_at|date:"d/m/Y H:i" }}</td>
+              <td class="px-4 py-3 text-[var(--color-text)]">
+                {% if review.request_type == "modification" %}
+                  {% for field in review.fields.all|slice:":3" %}
+                    <div><strong>{{ field.field_name|field_label }}</strong> : {{ field.old_value|default:"—" }} → {{ field.new_value }}</div>
+                  {% endfor %}
+                  {% if review.fields.count > 3 %}
+                    <div class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">+ {{ review.fields.count|add:"-3" }} autre(s) champ(s)</div>
+                  {% endif %}
+                {% else %}
+                  <span class="text-[var(--color-text-subtle)]">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3">
+                {% if review.request_type == "confirmation" %}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+                    Confirmé sans modification
+                  </span>
+                {% elif review.status == "en_attente" %}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-warning-soft)] text-[var(--color-warning)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+                    En attente
+                  </span>
+                {% elif review.status == "acceptee" %}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+                    Acceptée
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-danger-soft)] text-[var(--color-danger)]">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+                    Refusée
+                  </span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">
+                {% if review.reviewed_at %}
+                  {{ review.reviewed_at|date:"d/m/Y H:i" }} par {{ review.reviewed_by.email|default:"inconnu" }}
+                  {% if review.review_comment %}<span class="block">{{ review.review_comment }}</span>{% endif %}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+            {% if review.status == "en_attente" and review.request_type != "confirmation" %}
+              <tr class="bg-[var(--color-surface-2)] border-b border-[var(--color-border)]">
+                <td colspan="6" class="px-4 py-4">
+                  {% if review.request_type == "modification" %}
+                    <div class="w-full overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)] mb-3">
+                      <table class="w-full border-collapse text-[length:var(--fs-sm)]">
+                        <thead>
+                          <tr>
+                            <th scope="col" class="text-left px-3 py-2 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Champ</th>
+                            <th scope="col" class="text-left px-3 py-2 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Avant</th>
+                            <th scope="col" class="text-left px-3 py-2 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">Après</th>
+                            <th scope="col" class="text-center px-3 py-2 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] w-32">Décision</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for field in review.fields.all %}
+                            <tr class="border-b border-[var(--color-border)]">
+                              <td class="px-3 py-2 text-[var(--color-text)]">{{ field.field_name|field_label }}</td>
+                              <td class="px-3 py-2 text-[var(--color-text-subtle)]">{{ field.old_value|default:"—" }}</td>
+                              <td class="px-3 py-2 text-[var(--color-text)] font-medium">{{ field.new_value }}</td>
+                              <td class="px-3 py-2 text-center">
+                                <label class="inline-flex items-center gap-1.5 text-[length:var(--fs-xs)]">
+                                  <input type="checkbox" name="accepted_fields" value="{{ field.pk }}" form="review-{{ review.pk }}" checked class="w-5 h-5 mt-0.5 shrink-0 accent-[var(--color-primary)]">
+                                  Accepter
+                                </label>
+                              </td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  {% endif %}
+                  <form id="review-{{ review.pk }}" method="post" action="{% url 'dashboard_campagnes:request_review' review.pk %}" class="flex flex-wrap items-end gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="decision" value="accept_selected">
+                    <div class="flex-1 min-w-[16rem]">
+                      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="comment-{{ review.pk }}">Commentaire interne</label>
+                      <textarea id="comment-{{ review.pk }}" name="comment" rows="2" class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 resize-y"></textarea>
+                    </div>
+                    <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">Accepter les champs cochés</button>
+                    <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-[var(--color-danger-border)] hover:bg-[var(--color-danger)] hover:text-white hover:border-[var(--color-danger)]" type="submit" name="decision" value="reject">Refuser</button>
+                  </form>
+                </td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-center text-[var(--color-text-muted)] py-6 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)]">Aucune demande dans cette catégorie.</p>
+  {% endif %}
+</section>
+{% empty %}
+  <p class="text-center text-[var(--color-text-muted)] py-8">Aucune demande à afficher.</p>
+{% endfor %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+  <nav class="flex items-center justify-center gap-3 mt-6" aria-label="Pagination">
+    <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0">
+      Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+    </p>
+    <ul class="list-none p-0 m-0 flex items-center gap-1.5" role="list">
+      {% if page_obj.has_previous %}
+        <li>
+          <a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+             rel="prev"
+             href="?page={{ page_obj.previous_page_number }}{% if pagination_query %}&{{ pagination_query }}{% endif %}">
+            <span aria-hidden="true">«</span><span class="visually-hidden">Page précédente</span>
+          </a>
+        </li>
+      {% endif %}
+      {% for p in page_obj.paginator.page_range %}
+        <li>
+          {% if p == page_obj.number %}
+            <span class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-semibold bg-[var(--color-primary)] text-white" aria-current="page">{{ p }}</span>
+          {% elif p > page_obj.number|add:"-3" and p < page_obj.number|add:"3" %}
+            <a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+               href="?page={{ p }}{% if pagination_query %}&{{ pagination_query }}{% endif %}" aria-label="Page {{ p }}">{{ p }}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+        <li>
+          <a class="inline-flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-[var(--radius-md)] text-[length:var(--fs-sm)] font-medium text-[var(--color-text)] no-underline border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-primary-soft)] hover:border-[var(--color-primary-soft-border)] transition-colors duration-150"
+             rel="next"
+             href="?page={{ page_obj.next_page_number }}{% if pagination_query %}&{{ pagination_query }}{% endif %}">
+            <span class="visually-hidden">Page suivante</span><span aria-hidden="true">»</span>
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}

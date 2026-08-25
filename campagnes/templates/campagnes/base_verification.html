@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+  <title>{% block title %}Vérification de vos informations — SPPE Sud-Avesnois{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'vendor/inter/inter.css' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.min.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="flex flex-col min-h-screen min-h-[100dvh] bg-[var(--color-surface-2)]">
+  <header class="bg-[var(--color-surface)] border-b border-[var(--color-border)]" role="banner">
+    <div class="flex items-center gap-2 h-16 px-4 md:px-6">
+      <img class="w-9 h-9 shrink-0" src="{% static 'img/logo.svg' %}" alt="" width="36" height="36" aria-hidden="true">
+      <span class="font-display font-extrabold text-[length:var(--fs-md)] text-[var(--color-text)]"><span class="text-[var(--color-primary)]">SPPE</span>&nbsp;Sud-Avesnois</span>
+      <span class="ml-auto text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Vérification de vos informations</span>
+    </div>
+  </header>
+
+  <main id="main-content" class="flex-1 w-full max-w-2xl mx-auto px-4 py-8 md:py-10" role="main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-[var(--color-surface)] border-t border-[var(--color-border)] px-4 py-4 text-center text-[length:var(--fs-xs)] text-[var(--color-text-muted)]" role="contentinfo">
+    SPPE Sud-Avesnois — Annuaire des structures petite enfance
+  </footer>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends "campagnes/base_verification.html" %}
+{% load static %}
+
+{% block content %}
+<div class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:p-8 text-center">
+  <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-success-soft)] text-[var(--color-success)] mb-4" aria-hidden="true">
+    <svg class="w-6 h-6"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+  </span>
+  <h1 class="font-display text-[length:var(--fs-xl)] font-bold text-[var(--color-text)] m-0">Merci.</h1>
+  {% if latest_request.request_type == "confirmation" %}
+    <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] mt-3">
+      Vos informations ont été confirmées le {{ latest_request.submitted_at|date:"d/m/Y" }}.
+      Aucune modification ne sera apportée à votre fiche.
+    </p>
+  {% else %}
+    <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] mt-3">
+      Votre demande a été transmise le {{ latest_request.submitted_at|date:"d/m/Y" }}
+      et est en attente de validation par notre service.
+      Les modifications ne seront appliquées qu'après vérification.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

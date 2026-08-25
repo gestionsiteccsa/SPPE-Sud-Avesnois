@@ -195,6 +195,13 @@ class Structure(models.Model):
             errors["age_non_renseigne"] = (
                 "Une tranche d'âge ne peut pas être renseignée lorsque l'âge est déclaré inconnu."
             )
+        if not self.age_non_renseigne and (
+            self.age_min is None or self.age_max is None
+        ):
+            errors["age_non_renseigne"] = (
+                "Renseignez la tranche d'âge (âge minimum et âge maximum) "
+                "ou cochez « Âge non renseigné »."
+            )
         for value_field, unit_field in (
             ("age_min", "age_min_unite"),
             ("age_max", "age_max_unite"),
@@ -320,6 +327,9 @@ class AuditLog(models.Model):
         verbose_name = "Journal d'activité"
         verbose_name_plural = "Journal d'activité"
         ordering = ["-timestamp"]
+        indexes = [
+            models.Index(fields=["timestamp"], name="structures_auditlog_timestamp"),
+        ]
 
     def __str__(self):
         return f"[{self.get_action_display()}] {self.model_name} #{self.object_id} — {self.timestamp.strftime('%d/%m/%Y %H:%M')}"

@@ -8,6 +8,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import PasswordChangeView, redirect_to_login
+from django.db import transaction
 from django.db.models import Count, Q, Value
 from django.db.models.functions import (
     Coalesce,
@@ -923,47 +924,51 @@ class DashboardInscriptionDecideView(SuperuserRequiredMixin, View):
         action = request.POST.get("action")
         user = inscription.user
         if action == "valider":
-            inscription.statut = CollaborateurInscription.STATUT_VALIDEE
-            inscription.date_decision = timezone.now()
-            inscription.decideur = request.user
-            inscription.save(update_fields=["statut", "date_decision", "decideur"])
-            user.is_active = True
-            user.save(update_fields=["is_active"])
-            notify_collaborateur_validee(user)
-            AuditLog.objects.create(
-                user=request.user,
-                action="update",
-                model_name="Inscription",
-                object_id=inscription.pk,
-                object_repr=user.email,
-                changes={
-                    "statut": {
-                        "old": CollaborateurInscription.STATUT_EN_ATTENTE,
-                        "new": CollaborateurInscription.STATUT_VALIDEE,
+            # Écritures et journal dans une même transaction ; l'e-mail part
+            # après le commit pour ne pas dépendre du serveur SMTP.
+            with transaction.atomic():
+                inscription.statut = CollaborateurInscription.STATUT_VALIDEE
+                inscription.date_decision = timezone.now()
+                inscription.decideur = request.user
+                inscription.save(update_fields=["statut", "date_decision", "decideur"])
+                user.is_active = True
+                user.save(update_fields=["is_active"])
+                AuditLog.objects.create(
+                    user=request.user,
+                    action="update",
+                    model_name="Inscription",
+                    object_id=inscription.pk,
+                    object_repr=user.email,
+                    changes={
+                        "statut": {
+                            "old": CollaborateurInscription.STATUT_EN_ATTENTE,
+                            "new": CollaborateurInscription.STATUT_VALIDEE,
+                        },
+                        "is_active": {"old": False, "new": True},
                     },
-                    "is_active": {"old": False, "new": True},
-                },
-            )
+                )
+            notify_collaborateur_validee(user)
             messages.success(request, f"L'inscription de {user.email} a été validée.")
         elif action == "refuser":
-            inscription.statut = CollaborateurInscription.STATUT_REFUSEE
-            inscription.date_decision = timezone.now()
-            inscription.decideur = request.user
-            inscription.save(update_fields=["statut", "date_decision", "decideur"])
+            with transaction.atomic():
+                inscription.statut = CollaborateurInscription.STATUT_REFUSEE
+                inscription.date_decision = timezone.now()
+                inscription.decideur = request.user
+                inscription.save(update_fields=["statut", "date_decision", "decideur"])
+                AuditLog.objects.create(
+                    user=request.user,
+                    action="update",
+                    model_name="Inscription",
+                    object_id=inscription.pk,
+                    object_repr=user.email,
+                    changes={
+                        "statut": {
+                            "old": CollaborateurInscription.STATUT_EN_ATTENTE,
+                            "new": CollaborateurInscription.STATUT_REFUSEE,
+                        }
+                    },
+                )
             notify_collaborateur_refusee(user)
-            AuditLog.objects.create(
-                user=request.user,
-                action="update",
-                model_name="Inscription",
-                object_id=inscription.pk,
-                object_repr=user.email,
-                changes={
-                    "statut": {
-                        "old": CollaborateurInscription.STATUT_EN_ATTENTE,
-                        "new": CollaborateurInscription.STATUT_REFUSEE,
-                    }
-                },
-            )
             messages.success(request, f"L'inscription de {user.email} a été refusée.")
         else:
             messages.error(request, "Action inconnue.")

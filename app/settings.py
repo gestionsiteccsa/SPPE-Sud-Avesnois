@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "communes",
     "structures",
     "authentication",
+    "campagnes",
 ]
 
 MIDDLEWARE = [
@@ -177,9 +178,9 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
 EMAIL_USE_SSL = config("EMAIL_USE_SSL", default=False, cast=bool)
 EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=10, cast=int)
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@bddpe.fr")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="nepasrepondre@cc-sudavesnois.fr")
 SERVER_EMAIL = config("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
-SITE_URL = config("SITE_URL", default="https://bddpe.fr").rstrip("/")
+SITE_URL = config("SITE_URL", default="https://www.sppe.ccsudavesnois.fr").rstrip("/")
 
 GEOCODE_ENABLED = True
 GEOCODE_TIMEOUT = config("GEOCODE_TIMEOUT", default=4, cast=int)

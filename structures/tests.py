@@ -274,8 +274,12 @@ class StructureImportTests(TestCase):
     def test_replace_import_rolls_back_when_one_row_is_invalid(self):
         Structure.objects.create(nom="Structure existante")
         rows = [
-            {"NOM": "Structure valide"},
-            {"NOM": "Structure invalide", "email": "adresse-invalide"},
+            {"NOM": "Structure valide", "Tranche d'âge": "3 ans - 12 ans"},
+            {
+                "NOM": "Structure invalide",
+                "email": "adresse-invalide",
+                "Tranche d'âge": "3 ans - 12 ans",
+            },
         ]
 
         with self.assertRaises(ImportDataError):
@@ -288,7 +292,13 @@ class StructureImportTests(TestCase):
 
     def test_import_stores_source_date_in_monenfant_field(self):
         import_rows(
-            [{"NOM": "Structure exemple", "Date mise à jour": "03/02/2026"}],
+            [
+                {
+                    "NOM": "Structure exemple",
+                    "Date mise à jour": "03/02/2026",
+                    "Tranche d'âge": "3 ans - 12 ans",
+                }
+            ],
             replace=False,
             actor=None,
         )
@@ -297,7 +307,11 @@ class StructureImportTests(TestCase):
         self.assertEqual(structure.date_mise_a_jour_monenfant.isoformat(), "2026-02-03")
 
     def test_import_maps_nom_column_to_nom_structure(self):
-        import_rows([{"NOM": "Crèche Exemple"}], replace=False, actor=None)
+        import_rows(
+            [{"NOM": "Crèche Exemple", "Tranche d'âge": "3 ans - 12 ans"}],
+            replace=False,
+            actor=None,
+        )
 
         structure = Structure.objects.get()
         self.assertEqual(structure.nom_structure, "Crèche Exemple")
@@ -309,8 +323,18 @@ class StructureImportTests(TestCase):
 
         count = import_rows(
             [
-                {"NOM": "Crèche Déjà là", "commune": "Doublonville", "code postal": "75001"},
-                {"NOM": "Nouvelle structure", "commune": "Doublonville", "code postal": "75001"},
+                {
+                    "NOM": "Crèche Déjà là",
+                    "commune": "Doublonville",
+                    "code postal": "75001",
+                    "Tranche d'âge": "3 ans - 12 ans",
+                },
+                {
+                    "NOM": "Nouvelle structure",
+                    "commune": "Doublonville",
+                    "code postal": "75001",
+                    "Tranche d'âge": "3 ans - 12 ans",
+                },
             ],
             replace=False,
             actor=None,
@@ -318,6 +342,90 @@ class StructureImportTests(TestCase):
 
         self.assertEqual(count, 1)
         self.assertTrue(Structure.objects.filter(nom_structure="Nouvelle structure").exists())
+
+    def test_import_skips_duplicate_within_the_same_file(self):
+        rows = [
+            {
+                "NOM": "Crèche Déjà là",
+                "commune": "Doublonville",
+                "code postal": "75001",
+                "Tranche d'âge": "3 ans - 12 ans",
+            },
+            {
+                "NOM": "crèche déjà là",
+                "commune": "Doublonville",
+                "code postal": "75001",
+                "Tranche d'âge": "3 ans - 12 ans",
+            },
+        ]
+
+        count = import_rows(rows, replace=False, actor=None)
+
+        self.assertEqual(count, 1)
+        self.assertEqual(Structure.objects.count(), 1)
+
+    def test_import_query_count_stays_bounded_for_many_rows(self):
+        rows = [
+            {
+                "NOM": f"Structure {index}",
+                "Type": "Micro-crèche" if index % 2 else "Crèche",
+                "commune": "Doublonville",
+                "code postal": "75001",
+                "Tranche d'âge": "3 ans - 12 ans",
+            }
+            for index in range(60)
+        ]
+        Commune.objects.create(nom="Doublonville", code_postal="75001")
+
+        with CaptureQueriesContext(connection) as context:
+            import_rows(rows, replace=False, actor=None)
+
+        self.assertLessEqual(len(context), 40)
+        self.assertEqual(Structure.objects.count(), 60)
+
+    def test_import_does_not_requery_existing_structures_per_row(self):
+        commune = Commune.objects.create(nom="Doublonville", code_postal="75001")
+        Structure.objects.create(nom_structure="Crèche Déjà là", commune=commune)
+        rows = [
+            {
+                "NOM": f"Nouvelle structure {index}",
+                "commune": "Doublonville",
+                "code postal": "75001",
+                "Tranche d'âge": "3 ans - 12 ans",
+            }
+            for index in range(30)
+        ]
+
+        with CaptureQueriesContext(connection) as context:
+            count = import_rows(rows, replace=False, actor=None)
+
+        structure_queries = [
+            query["sql"]
+            for query in context.captured_queries
+            if 'FROM "structures_structure"' in query["sql"]
+        ]
+        self.assertEqual(count, 30)
+        self.assertLessEqual(len(structure_queries), 2)
+
+    def test_import_logs_each_created_structure(self):
+        import_rows(
+            [
+                {
+                    "NOM": f"Structure {index}",
+                    "Tranche d'âge": "3 ans - 12 ans",
+                }
+                for index in range(3)
+            ],
+            replace=False,
+            actor=None,
+        )
+
+        self.assertEqual(
+            AuditLog.objects.filter(
+                action="create", model_name="Structure"
+            ).count(),
+            3,
+        )
 
 
 @override_settings(GEOCODE_ENABLED=False)
@@ -349,6 +457,10 @@ class StructureIdentityTests(TestCase):
                 "nom": "Dupont",
                 "prenom": "Marie",
                 "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
             }
         )
         self.assertTrue(form.is_valid())
@@ -364,6 +476,10 @@ class StructureIdentityTests(TestCase):
                 "prenom": "Marie",
                 "nom_structure": "Crèche Des Coquilles",
                 "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
             }
         )
         self.assertTrue(form.is_valid())
@@ -378,12 +494,26 @@ class StructureIdentityTests(TestCase):
                 "est_structure": "on",
                 "nom_structure": "Crèche Les Lutins",
                 "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
             }
         )
         self.assertTrue(form.is_valid())
 
     def test_form_accepts_person_identity(self):
-        form = StructureForm(data={"nom": "Dupont", "prenom": "Marie", "horaires": self.horaires})
+        form = StructureForm(
+            data={
+                "nom": "Dupont",
+                "prenom": "Marie",
+                "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
+            }
+        )
         self.assertTrue(form.is_valid())
 
     def test_est_structure_initial_state_in_edit_mode(self):
@@ -421,6 +551,10 @@ class StructureIdentityTests(TestCase):
                 "nom_structure": "Crèche Les Lutins",
                 "commune": self.autre_commune.pk,
                 "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
             }
         )
         self.assertTrue(form.is_valid())
@@ -461,6 +595,10 @@ class StructureIdentityTests(TestCase):
                 "nom_structure": "Crèche Les Lutins",
                 "commune": self.commune.pk,
                 "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
             },
             instance=existing,
         )
@@ -483,6 +621,10 @@ class StructureIdentityTests(TestCase):
                 "horaires": self.horaires,
                 "latitude": 50.2841,
                 "longitude": 3.7887,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
             },
             instance=existing,
         )
@@ -575,7 +717,15 @@ class StructureFormGeocodeTests(TestCase):
 
     def test_save_geocodes_when_coordinates_missing(self):
         form = StructureForm(
-            data={"est_structure": "on", "nom_structure": "Crèche Les Lutins", "horaires": self.horaires}
+            data={
+                "est_structure": "on",
+                "nom_structure": "Crèche Les Lutins",
+                "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
+            }
         )
         self.assertTrue(form.is_valid())
         called = []
@@ -596,6 +746,10 @@ class StructureFormGeocodeTests(TestCase):
                 "horaires": self.horaires,
                 "latitude": 50.1,
                 "longitude": 3.2,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
             }
         )
         self.assertTrue(form.is_valid())
@@ -1208,6 +1362,7 @@ class DashboardSidebarTests(TestCase):
         response = self.client.get(reverse("dashboard:structure_list"))
 
         self.assertContains(response, "Structures")
+        self.assertContains(response, "File de validation")
         for label in (
             "Utilisateurs",
             "Demandes d'inscription",
@@ -1561,12 +1716,79 @@ class StructureFormErrorDisplayTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "adresse de courriel valide", html=False)
 
+    def test_age_range_is_required_when_not_declared_unknown(self):
+        response = self._post_invalid()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Renseignez la tranche d&#x27;âge", html=False)
+        self.assertFalse(Structure.objects.filter(nom="Structure invalide").exists())
+
+    @override_settings(GEOCODE_ENABLED=False)
+    def test_age_unknown_allows_empty_range(self):
+        response = self._post_invalid(
+            nom="Structure âge inconnu",
+            prenom="",
+            age_non_renseigne="on",
+        )
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure âge inconnu")
+        self.assertTrue(structure.age_non_renseigne)
+        self.assertIsNone(structure.age_min)
+        self.assertIsNone(structure.age_max)
+
+    def test_partial_age_range_is_rejected(self):
+        response = self._post_invalid(
+            age_min="3",
+            age_min_unite="ans",
+            age_max="",
+            age_max_unite="",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Renseignez la tranche d&#x27;âge", html=False)
+
+    @override_settings(GEOCODE_ENABLED=False)
+    def test_age_range_with_units_is_accepted(self):
+        response = self._post_invalid(
+            nom="Structure avec âge",
+            prenom="",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
+        )
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure avec âge")
+        self.assertEqual(structure.age_min, 3)
+        self.assertEqual(structure.age_max, 12)
+
+    @override_settings(GEOCODE_ENABLED=False)
+    def test_age_unknown_with_range_is_rejected(self):
+        response = self._post_invalid(
+            age_non_renseigne="on",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "ne peut pas être renseignée lorsque l&#x27;âge est déclaré inconnu",
+            html=False,
+        )
+
     @override_settings(GEOCODE_ENABLED=False)
     def test_phone_number_is_normalized_and_stored(self):
         response = self._post_invalid(
             telephone="06.12.34.56.78",
             nom="Structure normale",
             prenom="",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
         )
         self.assertEqual(response.status_code, 302)
         structure = Structure.objects.get(nom="Structure normale")
@@ -1589,6 +1811,10 @@ class StructureFormErrorDisplayTests(TestCase):
             email="  USER@Example.FR ",
             nom="Structure normalisée",
             prenom="",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
         )
         self.assertEqual(response.status_code, 302)
         structure = Structure.objects.get(nom="Structure normalisée")
@@ -1601,6 +1827,10 @@ class StructureFormErrorDisplayTests(TestCase):
             prenom="",
             tel_direction="+33 6 12 34 56 78",
             email_direction=" Direction@Example.FR ",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
         )
         self.assertEqual(response.status_code, 302)
         structure = Structure.objects.get(nom="Structure direction")
@@ -1613,6 +1843,10 @@ class StructureFormErrorDisplayTests(TestCase):
             telephone="+33 1 23 45 67 89",
             nom="Structure internationale",
             prenom="",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
         )
         self.assertEqual(response.status_code, 302)
         structure = Structure.objects.get(nom="Structure internationale")
@@ -1625,6 +1859,10 @@ class StructureFormErrorDisplayTests(TestCase):
             prenom="",
             telephone="",
             email="",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
         )
         self.assertEqual(response.status_code, 302)
         structure = Structure.objects.get(nom="Structure sans contact")
@@ -1689,7 +1927,14 @@ class StructureScheduleEditorTests(TestCase):
 
         response = self.client.post(
             reverse("dashboard:structure_add"),
-            {"nom": "Structure horaires", "horaires": json.dumps(schedule)},
+            {
+                "nom": "Structure horaires",
+                "horaires": json.dumps(schedule),
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
+            },
         )
 
         self.assertRedirects(response, reverse("dashboard:structure_list"))
@@ -1725,7 +1970,14 @@ class StructureFlashMessageTests(TestCase):
     def test_create_structure_shows_flash_message(self):
         response = self.client.post(
             reverse("dashboard:structure_add"),
-            {"nom": "Crèche flash", "horaires": self.horaires},
+            {
+                "nom": "Crèche flash",
+                "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
+            },
             follow=True,
         )
 
@@ -1737,7 +1989,14 @@ class StructureFlashMessageTests(TestCase):
 
         response = self.client.post(
             reverse("dashboard:structure_edit", args=[structure.pk]),
-            {"nom": "Après", "horaires": self.horaires},
+            {
+                "nom": "Après",
+                "horaires": self.horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
+            },
             follow=True,
         )
 
@@ -1929,7 +2188,15 @@ class CollaboratorStructureScopeTests(TestCase):
 
         response = self.client.post(
             reverse("dashboard:structure_add"),
-            {"nom": "Crèche C", "commune": str(self.commune_a.pk), "horaires": horaires},
+            {
+                "nom": "Crèche C",
+                "commune": str(self.commune_a.pk),
+                "horaires": horaires,
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
+            },
         )
 
         self.assertRedirects(response, reverse("dashboard:structure_list"))

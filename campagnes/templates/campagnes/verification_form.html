@@ -1,0 +1,88 @@
+{% extends "campagnes/base_verification.html" %}
+{% load static %}
+
+{% block content %}
+<div class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:p-8">
+  <h1 class="font-display text-[length:var(--fs-xl)] font-bold text-[var(--color-text)] m-0">Vérification de vos informations</h1>
+  <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] mt-2">
+    Dans le cadre de la mise à jour annuelle, merci de vérifier les informations ci-dessous.
+    Cette vérification est disponible jusqu'au
+    <strong>{{ invitation.campaign.ends_at|date:"d/m/Y" }}</strong>.
+  </p>
+  {% if invitation.campaign.message %}
+    <p class="text-[var(--color-text)] text-[length:var(--fs-sm)] mt-4">{{ invitation.campaign.message|linebreaksbr }}</p>
+  {% endif %}
+
+  <section class="mt-6" aria-labelledby="fiche-titre">
+    <h2 id="fiche-titre" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] mb-3">Votre fiche</h2>
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-[length:var(--fs-sm)] m-0">
+      <div><dt class="text-[var(--color-text-muted)] text-[length:var(--fs-xs)]">Nom</dt><dd class="m-0 text-[var(--color-text)] font-medium">{{ structure.nom_affiche }}</dd></div>
+      <div><dt class="text-[var(--color-text-muted)] text-[length:var(--fs-xs)]">Type</dt><dd class="m-0 text-[var(--color-text)]">{{ structure.type.nom|default:"—" }}</dd></div>
+      <div><dt class="text-[var(--color-text-muted)] text-[length:var(--fs-xs)]">Téléphone</dt><dd class="m-0 text-[var(--color-text)]">{{ structure.telephone|default:"—" }}</dd></div>
+      <div><dt class="text-[var(--color-text-muted)] text-[length:var(--fs-xs)]">E-mail</dt><dd class="m-0 text-[var(--color-text)]">{{ structure.email|default:"—" }}</dd></div>
+      <div><dt class="text-[var(--color-text-muted)] text-[length:var(--fs-xs)]">Commune</dt><dd class="m-0 text-[var(--color-text)]">{{ structure.commune.nom|default:"—" }}</dd></div>
+      <div><dt class="text-[var(--color-text-muted)] text-[length:var(--fs-xs)]">Adresse</dt><dd class="m-0 text-[var(--color-text)]">{{ structure.adresse|default:"—" }}</dd></div>
+      <div><dt class="text-[var(--color-text-muted)] text-[length:var(--fs-xs)]">Places disponibles</dt><dd class="m-0 text-[var(--color-text)]">{{ structure.afficher_places }}</dd></div>
+      <div><dt class="text-[var(--color-text-muted)] text-[length:var(--fs-xs)]">Informations complémentaires</dt><dd class="m-0 text-[var(--color-text)]">{{ structure.conditions_places|default:"—" }}</dd></div>
+    </dl>
+  </section>
+
+  <section class="mt-8" aria-labelledby="choix-titre">
+    <h2 id="choix-titre" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] mb-3">Comment souhaitez-vous répondre ?</h2>
+
+    <form method="post" action="{% url 'campagnes:verification' token=token %}" class="mt-2">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="confirmer">
+      <button class="w-full inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+        Tout est correct
+      </button>
+    </form>
+  </section>
+
+  <section class="mt-6" aria-labelledby="modification-titre">
+    <h2 id="modification-titre" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] mb-1">Modifier certaines informations</h2>
+    <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] mt-1 mb-3">
+      Laissez vide tout champ que vous ne souhaitez pas modifier. Vos propositions seront
+      vérifiées par notre service avant d'être appliquées.
+    </p>
+
+    <form method="post" action="{% url 'campagnes:verification' token=token %}" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="modifier">
+      {% if form.non_field_errors %}
+        <p class="text-[var(--color-danger)] text-[length:var(--fs-sm)] font-medium mb-3" role="alert">{{ form.non_field_errors.0 }}</p>
+      {% endif %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% for field in form %}
+          <div class="{% if field.name == 'conditions_places' %}sm:col-span-2{% endif %}">
+            <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="text-[var(--color-danger)] text-[length:var(--fs-xs)] mt-1" role="alert">{{ field.errors.0 }}</p>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <button class="mt-4 inline-flex items-center justify-center gap-1.5 min-h-[2.75rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" type="submit">
+        Envoyer ma demande
+      </button>
+    </form>
+  </section>
+
+  <section class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3" aria-label="Autres situations">
+    <form method="post" action="{% url 'campagnes:verification' token=token %}" data-confirm="Confirmez-vous ne plus exercer comme assistante maternelle ? Cette action est définitive (la fiche ne pourra plus être mise à jour via ce lien).">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="arreter">
+      <button class="w-full inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border-strong)] hover:bg-[var(--color-surface-3)]" type="submit">
+        Je n'exerce plus comme assistante maternelle
+      </button>
+    </form>
+    <form method="post" action="{% url 'campagnes:verification' token=token %}" data-confirm="Confirmez-vous que cette fiche ne vous concerne pas ? Cette action est définitive (la fiche ne pourra plus être mise à jour via ce lien).">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="fiche_incorrecte">
+      <button class="w-full inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border-strong)] hover:bg-[var(--color-surface-3)]" type="submit">
+        Cette fiche ne me concerne pas
+      </button>
+    </form>
+  </section>
+</div>
+{% endblock %}
+

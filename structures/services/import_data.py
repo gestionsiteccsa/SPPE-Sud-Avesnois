@@ -3,17 +3,18 @@ import io
 import re
 import unicodedata
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 from communes.models import Commune
 from structures.audit import audit_actor
 from structures.models import AuditLog, JOURS_SEM, Structure, TypeStructure
+from structures.signals import suspended_audit
 
 
 MAX_IMPORT_ROWS = 5_000
@@ -36,6 +37,14 @@ class PreparedStructure:
     type_name: str
     commune_name: str
     postal_code: str
+
+
+@dataclass
+class _ImportCache:
+    types_by_name: dict[str, TypeStructure] = field(default_factory=dict)
+    communes_by_name: dict[str, Commune] = field(default_factory=dict)
+    communes_by_postal_code: dict[str, Commune] = field(default_factory=dict)
+    existing_names: dict[int, set[str]] = field(default_factory=dict)
 
 
 def _as_text(value: object) -> str:
@@ -252,9 +261,18 @@ def _prepare_row(row: Mapping[str, object], *, line_number: int) -> PreparedStru
             ),
         }
         values.update(_parse_age(normalized.get("Tranche d'âge", "")))
-        Structure(**values).full_clean(exclude={"type", "commune"})
+        Structure(**values).full_clean(
+            exclude={"type", "commune"},
+            validate_constraints=False,
+        )
     except (ImportDataError, ValidationError) as error:
         details = "; ".join(error.messages) if isinstance(error, ValidationError) else str(error)
+        details = details.replace(
+            "Renseignez la tranche d'âge (âge minimum et âge maximum) "
+            "ou cochez « Âge non renseigné ».",
+            "La colonne « Tranche d'âge » est obligatoire : renseignez une plage "
+            "(ex. « 3 mois - 4 ans ») ou la valeur « non renseigné ».",
+        )
         raise ImportDataError(f"Ligne {line_number} ({name}) : {details}") from error
 
     return PreparedStructure(
@@ -338,6 +356,58 @@ def read_rows_from_path(path: Path) -> list[dict[str, str]]:
     raise ImportDataError("Format non supporté. Utilisez un fichier .csv ou .xlsx.")
 
 
+def _resolve_type(item: PreparedStructure, cache: _ImportCache) -> TypeStructure | None:
+    if not item.type_name:
+        return None
+    type_object = cache.types_by_name.get(item.type_name)
+    if type_object is None:
+        type_object, _created = TypeStructure.objects.get_or_create(nom=item.type_name)
+        cache.types_by_name[item.type_name] = type_object
+    return type_object
+
+
+def _resolve_commune(
+    item: PreparedStructure, cache: _ImportCache
+) -> Commune | None:
+    commune = None
+    if item.commune_name:
+        commune = cache.communes_by_name.get(item.commune_name)
+        if commune is None:
+            commune, _created = Commune.objects.get_or_create(
+                nom=item.commune_name,
+                defaults={"code_postal": item.postal_code},
+            )
+            cache.communes_by_name[item.commune_name] = commune
+    elif item.postal_code:
+        commune = cache.communes_by_postal_code.get(item.postal_code)
+        if commune is None:
+            commune = Commune.objects.filter(code_postal=item.postal_code).first()
+            if commune is not None:
+                cache.communes_by_postal_code[item.postal_code] = commune
+    return commune
+
+
+def _is_known_duplicate(
+    item: PreparedStructure,
+    commune: Commune | None,
+    cache: _ImportCache,
+) -> bool:
+    identity = str(item.values.get("nom_structure", "")).strip()
+    if commune is None or not identity:
+        return False
+    candidate_normalized = _normalize_name(identity)
+    known_names = cache.existing_names.get(commune.pk)
+    if known_names is None:
+        known_names = {
+            _normalize_name(nom)
+            for nom in Structure.objects.filter(commune=commune).values_list(
+                "nom_structure", flat=True
+            )
+        }
+        cache.existing_names[commune.pk] = known_names
+    return candidate_normalized in known_names
+
+
 def import_rows(
     rows: Iterable[Mapping[str, object]],
     *,
@@ -357,50 +427,75 @@ def import_rows(
         raise ImportDataError("Le fichier ne contient aucune structure exploitable.")
 
     skipped = 0
-    with transaction.atomic(), audit_actor(actor):
-        if replace:
-            Structure.objects.all().delete()
-        for item in prepared:
-            type_object = None
-            if item.type_name:
-                type_object, _created = TypeStructure.objects.get_or_create(nom=item.type_name)
+    try:
+        with transaction.atomic(), audit_actor(actor):
+            if replace:
+                deleted_count = Structure.objects.count()
+                with suspended_audit():
+                    Structure.objects.all().delete()
+            else:
+                deleted_count = 0
+            cache = _ImportCache()
+            to_create: list[Structure] = []
+            for item in prepared:
+                type_object = _resolve_type(item, cache)
+                commune = _resolve_commune(item, cache)
 
-            commune = None
-            if item.commune_name:
-                commune, _created = Commune.objects.get_or_create(
-                    nom=item.commune_name,
-                    defaults={"code_postal": item.postal_code},
+                if not replace and _is_known_duplicate(item, commune, cache):
+                    skipped += 1
+                    continue
+
+                to_create.append(
+                    Structure(type=type_object, commune=commune, **item.values)
                 )
-            elif item.postal_code:
-                commune = Commune.objects.filter(code_postal=item.postal_code).first()
+                if commune is not None:
+                    identity = str(item.values.get("nom_structure", "")).strip()
+                    if identity:
+                        cache.existing_names.setdefault(commune.pk, set()).add(
+                            _normalize_name(identity)
+                        )
 
-            if not replace and commune is not None:
-                identity = item.values.get("nom_structure", "").strip()
-                if identity:
-                    duplicates = Structure.objects.filter(commune=commune)
-                    candidate_normalized = _normalize_name(identity)
-                    already_exists = any(
-                        _normalize_name(existing.nom_structure) == candidate_normalized
-                        for existing in duplicates
-                    )
-                    if already_exists:
-                        skipped += 1
-                        continue
+            Structure.objects.bulk_create(to_create, batch_size=200)
 
-            structure = Structure(type=type_object, commune=commune, **item.values)
-            structure.full_clean()
-            structure.save()
-
-        if actor is not None:
-            AuditLog.objects.create(
-                user=actor,
-                action="import",
-                model_name="Structure",
-                object_repr=f"Import de {len(prepared)} structure(s)",
-                changes={
-                    "count": len(prepared),
-                    "replace": replace,
-                    "ignored_duplicates": skipped,
-                },
-            )
+            audit_entries = [
+                AuditLog(
+                    user=actor,
+                    action="create",
+                    model_name="Structure",
+                    object_id=structure.pk,
+                    object_repr=str(structure),
+                    changes={"_created": True},
+                )
+                for structure in to_create
+            ]
+            AuditLog.objects.bulk_create(audit_entries, batch_size=200)
+            if replace:
+                AuditLog.objects.create(
+                    user=actor,
+                    action="batch",
+                    model_name="Structure",
+                    object_id=0,
+                    object_repr=(
+                        f"Remplacement des données : {deleted_count} fiche(s) "
+                        "supprimée(s) avant import"
+                    ),
+                    changes={"_replaced": True, "_count": deleted_count},
+                )
+            if actor is not None:
+                AuditLog.objects.create(
+                    user=actor,
+                    action="import",
+                    model_name="Structure",
+                    object_repr=f"Import de {len(prepared)} structure(s)",
+                    changes={
+                        "count": len(prepared),
+                        "replace": replace,
+                        "ignored_duplicates": skipped,
+                    },
+                )
+    except IntegrityError as error:
+        raise ImportDataError(
+            "Des données du fichier violent une contrainte de la base "
+            "(doublon unique, valeur interdite…). Aucune ligne n'a été importée."
+        ) from error
     return len(prepared) - skipped

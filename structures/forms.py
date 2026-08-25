@@ -140,22 +140,29 @@ class StructureForm(forms.ModelForm):
             if self.instance.pk:
                 queryset = queryset.exclude(pk=self.instance.pk)
             candidate_normalized = _normalize_name(candidate_identity)
+            # Comparaison en Python mais chargement limité aux trois colonnes utiles,
+            # pour ne pas instancier toutes les fiches (JSON d'horaires inclus) de la commune.
             duplicate = next(
                 (
-                    existing
-                    for existing in queryset
-                    if _normalize_name(
-                        existing.nom_structure
-                        or f"{existing.prenom} {existing.nom}".strip()
-                    )
+                    row
+                    for row in queryset.values_list("nom_structure", "prenom", "nom")
+                    if _normalize_name(row[0] or f"{row[1]} {row[2]}".strip())
                     == candidate_normalized
                 ),
                 None,
             )
             if duplicate is not None:
+                dup_nom_structure, dup_prenom, dup_nom = duplicate
+                duplicate_display = (
+                    dup_nom_structure.strip()
+                    or " ".join(
+                        part for part in (dup_prenom, dup_nom) if part.strip()
+                    )
+                    or dup_nom
+                )
                 self.add_error(
                     "nom_structure" if est_structure else "nom",
-                    f"Une fiche « {duplicate.nom_affiche} » existe déjà dans cette commune.",
+                    f"Une fiche « {duplicate_display} » existe déjà dans cette commune.",
                 )
         return cleaned
 
