@@ -1,0 +1,189 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}{{ campaign.name }} — Tableau de bord SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}{{ campaign.name }}{% endblock %}
+{% block page_title %}{{ campaign.name }}{% endblock %}
+{% block page_subtitle %}{{ campaign.starts_at|date:"d/m/Y" }} → {{ campaign.ends_at|date:"d/m/Y" }}{% endblock %}
+
+{% block content %}
+{% if campaign.test_mode %}
+  <div class="mb-5 p-4 rounded-[var(--radius-md)] border bg-[var(--color-warning-soft)] border-[var(--color-warning-border)] text-[var(--color-warning)] text-[length:var(--fs-sm)]" role="status">
+    <strong>Mode test :</strong> les e-mails ont été envoyés uniquement aux adresses de test
+    ({{ campaign.test_emails }}). Aucun e-mail réel n'est parti.
+  </div>
+{% endif %}
+{% if campaign.status == "en_cours" %}
+  <div class="flex flex-wrap items-center gap-2 mb-5">
+    <form method="post" action="{% url 'dashboard_campagnes:campaign_remind' campaign.pk %}">
+      {% csrf_token %}
+      <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" type="submit">
+        Relancer les personnes n'ayant pas répondu
+      </button>
+    </form>
+    {% if campaign.test_mode %}
+      <form method="post" action="{% url 'dashboard_campagnes:campaign_go_live' campaign.pk %}" data-confirm="Passer en réel ? Les jetons de test seront régénérés (les liens de test deviendront invalides) et les e-mails partiront aux vraies adresses.">
+        {% csrf_token %}
+        <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+          Passer en réel
+        </button>
+      </form>
+    {% endif %}
+    <form method="post" action="{% url 'dashboard_campagnes:campaign_letters' campaign.pk %}">
+      {% csrf_token %}
+      <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" type="submit">
+        Générer les courriers (sans e-mail)
+      </button>
+    </form>
+    <form method="post" action="{% url 'dashboard_campagnes:campaign_close' campaign.pk %}" data-confirm="Clôturer cette campagne ? Les personnes n'ayant pas répondu passeront en « expiré ».">
+      {% csrf_token %}
+      <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-[var(--color-danger-border)] hover:bg-[var(--color-danger)] hover:text-white hover:border-[var(--color-danger)]" type="submit">
+        Clôturer la campagne
+      </button>
+    </form>
+  </div>
+{% elif campaign.status == "brouillon" %}
+  <div class="flex flex-wrap items-end gap-4 mb-5">
+    <form method="post" action="{% url 'dashboard_campagnes:campaign_launch' campaign.pk %}" data-confirm="Lancer cette campagne ? Les invitations seront créées et les e-mails envoyés.">
+      {% csrf_token %}
+      <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" type="submit">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-mail"></use></svg>
+        Lancer les envois
+      </button>
+    </form>
+    <form method="post" action="{% url 'dashboard_campagnes:campaign_test_launch' campaign.pk %}" data-confirm="Lancer en mode test ? Les e-mails partiront uniquement vers les adresses de test, aucun e-mail réel ne sera envoyé." class="flex flex-wrap items-end gap-2">
+      {% csrf_token %}
+      <div>
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="test-emails">Adresses e-mail de test</label>
+        <input id="test-emails" name="test_emails" type="text" value="{{ campaign.test_emails }}" placeholder="test1@exemple.fr, test2@exemple.fr" class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 min-w-[18rem]">
+      </div>
+      <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-warning-soft)] text-[var(--color-warning)] border-[var(--color-warning-border)] hover:bg-[var(--color-warning)] hover:text-white hover:border-[var(--color-warning)]" type="submit">
+        <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+        Lancer en mode test
+      </button>
+    </form>
+  </div>
+{% endif %}
+
+<section class="mb-6" aria-labelledby="stats-titre">
+  <h2 id="stats-titre" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] mb-3">Résumé</h2>
+  <dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 m-0">
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Fiches concernées</dt>
+      <dd class="m-0 font-display font-bold text-[length:var(--fs-xl)] text-[var(--color-text)]">{{ stats.total }}</dd>
+    </div>
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">E-mails envoyés</dt>
+      <dd class="m-0 font-display font-bold text-[length:var(--fs-xl)] text-[var(--color-text)]">{{ stats.sent }}</dd>
+    </div>
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Erreurs d'envoi</dt>
+      <dd class="m-0 font-display font-bold text-[length:var(--fs-xl)] text-[var(--color-danger)]">{{ stats.send_error }}</dd>
+    </div>
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Sans e-mail (courrier)</dt>
+      <dd class="m-0 font-display font-bold text-[length:var(--fs-xl)] text-[var(--color-text)]">{{ stats.without_email }}</dd>
+    </div>
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Réponses</dt>
+      <dd class="m-0 font-display font-bold text-[length:var(--fs-xl)] text-[var(--color-text)]">{{ stats.responded }} <span class="text-[length:var(--fs-sm)] font-normal text-[var(--color-text-muted)]">({{ stats.response_rate }} %)</span></dd>
+    </div>
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Confirmées sans modification</dt>
+      <dd class="m-0 font-display font-bold text-[length:var(--fs-xl)] text-[var(--color-text)]">{{ stats.confirmed }}</dd>
+    </div>
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Validations en attente</dt>
+      <dd class="m-0 font-display font-bold text-[length:var(--fs-xl)] text-[var(--color-warning)]">{{ stats.requests_pending }}</dd>
+    </div>
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <dt class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">Sans réponse</dt>
+      <dd class="m-0 font-display font-bold text-[length:var(--fs-xl)] text-[var(--color-text)]">{{ stats.unanswered }}</dd>
+    </div>
+  </dl>
+</section>
+
+<section aria-labelledby="invitations-titre">
+  <div class="flex items-center justify-between gap-4 mb-3">
+    <h2 id="invitations-titre" class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Fiches de la campagne</h2>
+    <form method="get" class="flex items-center gap-2">
+      <label class="sr-only" for="filtre">Filtrer les fiches</label>
+      <select id="filtre" name="filtre" class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none">
+        <option value="tout" {% if active_filter == "tout" %}selected{% endif %}>Tout</option>
+        <option value="sans_reponse" {% if active_filter == "sans_reponse" %}selected{% endif %}>Sans réponse</option>
+        <option value="sans_email" {% if active_filter == "sans_email" %}selected{% endif %}>Sans e-mail</option>
+        <option value="erreur_envoi" {% if active_filter == "erreur_envoi" %}selected{% endif %}>Erreur d'envoi</option>
+        <option value="modification" {% if active_filter == "modification" %}selected{% endif %}>Modification demandée</option>
+        <option value="validation" {% if active_filter == "validation" %}selected{% endif %}>Validation en attente</option>
+        <option value="confirme" {% if active_filter == "confirme" %}selected{% endif %}>Vérifié sans modification</option>
+        <option value="expire" {% if active_filter == "expire" %}selected{% endif %}>Expiré</option>
+      </select>
+      <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" type="submit">Filtrer</button>
+    </form>
+  </div>
+  {% if invitations_total > 200 %}
+    <p class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] mb-3">
+      {{ invitations_total }} fiches correspondent au filtre&nbsp;; seules les 200 premières sont affichées.
+    </p>
+  {% endif %}
+  <div class="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+    <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]">
+      <thead>
+        <tr class="sticky top-0 z-10">
+          <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Fiche</th>
+          <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Commune</th>
+          <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Canal</th>
+          <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Statut</th>
+          <th scope="col" class="text-right px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Consulté / répondu</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for invitation in invitations %}
+          <tr class="border-b border-[var(--color-border)] transition-colors duration-150 group hover:bg-[var(--color-primary-soft)]">
+            <td class="px-4 py-3 text-[var(--color-text)]">
+              <strong>{{ invitation.structure.nom_affiche }}</strong>
+              {% if invitation.structure.email %}
+                <span class="block text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">{{ invitation.structure.email }}</span>
+              {% else %}
+                <span class="block text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">{{ invitation.structure.telephone|default:"aucun contact" }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">{{ invitation.structure.commune.nom|default:"—" }}</td>
+            <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">{{ invitation.get_delivery_channel_display|default:"—" }}</td>
+            <td class="px-4 py-3">
+              {% if invitation.status == "envoye" or invitation.status == "envoi_programme" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]">{{ invitation.get_status_display }}</span>
+              {% elif invitation.status == "erreur_envoi" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-danger-soft)] text-[var(--color-danger)]">{{ invitation.get_status_display }}</span>
+              {% elif invitation.status == "confirme_sans_modification" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]">{{ invitation.get_status_display }}</span>
+              {% elif invitation.status == "en_attente_validation" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-warning-soft)] text-[var(--color-warning)]">Modification en attente</span>
+              {% elif invitation.status == "valide" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]">Validé</span>
+              {% elif invitation.status == "refuse" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-danger-soft)] text-[var(--color-danger)]">Refusé</span>
+              {% elif invitation.status == "expire" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]">Expiré</span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]">{{ invitation.get_status_display }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-right text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] whitespace-nowrap">
+              {% if invitation.completed_at %}
+                {{ invitation.completed_at|date:"d/m/Y" }}
+              {% elif invitation.opened_at %}
+                {{ invitation.opened_at|date:"d/m/Y" }} ({{ invitation.opened_count }})
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="text-center text-[var(--color-text-muted)] py-8">Aucune fiche pour ce filtre.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

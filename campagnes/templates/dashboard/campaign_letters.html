@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Courriers — {{ campaign.name }} — SPPE Sud-Avesnois</title>
+  <style>
+    @page { margin: 18mm 16mm; }
+    body { font-family: "Inter", Arial, sans-serif; font-size: 12px; color: #1b2028; }
+    .lettre { page-break-after: always; max-width: 170mm; }
+    .lettre:last-child { page-break-after: auto; }
+    header { border-bottom: 2px solid #5B8AC4; padding-bottom: 6px; margin-bottom: 14px; }
+    header h1 { font-size: 15px; margin: 0; }
+    header p { margin: 2px 0 0; color: #5f6b7a; }
+    .code { margin: 14px 0; padding: 10px 14px; border: 1px solid #5B8AC4; border-radius: 6px; }
+    .code strong { font-size: 16px; letter-spacing: 1px; }
+    footer { margin-top: 22px; color: #5f6b7a; font-size: 10px; }
+  </style>
+</head>
+<body>
+  {% for letter in letters %}
+  <article class="lettre">
+    <header>
+      <h1>SPPE Sud-Avesnois — Vérification annuelle de vos informations</h1>
+      <p>{{ campaign.name }} — du {{ campaign.starts_at|date:"d/m/Y" }} au {{ campaign.ends_at|date:"d/m/Y" }}</p>
+    </header>
+    <p>Madame, Monsieur,</p>
+    <p>
+      Dans le cadre de la mise à jour annuelle de l'annuaire des structures petite enfance,
+      nous vous invitons à vérifier les informations enregistrées vous concernant.
+      Cette vérification est disponible jusqu'au
+      <strong>{{ campaign.ends_at|date:"d/m/Y" }}</strong>.
+    </p>
+    <p>Rendez-vous sur le portail et saisissez votre code personnel :</p>
+    <div class="code">
+      <p style="margin: 0 0 4px;">Adresse du portail : <strong>https://{{ request.get_host }}/verification/</strong></p>
+      <p style="margin: 0;">Votre code personnel : <strong>{{ letter.token }}</strong></p>
+    </div>
+    <p>
+      Aucun compte n'est nécessaire. Ce code est personnel :
+      ne le communiquez à personne d'autre que notre service.
+    </p>
+    {% if campaign.message %}
+      <p>{{ campaign.message }}</p>
+    {% endif %}
+    <p>En cas de difficulté, vous pouvez nous contacter.</p>
+    <footer>
+      <p>SPPE Sud-Avesnois — Coordonnées de la structure à contacter en cas de difficulté.</p>
+    </footer>
+  </article>
+  {% endfor %}
+</body>
+</html>

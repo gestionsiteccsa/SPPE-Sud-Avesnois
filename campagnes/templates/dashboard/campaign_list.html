@@ -1,0 +1,64 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Campagnes de mise à jour — Tableau de bord SPPE Sud-Avesnois{% endblock %}
+{% block mobile_title %}Campagnes{% endblock %}
+{% block page_title %}Campagnes de mise à jour{% endblock %}
+{% block page_subtitle %}Vérification annuelle des fiches des assistantes maternelles{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between gap-4 mb-5">
+  <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] m-0">
+    Une campagne crée un lien personnel par fiche, sans compte utilisateur.
+  </p>
+  <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] hover:border-[var(--color-primary-hover)]" href="{% url 'dashboard_campagnes:campaign_add' %}">
+    <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-plus"></use></svg>
+    Nouvelle campagne
+  </a>
+</div>
+
+<div class="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+  <table class="w-full border-collapse bg-[var(--color-surface)] text-[length:var(--fs-sm)]">
+    <thead>
+      <tr class="sticky top-0 z-10">
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Nom</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Période</th>
+        <th scope="col" class="text-left px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap">Statut</th>
+        <th scope="col" class="text-right px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-3)] font-display font-semibold text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] whitespace-nowrap w-40">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for campaign in campaigns %}
+        <tr class="border-b border-[var(--color-border)] transition-colors duration-150 group hover:bg-[var(--color-primary-soft)]">
+          <td class="px-4 py-3 text-[var(--color-text)]">
+            <a class="text-[var(--color-primary)] no-underline hover:underline font-medium" href="{% url 'dashboard_campagnes:campaign_detail' campaign.pk %}">{{ campaign.name }}</a>
+            <span class="block text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">Créée le {{ campaign.created_at|date:"d/m/Y" }}</span>
+          </td>
+          <td class="px-4 py-3 text-[length:var(--fs-xs)] text-[var(--color-text-subtle)] whitespace-nowrap">
+            {{ campaign.starts_at|date:"d/m/Y" }} → {{ campaign.ends_at|date:"d/m/Y" }}
+          </td>
+          <td class="px-4 py-3">
+            {% if campaign.status == "brouillon" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]">Brouillon</span>
+            {% elif campaign.status == "en_cours" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-success-soft)] text-[var(--color-success)]">En cours</span>
+            {% elif campaign.status == "cloturee" %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-warning-soft)] text-[var(--color-warning)]">Clôturée</span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--color-surface-3)] text-[var(--color-text-muted)]">Archivée</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-3 py-2 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] no-underline cursor-pointer border transition-all whitespace-nowrap select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]" href="{% url 'dashboard_campagnes:campaign_detail' campaign.pk %}">
+              <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-eye"></use></svg>
+              Détail
+            </a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="text-center text-[var(--color-text-muted)] py-8">Aucune campagne pour le moment.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

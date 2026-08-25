@@ -18,3 +18,6 @@ class StructureAdmin(admin.ModelAdmin):
     search_fields = ["nom", "prenom", "nom_structure", "adresse", "email", "telephone"]
     autocomplete_fields = ["commune", "type"]
     readonly_fields = ["date_mise_a_jour"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("type", "commune")

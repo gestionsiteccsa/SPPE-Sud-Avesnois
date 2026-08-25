@@ -25,7 +25,7 @@ _last_request_ts = 0.0
 
 
 def _user_agent() -> str:
-    contact = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@bddpe.fr")
+    contact = getattr(settings, "DEFAULT_FROM_EMAIL", "nepasrepondre@cc-sudavesnois.fr")
     return f"SPPE-Sud-Avesnois (contact: {contact})"
 
 

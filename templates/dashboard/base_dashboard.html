@@ -79,6 +79,16 @@
         <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-tag"></use></svg>
         Types
       </a>
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'campaigns' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard_campagnes:campaign_list' %}" {% if active_tab == 'campaigns' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-calendar"></use></svg>
+        Campagnes
+      </a>
+      {% endif %}
+      <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'request_queue' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard_campagnes:request_queue' %}" {% if active_tab == 'request_queue' %}aria-current="page"{% endif %}>
+        <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
+        File de validation
+      </a>
+      {% if user.is_superuser %}
       <a class="flex items-center gap-3 px-3 py-3 rounded-[var(--radius-md)] text-[var(--color-text-muted)] no-underline text-[length:var(--fs-sm)] font-medium hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-text)] transition-[background,color] duration-[120ms] {% if active_tab == 'import' %}bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold{% endif %}" href="{% url 'dashboard:import_data' %}">
         <svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-upload"></use></svg>
         Importer

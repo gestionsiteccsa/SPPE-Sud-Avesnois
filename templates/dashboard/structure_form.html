@@ -99,6 +99,7 @@
              {% if form.age_non_renseigne.value %}checked{% endif %}>
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_age_non_renseigne">Âge non renseigné</label>
     </div>
+    <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0 mt-1.5">Si cette case est décochée, l'âge minimum et l'âge maximum sont obligatoires.</p>
     {% if form.age_non_renseigne.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.age_non_renseigne.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4" id="age-fields">
       <div class="flex flex-col gap-1.5">

@@ -1,11 +1,41 @@
+from contextlib import contextmanager
+from contextvars import ContextVar
 from django.db.models.signals import post_delete, post_save, pre_save
 
+from campagnes.models import UpdateCampaign, UpdateRequest, UpdateRequestField, VerificationInvitation
 from communes.models import Commune
 from structures.audit import get_audit_actor
 from structures.models import AuditLog, Structure, TypeStructure
 
-AUDITED_MODELS = (Structure, TypeStructure, Commune)
+AUDITED_MODELS = (
+    Structure,
+    TypeStructure,
+    Commune,
+    UpdateCampaign,
+    VerificationInvitation,
+    UpdateRequest,
+    UpdateRequestField,
+)
 SKIP_FIELDS = {"date_mise_a_jour"}
+
+_AUDIT_SUSPENDED: ContextVar[bool] = ContextVar(
+    "structures_audit_suspended",
+    default=False,
+)
+
+
+@contextmanager
+def suspended_audit():
+    """Suspend les signaux d'audit (opérations groupées : remplacement d'import…).
+
+    Les écritures réalisées dans ce bloc ne génèrent aucune entrée de journal ;
+    l'appelant reste responsable de consigner lui-même une entrée résumée.
+    """
+    token = _AUDIT_SUSPENDED.set(True)
+    try:
+        yield
+    finally:
+        _AUDIT_SUSPENDED.reset(token)
 
 
 def _audit_value(value):
@@ -43,7 +73,7 @@ def _get_original(instance):
 
 
 def capture_changes(sender, instance, raw=False, **kwargs):
-    if raw:
+    if raw or _AUDIT_SUSPENDED.get():
         return
     original = _get_original(instance)
     instance._audit_changes = (
@@ -52,7 +82,7 @@ def capture_changes(sender, instance, raw=False, **kwargs):
 
 
 def log_save(sender, instance, created=False, raw=False, **kwargs):
-    if raw:
+    if raw or _AUDIT_SUSPENDED.get():
         return
     user = get_audit_actor()
     changes = getattr(instance, "_audit_changes", {"_created": True} if created else {})
@@ -69,6 +99,8 @@ def log_save(sender, instance, created=False, raw=False, **kwargs):
 
 
 def log_delete(sender, instance, **kwargs):
+    if _AUDIT_SUSPENDED.get():
+        return
     AuditLog.objects.create(
         user=get_audit_actor(),
         action="delete",

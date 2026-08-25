@@ -1,0 +1,20 @@
+{% extends "campagnes/base_verification.html" %}
+{% load static %}
+
+{% block content %}
+<div class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:p-8 text-center">
+  <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-warning-soft)] text-[var(--color-warning)] mb-4" aria-hidden="true">
+    <svg class="w-6 h-6"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
+  </span>
+  <h1 class="font-display text-[length:var(--fs-xl)] font-bold text-[var(--color-text)] m-0">Lien invalide ou expiré</h1>
+  <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] mt-3">
+    Ce lien n'est plus utilisable. Il peut avoir expiré, avoir déjà été utilisé,
+    ou ne pas correspondre à une campagne en cours.
+  </p>
+  <p class="text-[var(--color-text-muted)] text-[length:var(--fs-sm)] mt-2">
+    Si vous pensez qu'il s'agit d'une erreur, contactez-nous :
+    <a class="text-[var(--color-primary)] no-underline hover:underline"
+       href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+  </p>
+</div>
+{% endblock %}
