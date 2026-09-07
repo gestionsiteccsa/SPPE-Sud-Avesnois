@@ -54,6 +54,7 @@ from structures.access import allowed_commune_ids
 from structures.audit import audit_actor
 from structures.forms import StructureForm
 from structures.models import AUDIT_ACTIONS, AuditLog, Structure, TypeStructure
+from structures.views import query_int
 from structures.services.import_data import (
     ImportDataError,
     import_rows,
@@ -106,7 +107,12 @@ class DashboardHomeView(StructureManageAccessMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["active_tab"] = "home"
 
-        counts = Structure.objects.aggregate(
+        commune_ids = self.allowed_commune_ids()
+        scoped_structures = Structure.objects.all()
+        if commune_ids is not None:
+            scoped_structures = scoped_structures.filter(commune_id__in=commune_ids)
+
+        counts = scoped_structures.aggregate(
             total_structures=Count("id"),
             total_visible=Count("id", filter=Q(afficher=True)),
             total_hidden=Count("id", filter=Q(afficher=False)),
@@ -120,10 +126,16 @@ class DashboardHomeView(StructureManageAccessMixin, TemplateView):
             total_recrutement=Count("id", filter=Q(recrutement=True)),
         )
         ctx.update(counts)
-        ctx["total_communes"] = Commune.objects.count()
+        if commune_ids is None:
+            ctx["total_communes"] = Commune.objects.count()
+        else:
+            ctx["total_communes"] = Commune.objects.filter(pk__in=commune_ids).count()
         ctx["total_types"] = TypeStructure.objects.count()
 
-        statistics = build_dashboard_statistics()
+        statistics = build_dashboard_statistics(
+            offer_queryset=scoped_structures.filter(afficher=True),
+            quality_queryset=scoped_structures,
+        )
         ctx["offer_stats"] = statistics["offer"]
         ctx["total_places"] = statistics["offer"]["available_places"]
         ctx["types_count"] = statistics["by_type"]["counts"]
@@ -135,10 +147,10 @@ class DashboardHomeView(StructureManageAccessMixin, TemplateView):
         ctx["freshness_outdated"] = statistics["freshness_outdated"]
         ctx["completeness_stats"] = statistics["completeness"]
 
-        ctx["recent_structures"] = (
-            Structure.objects.select_related("type", "commune")
-            .order_by("-date_mise_a_jour", "-pk")[:5]
-        )
+        recent_structures = Structure.objects.select_related("type", "commune")
+        if commune_ids is not None:
+            recent_structures = recent_structures.filter(commune_id__in=commune_ids)
+        ctx["recent_structures"] = recent_structures.order_by("-date_mise_a_jour", "-pk")[:5]
 
         today = date.today()
         chart_months = []
@@ -150,6 +162,9 @@ class DashboardHomeView(StructureManageAccessMixin, TemplateView):
                 year -= 1
             chart_months.append(date(year, month, 1))
 
+        monthly_base = Structure.objects.filter(date_mise_a_jour__gte=chart_months[0])
+        if commune_ids is not None:
+            monthly_base = monthly_base.filter(commune_id__in=commune_ids)
         monthly_totals = {
             (
                 row["month"].date()
@@ -157,7 +172,7 @@ class DashboardHomeView(StructureManageAccessMixin, TemplateView):
                 else row["month"]
             ): row["total"]
             for row in (
-                Structure.objects.filter(date_mise_a_jour__gte=chart_months[0])
+                monthly_base
                 .annotate(month=TruncMonth("date_mise_a_jour"))
                 .values("month")
                 .annotate(total=Count("id"))
@@ -235,8 +250,8 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
             )
         )
         q = self.request.GET.get("q")
-        type_ = self.request.GET.get("type")
-        commune = self.request.GET.get("commune")
+        type_ = query_int(self.request.GET.get("type"))
+        commune = query_int(self.request.GET.get("commune"))
         o = self.request.GET.get("o") or "nom"
         if q:
             qs = qs.filter(
@@ -248,9 +263,9 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
                 | Q(directeur__icontains=q)
                 | Q(statut__icontains=q)
             )
-        if type_:
+        if type_ is not None:
             qs = qs.filter(type_id=type_)
-        if commune:
+        if commune is not None:
             qs = qs.filter(commune_id=commune)
         if o:
             parts = o.split(".")
@@ -259,6 +274,9 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
             order_field = SORT_MAP.get(raw)
             if order_field:
                 qs = qs.order_by(f"-{order_field}" if desc else order_field)
+        commune_ids = self.allowed_commune_ids()
+        if commune_ids is not None:
+            qs = qs.filter(commune_id__in=commune_ids)
         return qs
 
     def _build_sort_link(self, col, label):
@@ -865,7 +883,7 @@ class DashboardAuditLogView(SuperuserRequiredMixin, ListView):
 
 class DashboardStructureBatchView(StructureManageAccessMixin, View):
     def post(self, request):
-        ids = request.POST.getlist("ids")
+        ids = [pk for pk in request.POST.getlist("ids") if query_int(pk) is not None]
         action = request.POST.get("action")
         if not ids:
             messages.warning(request, "Aucune structure sélectionnée.")

@@ -77,7 +77,7 @@
     </div>
     <div class="flex flex-row items-center gap-3 mt-4 pt-4 border-t border-[var(--color-border)]">
       <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="afficher" id="id_afficher"
-             {% if form.afficher.value|default:True %}checked{% endif %}>
+             {% if form.afficher.value %}checked{% endif %}>
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_afficher">Afficher sur le site</label>
     </div>
     <div class="flex flex-col gap-1.5 mt-4">
@@ -106,7 +106,7 @@
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_age_min">Âge minimum</label>
         <div class="flex gap-2">
           <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.age_min.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="age_min" id="id_age_min" min="0"
-                 value="{{ form.age_min.value|default:'' }}" style="max-width: 7rem">
+                 value="{{ form.age_min.value|default_if_none:'' }}" style="max-width: 7rem">
           <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none {% if form.age_min_unite.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" name="age_min_unite" id="id_age_min_unite"
                   style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
             <option value="">—</option>
@@ -122,7 +122,7 @@
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_age_max">Âge maximum</label>
         <div class="flex gap-2">
           <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.age_max.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="age_max" id="id_age_max" min="0"
-                 value="{{ form.age_max.value|default:'' }}" style="max-width: 7rem">
+                 value="{{ form.age_max.value|default_if_none:'' }}" style="max-width: 7rem">
           <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none {% if form.age_max_unite.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" name="age_max_unite" id="id_age_max_unite"
                   style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
             <option value="">—</option>
@@ -216,13 +216,13 @@
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_places_disponibles">Places disponibles</label>
         <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.places_disponibles.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="places_disponibles" id="id_places_disponibles" min="0"
-               value="{{ form.places_disponibles.value|default:'' }}">
+                value="{{ form.places_disponibles.value|default_if_none:'' }}">
         {% if form.places_disponibles.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.places_disponibles.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nb_places_total">Places total</label>
         <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nb_places_total.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="nb_places_total" id="id_nb_places_total" min="0"
-               value="{{ form.nb_places_total.value|default:'' }}">
+                value="{{ form.nb_places_total.value|default_if_none:'' }}">
         {% if form.nb_places_total.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.nb_places_total.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
@@ -316,7 +316,7 @@
       <div class="flex flex-col gap-1.5">
         <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nb_professionnels">Nb professionnel·les</label>
         <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nb_professionnels.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="nb_professionnels" id="id_nb_professionnels" min="0"
-               value="{{ form.nb_professionnels.value|default:'' }}">
+                value="{{ form.nb_professionnels.value|default_if_none:'' }}">
         {% if form.nb_professionnels.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.nb_professionnels.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
       <div class="flex flex-col gap-1.5">
@@ -353,8 +353,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<link rel="stylesheet" href="{% static 'css/timeslider.css' %}">
-<script src="{% static 'js/timeslider.js' %}" nonce="{{ csp_nonce }}"></script>
+<link rel="stylesheet" href="{% static 'css/timeslider.min.css' %}">
+<script src="{% static 'js/timeslider.min.js' %}" nonce="{{ csp_nonce }}"></script>
 <script nonce="{{ csp_nonce }}">
 (function () {
   "use strict";

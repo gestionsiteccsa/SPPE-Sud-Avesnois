@@ -35,7 +35,7 @@ Relisez ensuite le diff de `static/`. Les fichiers générés sont versionnés p
 
 ## Dépendance externe restante
 
-La carte demande ses tuiles à OpenStreetMap. Conserver l'attribution visible et respecter la politique d'utilisation du fournisseur. Une indisponibilité des tuiles ne doit pas empêcher les listes et fiches de fonctionner.
+La carte propose deux fonds via le sélecteur en haut à droite : « Plan » (OpenStreetMap, affiché par défaut) et « Satellite » (Esri World Imagery). Conserver les attributions visibles et respecter la politique d'utilisation de chaque fournisseur. Une indisponibilité des tuiles ne doit pas empêcher les listes et fiches de fonctionner.
 
 ## Limite de sécurité
 

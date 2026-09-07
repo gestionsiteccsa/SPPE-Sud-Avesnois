@@ -10,6 +10,6 @@ Ce fichier résume les dépendances frontend redistribuées dans `static/vendor`
 | Inter via Fontsource | 5.3.0 | SIL Open Font License 1.1 |
 | Tailwind CSS / CLI | 4.3.3 | MIT |
 
-Les tuiles cartographiques utilisent OpenStreetMap. L'attribution OpenStreetMap affichée sur la carte doit rester visible. Les données cartographiques sont soumises à l'Open Database License et les tuiles au régime indiqué par le fournisseur.
+Les tuiles cartographiques utilisent OpenStreetMap (fond « Plan ») et Esri World Imagery (fond « Satellite »). Les attributions affichées sur la carte doivent rester visibles. Les données cartographiques sont soumises à l'Open Database License et les tuiles au régime indiqué par chaque fournisseur.
 
 Les dépendances Python et Node complètes, leurs versions et leurs sources de vérité se trouvent respectivement dans `requirements.txt`, `package.json` et `package-lock.json`.

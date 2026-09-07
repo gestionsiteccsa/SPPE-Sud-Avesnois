@@ -1175,6 +1175,25 @@ class StructureMapSecurityTests(TestCase):
             html=False,
         )
 
+    def test_map_offers_plan_and_satellite_base_layers(self):
+        Structure.objects.create(nom="Structure", latitude=50.0, longitude=4.0)
+
+        response = self.client.get(reverse("structures:carte"))
+
+        self.assertContains(response, "tile.openstreetmap.org", html=False)
+        self.assertContains(response, "server.arcgisonline.com", html=False)
+        self.assertContains(response, "L.control.layers", html=False)
+        self.assertContains(response, "Choisir le fond de carte", html=False)
+
+    def test_map_csp_allows_osm_and_esri_tiles(self):
+        Structure.objects.create(nom="Structure", latitude=50.0, longitude=4.0)
+
+        response = self.client.get(reverse("structures:carte"))
+
+        policy = response["Content-Security-Policy"]
+        self.assertIn("https://*.tile.openstreetmap.org", policy)
+        self.assertIn("https://server.arcgisonline.com", policy)
+
 
 class HealthCheckTests(TestCase):
     def test_health_endpoint_exposes_only_liveness(self):
@@ -1278,6 +1297,15 @@ class PublicStructureViewTests(TestCase):
 
         self.assertContains(response, "Crèche Visible")
         self.assertNotContains(response, "Micro X")
+
+    def test_list_ignores_invalid_filter_values(self):
+        response = self.client.get(
+            reverse("structures:liste"),
+            {"commune": "abc", "type": "abc"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Crèche Visible")
 
     def test_list_filters_by_available_places(self):
         Structure.objects.create(nom="Complet X", afficher=True, places_complet=True)
@@ -1907,8 +1935,8 @@ class StructureScheduleEditorTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="hours-picker"')
-        self.assertContains(response, 'css/timeslider.css')
-        self.assertContains(response, 'js/timeslider.js')
+        self.assertContains(response, 'css/timeslider.min.css')
+        self.assertContains(response, 'js/timeslider.min.js')
         self.assertContains(response, 'name="horaires"')
         self.assertContains(response, 'class="w-full"')
         self.assertContains(response, "xl:grid-cols-2")
@@ -1954,6 +1982,95 @@ class StructureScheduleEditorTests(TestCase):
         self.assertContains(response, 'name="horaires"')
         self.assertContains(response, "08:07")
         self.assertContains(response, "17:53")
+
+
+@override_settings(GEOCODE_ENABLED=False)
+class StructureFormZeroValueDisplayTests(TestCase):
+    """Les valeurs 0 des champs numériques doivent s'afficher en édition.
+
+    Le filtre Django ``default`` efface toute valeur falsy, y compris 0 ;
+    seuls ``default_if_none`` (ou l'absence de filtre pour les booléens)
+    préservent un « 0 » légitime et l'état réel de la case « Afficher ».
+    """
+
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="admin-zeros@example.test",
+            email="admin-zeros@example.test",
+            password="Un-mot-de-passe-tres-long-2026",
+        )
+        self.client.force_login(self.admin)
+
+    @staticmethod
+    def _input_value(html: str, name: str) -> str | None:
+        match = re.search(rf'name="{name}"[^>]*value="([^"]*)"', html)
+        return match.group(1) if match else None
+
+    def _checkbox_tag(self, html: str, name: str) -> str:
+        match = re.search(rf'<input[^>]*name="{name}"[^>]*>', html)
+        return match.group(0) if match else ""
+
+    def test_zero_numeric_values_are_displayed_when_editing(self):
+        structure = Structure.objects.create(
+            nom="Crèche Zéro",
+            age_min=0,
+            age_min_unite="ans",
+            age_max=4,
+            age_max_unite="ans",
+            places_disponibles=0,
+            nb_places_total=0,
+            nb_professionnels=0,
+        )
+
+        response = self.client.get(reverse("dashboard:structure_edit", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        expected_values = {
+            "age_min": "0",
+            "age_max": "4",
+            "places_disponibles": "0",
+            "nb_places_total": "0",
+            "nb_professionnels": "0",
+        }
+        for field, expected in expected_values.items():
+            self.assertEqual(
+                self._input_value(response.content.decode(), field),
+                expected,
+                f"Le champ {field} doit afficher la valeur encodée ({expected}).",
+            )
+
+    def test_null_numeric_fields_stay_empty(self):
+        structure = Structure.objects.create(nom="Crèche Sans Valeurs")
+
+        response = self.client.get(reverse("dashboard:structure_edit", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        for field in ("age_min", "age_max", "places_disponibles"):
+            self.assertEqual(
+                self._input_value(response.content.decode(), field),
+                "",
+                f"Le champ {field} doit rester vide lorsqu'il n'est pas renseigné.",
+            )
+
+    def test_hidden_structure_shows_afficher_checkbox_unchecked(self):
+        structure = Structure.objects.create(nom="Fiche masquée", afficher=False)
+
+        response = self.client.get(reverse("dashboard:structure_edit", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        tag = self._checkbox_tag(response.content.decode(), "afficher")
+        self.assertTrue(tag, "La case « Afficher sur le site » doit être rendue.")
+        self.assertNotIn("checked", tag)
+
+    def test_visible_structure_shows_afficher_checkbox_checked(self):
+        structure = Structure.objects.create(nom="Fiche visible", afficher=True)
+
+        response = self.client.get(reverse("dashboard:structure_edit", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        tag = self._checkbox_tag(response.content.decode(), "afficher")
+        self.assertTrue(tag)
+        self.assertIn("checked", tag)
 
 
 @override_settings(GEOCODE_ENABLED=False)
@@ -2144,7 +2261,44 @@ class CollaboratorStructureScopeTests(TestCase):
 
         response = self.client.get(reverse("dashboard:structure_list"))
 
-        self.assertEqual(list(response.context["object_list"]), [self.structure_a, self.structure_b])
+        self.assertEqual(list(response.context["object_list"]), [self.structure_a])
+
+    def test_collaborator_home_stats_are_scoped_to_linked_communes(self):
+        self.client.force_login(self.collab)
+
+        response = self.client.get(reverse("dashboard:home"))
+
+        self.assertEqual(response.context["total_structures"], 1)
+        self.assertEqual(response.context["total_communes"], 1)
+        self.assertNotIn(self.structure_b, response.context["recent_structures"])
+        self.assertEqual(
+            response.context["offer_stats"]["structures"],
+            1,
+        )
+
+    def test_list_ignores_invalid_filter_values(self):
+        self.client.force_login(self.collab)
+
+        response = self.client.get(
+            reverse("dashboard:structure_list"),
+            {"commune": "abc", "type": "abc"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["object_list"]), [self.structure_a])
+
+    def test_batch_delete_ignores_invalid_ids(self):
+        self.client.force_login(self.collab)
+
+        response = self.client.post(
+            reverse("dashboard:structure_batch"),
+            {"ids": ["abc", str(self.structure_a.pk)], "action": "delete"},
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("dashboard:structure_list"))
+        self.assertFalse(Structure.objects.filter(pk=self.structure_a.pk).exists())
+        self.assertTrue(Structure.objects.filter(pk=self.structure_b.pk).exists())
 
     def test_collaborator_can_edit_structure_of_linked_commune(self):
         self.client.force_login(self.collab)

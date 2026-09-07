@@ -91,6 +91,21 @@ def validate_app_css() -> None:
     print("  Validation des couches CSS réussie")
 
 
+def _run_esbuild(arguments: list[str], input: str | None = None) -> str:
+    """Exécute esbuild (dépendance de développement) pour minifier JS/CSS."""
+    cli = ROOT / "node_modules" / "esbuild" / "bin" / "esbuild"
+    result = subprocess.run(
+        ["node", str(cli), "--minify", "--legal-comments=none", *arguments],
+        input=input,
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        timeout=60,
+    )
+    return result.stdout
+
+
 def build_js() -> None:
     print("\n== JS ==")
     sources = ["theme.js", "nav.js", "filters.js", "password.js", "confirm.js"]
@@ -101,9 +116,27 @@ def build_js() -> None:
         print(f"  READ {filename} ({len(content)} caractères)")
 
     combined = "\n".join(parts)
+    minified = _run_esbuild(["--target=es2015"], input=combined)
     output = STATIC / "js" / "bundle.min.js"
-    output.write_text(combined, encoding="utf-8")
-    print(f"  WROTE bundle.min.js ({len(combined)} caractères)")
+    output.write_text(minified, encoding="utf-8")
+    print(f"  WROTE bundle.min.js ({len(combined)} -> {len(minified)} caractères)")
+
+
+def build_timeslider() -> None:
+    print("\n== Timeslider ==")
+    js_source = STATIC / "js" / "timeslider.js"
+    js_content = js_source.read_text(encoding="utf-8")
+    js_minified = _run_esbuild(["--target=es2015"], input=js_content)
+    js_output = STATIC / "js" / "timeslider.min.js"
+    js_output.write_text(js_minified, encoding="utf-8")
+    print(f"  WROTE timeslider.min.js ({len(js_content)} -> {len(js_minified)} caractères)")
+
+    css_source = STATIC / "css" / "timeslider.css"
+    css_content = css_source.read_text(encoding="utf-8")
+    css_minified = _run_esbuild(["--loader=css"], input=css_content)
+    css_output = STATIC / "css" / "timeslider.min.css"
+    css_output.write_text(css_minified, encoding="utf-8")
+    print(f"  WROTE timeslider.min.css ({len(css_content)} -> {len(css_minified)} caractères)")
 
 
 def _copy_file(source: Path, destination: Path) -> None:
@@ -151,5 +184,6 @@ if __name__ == "__main__":
     build_app_css()
     validate_app_css()
     build_js()
+    build_timeslider()
     build_vendor_assets()
     print("\nDone.")

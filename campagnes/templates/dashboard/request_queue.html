@@ -118,8 +118,8 @@
                   {% for field in review.fields.all|slice:":3" %}
                     <div><strong>{{ field.field_name|field_label }}</strong> : {{ field.old_value|default:"—" }} → {{ field.new_value }}</div>
                   {% endfor %}
-                  {% if review.fields.count > 3 %}
-                    <div class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">+ {{ review.fields.count|add:"-3" }} autre(s) champ(s)</div>
+                  {% if review.fields.all|length > 3 %}
+                    <div class="text-[length:var(--fs-xs)] text-[var(--color-text-subtle)]">+ {{ review.fields.all|length|add:"-3" }} autre(s) champ(s)</div>
                   {% endif %}
                 {% else %}
                   <span class="text-[var(--color-text-subtle)]">—</span>

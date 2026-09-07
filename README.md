@@ -96,4 +96,4 @@ L'admin Django n'est plus exposé à `/admin/` : le chemin par défaut est `gest
 
 SQLite convient au petit service prévu, avec peu d'écritures simultanées. Des erreurs `database is locked`, plusieurs administrateurs actifs, des imports fréquents, des écritures en arrière-plan ou plusieurs instances applicatives imposent de réévaluer une migration vers MariaDB.
 
-Les tuiles de la carte restent chargées depuis OpenStreetMap. Les autres dépendances frontend et la police Inter sont hébergées localement.
+Les tuiles de la carte sont chargées depuis OpenStreetMap (fond « Plan ») et Esri World Imagery (fond « Satellite »). Les autres dépendances frontend et la police Inter sont hébergées localement.

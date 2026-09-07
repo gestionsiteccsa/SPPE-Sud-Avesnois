@@ -153,6 +153,11 @@
   .leaflet-control-zoom a { color: var(--color-text) !important; background: var(--color-surface) !important; }
   .leaflet-control-zoom a:hover,
   .leaflet-control-zoom a:focus { background: var(--color-primary-soft) !important; }
+  .leaflet-control-layers { color: var(--color-text); background: var(--color-surface) !important; border: 1px solid var(--color-border) !important; border-radius: var(--radius-md) !important; box-shadow: var(--shadow-sm); font-family: var(--font-sans); font-size: 0.82rem; }
+  .leaflet-control-layers-toggle { width: 2.1rem !important; height: 2.1rem !important; }
+  .leaflet-control-layers-toggle:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+  .leaflet-control-layers label { display: flex; align-items: center; gap: 0.45rem; padding: 0.2rem 0.15rem; font-weight: 600; cursor: pointer; }
+  .leaflet-control-layers label:focus-within { outline: var(--focus-outline); outline-offset: 2px; border-radius: 4px; }
   .leaflet-control-attribution { color: var(--color-text-muted); background: color-mix(in srgb, var(--color-surface) 88%, transparent) !important; }
 
   @media (max-width: 639px) {
@@ -180,10 +185,25 @@
 
   var iconSprite = "{% static 'img/icons.svg' %}";
   var map = L.map('map', { scrollWheelZoom: false }).setView([50.03, 4.07], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  var planLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 18,
-  }).addTo(map);
+  });
+  var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+    maxZoom: 18,
+  });
+  planLayer.addTo(map);
+  L.control.layers(
+    { 'Plan': planLayer, 'Satellite': satelliteLayer },
+    null,
+    { position: 'topright', collapsed: window.innerWidth < 640 }
+  ).addTo(map);
+  var layersToggle = map.getContainer().querySelector('.leaflet-control-layers-toggle');
+  if (layersToggle) {
+    layersToggle.setAttribute('title', 'Fonds de carte : Plan ou Satellite');
+    layersToggle.setAttribute('aria-label', 'Choisir le fond de carte : Plan ou Satellite');
+  }
 
   var bounds = [];
   var icons = {};

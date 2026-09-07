@@ -124,6 +124,8 @@ class SecurityHeadersTests(TestCase):
         SECURE_SSL_REDIRECT=False,
         SECURE_CONTENT_TYPE_NOSNIFF=True,
         SECURE_HSTS_SECONDS=3600,
+        SECURE_HSTS_INCLUDE_SUBDOMAINS=False,
+        SECURE_HSTS_PRELOAD=False,
     )
     def test_production_security_headers(self):
         response = Client().get(reverse("login"), secure=True)

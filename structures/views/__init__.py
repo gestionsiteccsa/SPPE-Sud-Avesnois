@@ -7,21 +7,31 @@ from communes.models import Commune
 from ..models import Structure, TypeStructure
 
 
+def query_int(raw):
+    """Convertit une valeur de requête HTTP en entier ; None si non numérique."""
+    if raw is None or raw == "":
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 class StructureListView(LoginRequiredMixin, ListView):
     model = Structure
     paginate_by = 20
 
     def get_queryset(self):
         qs = super().get_queryset().select_related("type", "commune").filter(afficher=True)
-        commune = self.request.GET.get("commune")
-        type_ = self.request.GET.get("type")
+        commune = query_int(self.request.GET.get("commune"))
+        type_ = query_int(self.request.GET.get("type"))
         handicap = self.request.GET.get("handicap")
         urgence = self.request.GET.get("urgence")
         places = self.request.GET.get("places")
         q = self.request.GET.get("q")
-        if commune:
+        if commune is not None:
             qs = qs.filter(commune_id=commune)
-        if type_:
+        if type_ is not None:
             qs = qs.filter(type_id=type_)
         if handicap == "oui":
             qs = qs.filter(accueil_handicap=True)

@@ -21,6 +21,16 @@
 - journal d'audit : les champs proposés lors d'une demande de modification sont désormais journalisés explicitement (création par lots ne déclenchant pas les signaux).
 - fiches existantes sans tranche d'âge : migration de données les marquant « âge non renseigné » pour rester modifiables.
 
+### Corrigé
+
+- tableau de bord : la liste des structures et l'accueil sont désormais bornés aux communes liées du collaborateur (comme la création, la modification et la suppression), ce qui supprime l'exposition des fiches hors périmètre et des statistiques territoriales complètes.
+- annuaire et tableau de bord : les filtres `commune` / `type` et l'action groupée ignorent les valeurs non numériques (un paramètre `?commune=abc` ne provoque plus d'erreur 500).
+- file de validation : le compteur « + N autre(s) champ(s) » utilise désormais la relation préchargée au lieu d'un `COUNT` par demande affichée.
+- build frontend : le JavaScript est réellement minifié via esbuild (`bundle.min.js` passe d'environ 13,8 à 6,6 Ko) ; le sélecteur d'horaires est compilé en `timeslider.min.js` / `timeslider.min.css` servis par le formulaire, esbuild ayant été ajouté aux dépendances de développement.
+- tests : l'assertion des en-têtes de sécurité production ne dépend plus des options HSTS locales de l'environnement.
+- formulaire de fiche : la valeur « 0 » des champs numériques (âge minimum, places disponibles, nombre de places total, nombre de professionnel·les) disparaissait à l'affichage en modification à cause du filtre `default` qui efface toute valeur falsy ; remplacé par `default_if_none`.
+- formulaire de fiche : la case « Afficher sur le site » apparaissait cochée même pour une fiche masquée (`False|default:True`), risquant de republier involontairement une fiche masquée lors d'une simple modification ; l'état réel de la fiche est désormais respecté.
+
 ### Ajouté
 
 - manifeste Python 3.13 reproductible et lockfile npm ;
@@ -58,6 +68,7 @@
 - pages d'erreur personnalisées aux couleurs du site : 404 (page introuvable), 403 (accès refusé), 400 (requête invalide) et 500 (erreur interne, page autonome pour rester affichable même en cas de panne).
 - campagnes de mise à jour annuelle des assistantes maternelles : création et lancement d'une campagne (dates, statuts brouillon/en cours/clôturée/archivée), invitation par fiche avec jeton personnel aléatoire stocké haché (jamais d'identifiant de fiche dans l'URL), envoi du lien par e-mail ou courrier imprimable avec code, page publique de vérification sans compte (`/verification/<jeton>/`, CSRF, limitation de débit, lecture seule après soumission), confirmation ou proposition de modification sans application directe, file de validation champ par champ (superadmins et collaborateurs limités à leurs communes), saisie assistée par un agent (téléphone ou accueil), relance des non-répondants, clôture avec passage en « expiré », résumé et statistiques de campagne, journalisation dans l'audit.
 - mode test des campagnes : adresses e-mail de test saisies par campagne (2-3, validées), lancement et relance envoyés uniquement à ces adresses (sujet préfixé `[TEST]`, aucune adresse réelle jamais utilisée), bandeau « Mode test » dans le tableau de bord et bouton « Passer en réel » (jetons régénérés, envois aux vraies adresses, invitations courrier repassées en « non contacté ») ; bouton « Lancer en mode test » avec saisie des adresses directement sur la page d'une campagne en brouillon.
+- carte des structures : sélecteur de fond « Plan » (OpenStreetMap, par défaut) / « Satellite » (Esri World Imagery) avec attributions conservées et politique CSP étendue aux tuiles Esri.
 
 ### Modifié
 

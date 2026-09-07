@@ -251,7 +251,7 @@ CSP_POLICY = (
     "default-src 'self'; "
     "script-src 'self' 'nonce-%(nonce)s'; "
     "style-src 'self' 'unsafe-inline'; "
-    "img-src 'self' data: https://*.tile.openstreetmap.org; "
+    "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com; "
     "font-src 'self'; "
     "connect-src 'self'; "
     "object-src 'none'; "
