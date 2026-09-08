@@ -1,0 +1,125 @@
+{% load static %}
+{% if user.is_authenticated %}
+<button
+  type="button"
+  class="feedback-fab"
+  data-feedback-open
+  aria-haspopup="dialog"
+  aria-controls="feedback-dialog"
+  title="Signaler un bug ou une remarque"
+>
+  <svg class="w-6 h-6" aria-hidden="true" width="24" height="24"><use href="{% static 'img/icons.svg' %}#i-bug"></use></svg>
+  <span class="visually-hidden">Signaler un bug ou une remarque</span>
+</button>
+
+<dialog
+  id="feedback-dialog"
+  class="feedback-dialog"
+  aria-labelledby="feedback-dialog-title"
+  aria-describedby="feedback-dialog-desc"
+>
+  <form method="dialog" class="feedback-dialog__close-row">
+    <button type="submit" class="feedback-dialog__close" aria-label="Fermer la fenêtre de signalement">
+      <svg class="w-5 h-5" aria-hidden="true" width="20" height="20"><use href="{% static 'img/icons.svg' %}#i-close"></use></svg>
+    </button>
+  </form>
+  <h2 id="feedback-dialog-title" class="feedback-dialog__title">Signaler un bug ou une remarque</h2>
+  <p id="feedback-dialog-desc" class="feedback-dialog__desc">
+    La page où vous êtes est détectée automatiquement. Modifiez-la si le problème concerne une autre page.
+  </p>
+
+  <div class="feedback-dialog__status" data-feedback-status role="status" aria-live="polite" hidden></div>
+
+  <form
+    method="post"
+    action="{% url 'feedback:submit' %}"
+    data-feedback-form
+    novalidate
+  >
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}" data-feedback-next>
+    <input type="hidden" name="page_contexte" value="" data-feedback-context>
+
+    <div class="flex flex-col gap-2 mb-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="feedback-type">
+        Type de signalement
+      </label>
+      <select
+        id="feedback-type"
+        name="type"
+        class="block w-full px-4 py-3 text-[length:var(--fs-base)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem]"
+        required
+      >
+        <option value="bug" selected>Bug</option>
+        <option value="suggestion">Suggestion</option>
+        <option value="autre">Autre remarque</option>
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-2 mb-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="feedback-page">
+        Page concernée <span class="text-[var(--color-danger)]" aria-hidden="true">*</span>
+      </label>
+      <input
+        id="feedback-page"
+        name="page_declaree"
+        type="text"
+        class="block w-full px-4 py-3 text-[length:var(--fs-base)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem]"
+        required
+        maxlength="500"
+        autocomplete="off"
+        spellcheck="false"
+        list="feedback-pages"
+        data-feedback-page
+        aria-describedby="feedback-page-help"
+      >
+      <datalist id="feedback-pages">
+        <option value="/"></option>
+        <option value="/structures/"></option>
+        <option value="/structures/carte/"></option>
+        <option value="/dashboard/"></option>
+      </datalist>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]" id="feedback-page-help">
+        Pré-remplie avec votre page actuelle, modifiable librement.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-2 mb-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="feedback-message">
+        Votre message <span class="text-[var(--color-danger)]" aria-hidden="true">*</span>
+      </label>
+      <textarea
+        id="feedback-message"
+        name="message"
+        rows="5"
+        maxlength="2000"
+        required
+        minlength="10"
+        placeholder="Que s'est-il passé ? Que cherchiez-vous à faire ?"
+        class="block w-full px-4 py-3 text-[length:var(--fs-base)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)]"
+        aria-describedby="feedback-message-help"
+      ></textarea>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]" id="feedback-message-help">
+        10 à 2000 caractères. Ne mettez pas de mot de passe ni de donnée sensible inutile.
+      </p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+      <button
+        type="button"
+        class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-surface-3)]"
+        data-feedback-cancel
+      >
+        Annuler
+      </button>
+      <button
+        type="submit"
+        class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] bg-[var(--color-primary)] text-white border border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-55 disabled:cursor-not-allowed"
+        data-feedback-submit
+      >
+        Envoyer le signalement
+      </button>
+    </div>
+  </form>
+</dialog>
+{% endif %}

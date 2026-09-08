@@ -199,6 +199,7 @@
   </footer>
 
   <script src="{% static 'js/bundle.min.js' %}" defer nonce="{{ csp_nonce }}"></script>
+  {% include "feedback/_button.html" %}
   {% block extra_js %}{% endblock %}
 </body>
 </html>

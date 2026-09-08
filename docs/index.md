@@ -15,6 +15,7 @@ SPPE Sud-Avesnois est un annuaire de structures petite enfance à accès authent
 - [Notifications par email et mot de passe oublié](features/notifications-emails.md)
 - [Sauvegardes de la base](features/sauvegardes.md)
 - [Campagnes de mise à jour des assistantes maternelles](features/campagnes.md)
+- [Signalements (bug tracker intégré)](features/signalements.md)
 
 ## Sécurité et données
 

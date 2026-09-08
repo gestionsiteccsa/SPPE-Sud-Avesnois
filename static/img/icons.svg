@@ -197,4 +197,18 @@
     <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/>
     <path d="M19 17l.7 1.9L21.6 19.6 19.7 20.3 19 22.2 18.3 20.3 16.4 19.6 18.3 18.9Z"/>
   </symbol>
+
+  <symbol id="i-bug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="7" width="8" height="11" rx="4"/>
+    <line x1="12" y1="7" x2="12" y2="4"/>
+    <line x1="9" y1="4" x2="15" y2="4"/>
+    <line x1="4" y1="9" x2="8" y2="11"/>
+    <line x1="20" y1="9" x2="16" y2="11"/>
+    <line x1="4" y1="15" x2="8" y2="14"/>
+    <line x1="20" y1="15" x2="16" y2="14"/>
+    <line x1="9" y1="21" x2="9" y2="18"/>
+    <line x1="15" y1="21" x2="15" y2="18"/>
+    <circle cx="10" cy="12" r="0.5" fill="currentColor"/>
+    <circle cx="14" cy="12" r="0.5" fill="currentColor"/>
+  </symbol>
 </svg>

@@ -45,6 +45,8 @@
   .home-cta,
   .auth-illustration,
   .btn,
+  .feedback-fab,
+  .feedback-dialog,
   .form-actions { display: none !important; }
 
   /* Layout simplifié */
