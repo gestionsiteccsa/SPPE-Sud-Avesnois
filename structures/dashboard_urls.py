@@ -20,6 +20,7 @@ from .views.dashboard import (
     DashboardNotificationDeleteView,
     DashboardNotificationListView,
     DashboardNotificationUpdateView,
+    DashboardOpeningDayView,
     DashboardPasswordChangeView,
     DashboardProfileView,
     DashboardStructureCreateView,
@@ -40,6 +41,11 @@ app_name = "dashboard"
 
 urlpatterns = [
     path("", DashboardHomeView.as_view(), name="home"),
+    path(
+        "ouvertures/<str:jour>/",
+        DashboardOpeningDayView.as_view(),
+        name="opening_day",
+    ),
     path("profil/", DashboardProfileView.as_view(), name="profile"),
     path("mot-de-passe/", DashboardPasswordChangeView.as_view(), name="password_change"),
     path("structures/", DashboardStructureListView.as_view(), name="structure_list"),

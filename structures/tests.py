@@ -1937,6 +1937,107 @@ class DashboardOverviewAndReferenceTests(TestCase):
         self.assertEqual(len(expanded_queries), len(initial_queries))
 
 
+class DashboardOpeningDayTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="admin-opening@example.test",
+            email="admin-opening@example.test",
+            password="Un-mot-de-passe-tres-long-2026",
+        )
+        self.client.force_login(self.admin)
+        self.commune = Commune.objects.create(nom="Testville", code_postal="75001")
+        self.other_commune = Commune.objects.create(nom="Autreville", code_postal="75002")
+        self.type = TypeStructure.objects.create(nom="Crèche")
+        self.open_visible = Structure.objects.create(
+            nom="Crèche du dimanche",
+            afficher=True,
+            commune=self.commune,
+            type=self.type,
+            horaires=[
+                {"jour": "dimanche", "ferme": False, "ouverture": "08:00", "fermeture": "12:00"},
+                {"jour": "lundi", "ferme": True},
+            ],
+        )
+        self.open_hidden = Structure.objects.create(
+            nom="Garderie discrète",
+            afficher=False,
+            commune=self.commune,
+            type=self.type,
+            horaires=[{"jour": "dimanche", "ferme": False}],
+        )
+        self.closed = Structure.objects.create(
+            nom="Fermée le dimanche",
+            afficher=True,
+            commune=self.commune,
+            type=self.type,
+            horaires=[{"jour": "dimanche", "ferme": True}],
+        )
+
+    def test_home_exposes_day_buttons_and_dialog(self):
+        response = self.client.get(reverse("dashboard:home"))
+
+        self.assertContains(response, 'data-opening-day="dimanche"')
+        self.assertContains(response, 'id="opening-day-dialog"')
+        self.assertContains(response, "Sélectionnez un jour pour voir la liste")
+
+    def test_opening_day_lists_open_structures_with_public_and_edit_urls(self):
+        response = self.client.get(reverse("dashboard:opening_day", args=["dimanche"]))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["jour"], "dimanche")
+        self.assertEqual(payload["total"], 2)
+        names = [item["nom"] for item in payload["results"]]
+        self.assertIn("Crèche du dimanche", names)
+        self.assertIn("Garderie discrète", names)
+        self.assertNotIn("Fermée le dimanche", names)
+        by_name = {item["nom"]: item for item in payload["results"]}
+        self.assertFalse(by_name["Crèche du dimanche"]["masquee"])
+        self.assertEqual(
+            by_name["Crèche du dimanche"]["url"],
+            reverse("structures:detail", args=[self.open_visible.pk]),
+        )
+        self.assertEqual(by_name["Crèche du dimanche"]["horaires"], "08:00–12:00")
+        self.assertTrue(by_name["Garderie discrète"]["masquee"])
+        self.assertEqual(
+            by_name["Garderie discrète"]["url"],
+            reverse("dashboard:structure_edit", args=[self.open_hidden.pk]),
+        )
+
+    def test_opening_day_rejects_unknown_day(self):
+        response = self.client.get(reverse("dashboard:opening_day", args=["funday"]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_opening_day_is_scoped_to_collaborator_communes(self):
+        collab = User.objects.create_user(
+            username="collab-opening@example.test",
+            email="collab-opening@example.test",
+            password="Un-mot-de-passe-tres-long-2026",
+        )
+        UserCommune.objects.create(user=collab, commune=self.other_commune)
+        Structure.objects.create(
+            nom="Crèche d'ailleurs",
+            afficher=True,
+            commune=self.other_commune,
+            horaires=[{"jour": "dimanche", "ferme": False}],
+        )
+        self.client.force_login(collab)
+
+        response = self.client.get(reverse("dashboard:opening_day", args=["dimanche"]))
+
+        self.assertEqual(response.status_code, 200)
+        names = [item["nom"] for item in response.json()["results"]]
+        self.assertEqual(names, ["Crèche d'ailleurs"])
+
+    def test_opening_day_requires_login(self):
+        self.client.logout()
+
+        response = self.client.get(reverse("dashboard:opening_day", args=["dimanche"]))
+
+        self.assertIn(response.status_code, (302, 403))
+
+
 class StructureFormErrorDisplayTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(

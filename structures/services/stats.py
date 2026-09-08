@@ -50,7 +50,7 @@ class DashboardStatistics(TypedDict):
     offer: OfferSummary
     by_type: GroupedOfferStatistics
     by_commune: GroupedOfferStatistics
-    opening_days: list[StatisticItem]
+    opening_days: list[dict]
     freshness: list[StatisticItem]
     freshness_outdated: int
     completeness: list[CompletenessItem]
@@ -155,21 +155,42 @@ def _offer_summary(queryset: QuerySet) -> OfferSummary:
     }
 
 
-def _opening_day_statistics(queryset: QuerySet) -> list[StatisticItem]:
+def _day_schedule_entry(schedule, day: str) -> dict | None:
+    """Retourne l'entrée d'horaires correspondant à un jour, ou None."""
+    for item in schedule or []:
+        if isinstance(item, dict) and item.get("jour") == day:
+            return item
+    return None
+
+
+def is_open_on_day(schedule, day: str) -> bool:
+    """Indique si des horaires déclarent une ouverture un jour donné."""
+    entry = _day_schedule_entry(schedule, day)
+    return entry is not None and entry.get("ferme") is False
+
+
+def format_day_schedule(schedule, day: str) -> str:
+    """Libellé court des horaires d'un jour (ex. « 08:00–12:00 »)."""
+    entry = _day_schedule_entry(schedule, day)
+    if entry is None or entry.get("ferme") is not False:
+        return ""
+    ouverture = str(entry.get("ouverture") or "").strip()
+    fermeture = str(entry.get("fermeture") or "").strip()
+    if ouverture and fermeture:
+        return f"{ouverture}–{fermeture}"
+    return "Ouvert"
+
+
+def _opening_day_statistics(queryset: QuerySet) -> list[dict]:
     day_labels = dict(JOURS_SEM)
     totals = {day: 0 for day in day_labels}
     schedules = queryset.values_list("horaires", flat=True).iterator(chunk_size=500)
     for schedule in schedules:
-        open_days = {
-            item.get("jour")
-            for item in (schedule or [])
-            if isinstance(item, dict) and item.get("ferme") is False
-        }
-        for day in totals.keys() & open_days:
-            totals[day] += 1
+        for day in totals:
+            if is_open_on_day(schedule, day):
+                totals[day] += 1
     return [
-        {"label": label, "total": totals[day]}
-        for day, label in day_labels.items()
+        {"jour": day, "label": label, "total": totals[day]} for day, label in day_labels.items()
     ]
 
 

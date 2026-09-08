@@ -20,7 +20,7 @@ from django.db.models.functions import (
 )
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.utils.html import format_html
@@ -54,7 +54,7 @@ from communes.models import Commune
 from structures.access import allowed_commune_ids
 from structures.audit import audit_actor
 from structures.forms import StructureForm
-from structures.models import AUDIT_ACTIONS, AuditLog, Structure, TypeStructure
+from structures.models import AUDIT_ACTIONS, AuditLog, JOURS_SEM, Structure, TypeStructure
 from structures.views import query_int
 from structures.services.import_data import (
     ImportDataError,
@@ -70,7 +70,11 @@ from structures.services.sqlite_backup import (
     run_backup,
 )
 from structures.services.ban import ban_autocomplete
-from structures.services.stats import build_dashboard_statistics
+from structures.services.stats import (
+    build_dashboard_statistics,
+    format_day_schedule,
+    is_open_on_day,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -221,6 +225,60 @@ class DashboardHomeView(StructureManageAccessMixin, TemplateView):
             item["total"] for item in ctx["opening_days"]
         ]
         return ctx
+
+
+class DashboardOpeningDayView(StructureManageAccessMixin, View):
+    """Liste JSON des structures ouvertes un jour donné (modale dashboard)."""
+
+    MAX_RESULTS = 200
+
+    def get(self, request, jour):
+        day = (jour or "").strip().lower()
+        labels = dict(JOURS_SEM)
+        if day not in labels:
+            return JsonResponse({"detail": "Jour inconnu."}, status=404)
+
+        commune_ids = self.allowed_commune_ids()
+        queryset = Structure.objects.select_related("type", "commune")
+        if commune_ids is not None:
+            queryset = queryset.filter(commune_id__in=commune_ids)
+
+        matches = [
+            structure
+            for structure in queryset.iterator(chunk_size=500)
+            if is_open_on_day(structure.horaires, day)
+        ]
+        matches.sort(key=lambda s: (s.nom_affiche or "").casefold())
+        total = len(matches)
+        page = matches[: self.MAX_RESULTS]
+
+        results = []
+        for structure in page:
+            is_visible = bool(structure.afficher)
+            if is_visible:
+                url = reverse("structures:detail", args=[structure.pk])
+            else:
+                url = reverse("dashboard:structure_edit", args=[structure.pk])
+            results.append(
+                {
+                    "id": structure.pk,
+                    "nom": structure.nom_affiche,
+                    "type": structure.type.nom if structure.type else "",
+                    "commune": structure.commune.nom if structure.commune else "",
+                    "masquee": not is_visible,
+                    "horaires": format_day_schedule(structure.horaires, day),
+                    "url": url,
+                }
+            )
+        return JsonResponse(
+            {
+                "jour": day,
+                "label": labels[day],
+                "total": total,
+                "truncated": total > len(results),
+                "results": results,
+            }
+        )
 
 
 SORT_MAP = {

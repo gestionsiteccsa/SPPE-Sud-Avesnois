@@ -122,4 +122,27 @@
     </div>
   </form>
 </dialog>
+{% comment %}
+  Secours si le bundle JS est absent ou en erreur : ce script inline (nonce CSP)
+  ouvre la modale en natif. Le formulaire reste alors soumis en POST classique.
+  feedback.js gère le cas nominal (fetch JSON) et ignore le double-clic via
+  le garde-fou `dialog.open`.
+{% endcomment %}
+<script nonce="{{ csp_nonce }}">
+(function () {
+  var btn = document.querySelector("[data-feedback-open]");
+  var dlg = document.getElementById("feedback-dialog");
+  if (!btn || !dlg) return;
+  btn.addEventListener("click", function () {
+    try {
+      if (dlg.open) return;
+      if (typeof dlg.showModal === "function") {
+        dlg.showModal();
+        return;
+      }
+    } catch (e) {}
+    window.location.href = "{% url 'feedback:submit' %}";
+  });
+})();
+</script>
 {% endif %}

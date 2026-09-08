@@ -161,7 +161,7 @@
       <div class="mb-4"><h3 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0">Jours d’ouverture</h3><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">Nombre de structures visibles ouvertes chaque jour, d’après leurs horaires.</p></div>
       <div class="relative h-64"><canvas id="chart-opening-days" role="img" aria-label="Nombre de structures visibles ouvertes par jour" aria-describedby="chart-opening-days-description">Le détail des jours d’ouverture est disponible sous le graphique.</canvas></div>
       <p id="chart-opening-days-description" class="sr-only">Les nombres exacts du lundi au dimanche sont disponibles dans la liste dépliable qui suit.</p>
-      <details class="mt-3 text-[length:var(--fs-sm)]"><summary class="min-h-11 inline-flex items-center cursor-pointer font-semibold text-[var(--color-primary)] hover:underline">Afficher les données par jour</summary><ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2 list-none mt-2 mb-0 p-0" role="list">{% for item in opening_days %}<li class="flex items-center justify-between gap-3 border-b border-[var(--color-border)] py-1"><span>{{ item.label }}</span><strong>{{ item.total }}</strong></li>{% endfor %}</ul></details>
+      <details class="mt-3 text-[length:var(--fs-sm)]"><summary class="min-h-11 inline-flex items-center cursor-pointer font-semibold text-[var(--color-primary)] hover:underline">Afficher les données par jour</summary><p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] mt-1 mb-0">Sélectionnez un jour pour voir la liste des structures ouvertes.</p><ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2 list-none mt-2 mb-0 p-0" role="list">{% for item in opening_days %}<li class="border-b border-[var(--color-border)] py-1"><button type="button" class="flex w-full items-center justify-between gap-3 rounded-[var(--radius-sm)] px-1 py-1 text-left hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2" data-opening-day="{{ item.jour }}" data-opening-label="{{ item.label }}" data-opening-url="{% url 'dashboard:opening_day' jour=item.jour %}" aria-haspopup="dialog" aria-controls="opening-day-dialog"><span>{{ item.label }}</span><strong>{{ item.total }}</strong></button></li>{% endfor %}</ul></details>
     </article>
 
     <article class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 md:p-5 min-w-0">
@@ -184,6 +184,19 @@
     </article>
   </div>
 </section>
+
+<dialog id="opening-day-dialog" class="feedback-dialog" aria-labelledby="opening-day-title" aria-describedby="opening-day-desc">
+  <form method="dialog" class="feedback-dialog__close-row">
+    <button type="submit" class="feedback-dialog__close" aria-label="Fermer la liste des structures">
+      <svg class="w-5 h-5" aria-hidden="true" width="20" height="20"><use href="{% static 'img/icons.svg' %}#i-close"></use></svg>
+    </button>
+  </form>
+  <h2 id="opening-day-title" class="feedback-dialog__title" tabindex="-1">Structures ouvertes</h2>
+  <p id="opening-day-desc" class="feedback-dialog__desc">Liste des structures ouvertes le jour sélectionné. Sélectionnez une structure pour ouvrir sa fiche.</p>
+  <div class="feedback-dialog__status" data-opening-status role="status" aria-live="polite" hidden></div>
+  <ul class="list-none m-0 p-0 divide-y divide-[var(--color-border)]" data-opening-list role="list"></ul>
+  <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-3 mb-0" data-opening-more hidden></p>
+</dialog>
 {% endblock %}
 
 {% block extra_js %}

@@ -57,6 +57,8 @@
     }
 
     function open() {
+      // Garde-fou : le script de secours inline peut déjà avoir ouvert.
+      if (dialog.open) return;
       lastFocus = document.activeElement;
       prefill();
       if (statusBox) {

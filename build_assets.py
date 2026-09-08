@@ -156,7 +156,15 @@ def _run_esbuild(arguments: list[str], input: str | None = None) -> str:
 
 def build_js() -> None:
     print("\n== JS ==")
-    sources = ["theme.js", "nav.js", "filters.js", "password.js", "confirm.js", "feedback.js"]
+    sources = [
+        "theme.js",
+        "nav.js",
+        "filters.js",
+        "password.js",
+        "confirm.js",
+        "feedback.js",
+        "opening-days.js",
+    ]
     parts = []
     for filename in sources:
         content = (STATIC / "js" / filename).read_text(encoding="utf-8")

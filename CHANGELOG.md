@@ -33,6 +33,8 @@
 
 ### Ajouté
 
+- tableau de bord : dans « Jours d'ouverture », chaque jour du menu « Afficher les données par jour » ouvre une modale accessible (`<dialog>`) listant les structures ouvertes ce jour-là (nom, type, commune, horaires, badge « Masquée ») ; un clic sur une structure visible ouvre sa fiche publique, sur une structure masquée sa page de modification.
+
 - signalements : bouton fixe « Signaler un bug » sur tout le site (utilisateurs connectés) ouvrant une modale accessible (`<dialog>`, page pré-remplie modifiable, envoi JSON avec repli sans JS) ; stockage en base (`feedback.FeedbackReport`, statuts nouveau/en cours/résolu), email aux `DestinataireNotification` actifs et administration Django dédiée.
 - signalements : email de notification mis en page (pastille couleur par type, tableau auteur/pages/message, bouton vers l'admin) avec version texte conservée.
 - manifeste Python 3.13 reproductible et lockfile npm ;
