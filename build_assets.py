@@ -1,4 +1,5 @@
 """Construit les ressources statiques livrées à o2switch."""
+import os
 import re
 import shutil
 import subprocess
@@ -91,17 +92,26 @@ def validate_app_css() -> None:
     print("  Validation des couches CSS réussie")
 
 
-def _run_esbuild(arguments: list[str], input: str | None = None) -> str:
-    """Exécute esbuild (dépendance de développement) pour minifier JS/CSS."""
-    cli = ROOT / "node_modules" / "esbuild" / "bin" / "esbuild"
-    if not cli.is_file():
-        raise RuntimeError(
-            "esbuild est introuvable dans node_modules. "
-            "Exécutez `npm ci` puis relancez `python build_assets.py`."
-        )
+def _esbuild_command(cli: Path) -> list[str]:
+    """Retourne la commande de lancement d'esbuild selon la nature du fichier.
+
+    `bin/esbuild` est normalement un shim JS (à lancer via `node`), mais le
+    postinstall d'esbuild peut le remplacer par le binaire natif de la
+    plateforme lorsque le paquet optionnel manque (observé en CI : fichier
+    ELF, que Node est incapable d'interpréter). L'exécution directe couvre
+    les deux cas sous Linux ; le repli `node` couvre le shim sous Windows.
+    """
+    with cli.open("rb") as handle:
+        header = handle.read(2)
+    if header == b"#!":
+        return ["node", str(cli)]
+    return [str(cli)]
+
+
+def _invoke_esbuild(command: list[str], input: str | None) -> str:
     try:
         result = subprocess.run(
-            ["node", str(cli), "--minify", "--legal-comments=none", *arguments],
+            command,
             input=input,
             check=True,
             capture_output=True,
@@ -113,7 +123,7 @@ def _run_esbuild(arguments: list[str], input: str | None = None) -> str:
         details = (exc.stderr or "").strip() or (exc.stdout or "").strip()
         message = (
             "esbuild a échoué "
-            f"(code {exc.returncode}, options : {' '.join(arguments)})."
+            f"(code {exc.returncode}, commande : {' '.join(command)})."
         )
         if details:
             message += f" Détails : {details}"
@@ -121,6 +131,23 @@ def _run_esbuild(arguments: list[str], input: str | None = None) -> str:
             message += " Aucun détail sur stderr."
         raise RuntimeError(message) from exc
     return result.stdout
+
+
+def _run_esbuild(arguments: list[str], input: str | None = None) -> str:
+    """Exécute esbuild (dépendance de développement) pour minifier JS/CSS."""
+    cli = ROOT / "node_modules" / "esbuild" / "bin" / "esbuild"
+    if not cli.is_file():
+        raise RuntimeError(
+            "esbuild est introuvable dans node_modules. "
+            "Exécutez `npm ci` puis relancez `python build_assets.py`."
+        )
+    options = ["--minify", "--legal-comments=none", *arguments]
+    try:
+        return _invoke_esbuild(_esbuild_command(cli) + options, input)
+    except PermissionError:
+        # Binaire natif sans bit d'exécution (postinstall partiel côté CI).
+        os.chmod(cli, 0o755)
+        return _invoke_esbuild([str(cli)] + options, input)
 
 
 def build_js() -> None:

@@ -26,7 +26,7 @@ python manage.py test
 
 Relisez ensuite le diff de `static/`. Les fichiers générés sont versionnés parce que Node.js n'est pas requis sur l'hébergement mutualisé.
 
-En cas d'échec d'esbuild, `build_assets.py` affiche le message d'erreur du binaire (code, options et `stderr`) au lieu d'une erreur nue ; vérifiez d'abord que `node node_modules/esbuild/bin/esbuild --version` répond (sinon, relancer `npm ci`).
+En cas d'échec d'esbuild, `build_assets.py` affiche le message d'erreur du binaire (commande, code et `stderr`) au lieu d'une erreur nue. Le lanceur détecte automatiquement si `bin/esbuild` est le shim JS (via `node`) ou le binaire natif installé par le postinstall (exécution directe) ; vérifiez d'abord que `node_modules/esbuild/bin/esbuild --version` répond (sinon, relancer `npm ci`).
 
 ## Conventions Tailwind v4
 

@@ -111,6 +111,7 @@
 - affichage des erreurs de validation du formulaire de structure : résumé global en tête de formulaire et messages sous les champs concernés (auparavant, seules les erreurs du champ « nom » étaient visibles) ;
 - conservation de la commune et du type sélectionnés après une erreur de validation du formulaire de structure.
 - build des ressources : un échec d'esbuild affiche désormais son message d'erreur (plus de log aveugle en CI) avec un contrôle préalable du binaire dans le workflow qualité.
+- build des ressources : le lanceur esbuild détecte si `bin/esbuild` est le shim JS ou le binaire natif installé par le postinstall (exécution directe dans ce cas), corrigeant l'échec CI `SyntaxError: Invalid or unexpected token` sur le fichier ELF.
 
 ### Sécurité
 

@@ -28,7 +28,7 @@ jobs:
       - name: Installer les dépendances frontend
         run: npm ci
       - name: Vérifier le binaire esbuild
-        run: node node_modules/esbuild/bin/esbuild --version
+        run: node_modules/esbuild/bin/esbuild --version
       - name: Vérifier les dépendances
         run: |
           python -m pip check
