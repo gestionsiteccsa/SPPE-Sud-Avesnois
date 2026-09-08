@@ -94,15 +94,32 @@ def validate_app_css() -> None:
 def _run_esbuild(arguments: list[str], input: str | None = None) -> str:
     """Exécute esbuild (dépendance de développement) pour minifier JS/CSS."""
     cli = ROOT / "node_modules" / "esbuild" / "bin" / "esbuild"
-    result = subprocess.run(
-        ["node", str(cli), "--minify", "--legal-comments=none", *arguments],
-        input=input,
-        check=True,
-        capture_output=True,
-        text=True,
-        cwd=ROOT,
-        timeout=60,
-    )
+    if not cli.is_file():
+        raise RuntimeError(
+            "esbuild est introuvable dans node_modules. "
+            "Exécutez `npm ci` puis relancez `python build_assets.py`."
+        )
+    try:
+        result = subprocess.run(
+            ["node", str(cli), "--minify", "--legal-comments=none", *arguments],
+            input=input,
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+            timeout=60,
+        )
+    except subprocess.CalledProcessError as exc:
+        details = (exc.stderr or "").strip() or (exc.stdout or "").strip()
+        message = (
+            "esbuild a échoué "
+            f"(code {exc.returncode}, options : {' '.join(arguments)})."
+        )
+        if details:
+            message += f" Détails : {details}"
+        else:
+            message += " Aucun détail sur stderr."
+        raise RuntimeError(message) from exc
     return result.stdout
 
 
