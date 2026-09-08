@@ -1194,6 +1194,26 @@ class StructureMapSecurityTests(TestCase):
         self.assertIn("https://*.tile.openstreetmap.org", policy)
         self.assertIn("https://server.arcgisonline.com", policy)
 
+    def test_map_renders_availability_filter_with_all_option(self):
+        Structure.objects.create(
+            nom="Crèche Dispo",
+            latitude=50.0,
+            longitude=4.0,
+            places_disponibles=2,
+            places_complet=False,
+            places_non_communique=False,
+        )
+
+        response = self.client.get(reverse("structures:carte"))
+
+        self.assertContains(response, 'id="map-availability-filter"', html=False)
+        self.assertContains(response, 'name="disponibilite"', html=False)
+        for value in ("all", "available", "complete", "unknown"):
+            self.assertContains(response, f'value="{value}"', html=False)
+        self.assertContains(response, "Tout", html=False)
+        self.assertContains(response, 'id="map-filter-status"', html=False)
+        self.assertContains(response, "applyAvailabilityFilter", html=False)
+
 
 class HealthCheckTests(TestCase):
     def test_health_endpoint_exposes_only_liveness(self):
