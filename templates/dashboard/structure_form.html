@@ -202,9 +202,8 @@
     </div>
   </div>
 
-  {# --- Ligne : Adresse & Contact + Capacité d'accueil --- #}
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5 items-start">
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
+  {# --- Section : Adresse & Contact (pleine largeur) --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-map-pin"></use></svg>
       Adresse &amp; Contact
@@ -259,6 +258,8 @@
     </div>
   </div>
 
+  {# --- Ligne : Capacité d'accueil + Informations de gestion --- #}
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5 items-start">
   {# --- Section : Capacité --- #}
   <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
@@ -296,10 +297,9 @@
                 placeholder="Ex&nbsp;: sur dossier, entretien préalable…">{{ form.conditions_places.value|default:'' }}</textarea>
     </div>
   </div>
-  </div>
 
   {# --- Section : Gestion --- #}
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-settings"></use></svg>
       Informations de gestion
@@ -358,6 +358,7 @@
              {% if form.reference_monenfant.value %}checked{% endif %}>
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_reference_monenfant">Référencé sur monenfant.fr</label>
     </div>
+  </div>
   </div>
 
   {{ form.horaires }}

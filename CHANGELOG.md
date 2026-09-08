@@ -110,7 +110,7 @@
 - template de formulaire public redondant et inutilisé supprimé ;
 - envoi réel de l'email de réinitialisation de mot de passe (templates de sujet et de contenu manquants : la demande affichait une erreur serveur).
 - affichage des erreurs de validation du formulaire de structure : résumé global en tête de formulaire et messages sous les champs concernés (auparavant, seules les erreurs du champ « nom » étaient visibles) ;
-- formulaire de fiche : bloc « Accueil spécifique » en colonne de droite sous « Tranche d'âge » ; « Informations de gestion » en pleine largeur en bas.
+- formulaire de fiche : bloc « Accueil spécifique » en colonne de droite sous « Tranche d'âge » ; « Adresse & Contact » en pleine largeur avec « Capacité d'accueil » et « Informations de gestion » côte à côte en dessous.
 - conservation de la commune et du type sélectionnés après une erreur de validation du formulaire de structure.
 - build des ressources : un échec d'esbuild affiche désormais son message d'erreur (plus de log aveugle en CI) avec un contrôle préalable du binaire dans le workflow qualité.
 - build des ressources : le lanceur esbuild détecte si `bin/esbuild` est le shim JS ou le binaire natif installé par le postinstall (exécution directe dans ce cas), corrigeant l'échec CI `SyntaxError: Invalid or unexpected token` sur le fichier ELF.

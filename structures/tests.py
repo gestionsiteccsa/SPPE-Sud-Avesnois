@@ -2278,10 +2278,14 @@ class StructureFormZeroValueDisplayTests(TestCase):
         pos_age = html.index("id_age_non_renseigne")
         pos_accueil = html.index("id_accueil_handicap")
         pos_horaires = html.index("horaires-fieldset")
+        pos_adresse = html.index("id_adresse")
+        pos_capacite = html.index("id_places_disponibles")
         pos_gestion = html.index("id_directeur")
         self.assertLess(pos_age, pos_accueil)
         self.assertLess(pos_accueil, pos_horaires)
-        self.assertLess(pos_horaires, pos_gestion)
+        self.assertLess(pos_horaires, pos_adresse)
+        self.assertLess(pos_adresse, pos_capacite)
+        self.assertLess(pos_capacite, pos_gestion)
 
 
 @override_settings(GEOCODE_ENABLED=False)
