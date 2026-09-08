@@ -113,6 +113,7 @@
 - build des ressources : un échec d'esbuild affiche désormais son message d'erreur (plus de log aveugle en CI) avec un contrôle préalable du binaire dans le workflow qualité.
 - build des ressources : le lanceur esbuild détecte si `bin/esbuild` est le shim JS ou le binaire natif installé par le postinstall (exécution directe dans ce cas), corrigeant l'échec CI `SyntaxError: Invalid or unexpected token` sur le fichier ELF.
 - build des ressources : sorties strictement reproductibles entre Windows et Linux (normalisation LF des copies vendor, stdin binaire pour esbuild, écritures LF, `.gitattributes`), corrigeant l'échec CI `git diff --exit-code -- static` sur `leaflet.css` (CRLF livré par npm) et les `min.js`.
+- CI : variable `BACKUP_DIR` fournie au contrôle `check --deploy` (exigée en production depuis la fonction sauvegardes).
 
 ### Sécurité
 
