@@ -2371,6 +2371,8 @@ class StructureFlashMessageTests(TestCase):
         self.assertContains(response, 'id="adresse-placer"', html=False)
         self.assertContains(response, "Placer le point manuellement")
         self.assertContains(response, 'id="adresse-minimap"', html=False)
+        self.assertContains(response, "Satellite", html=False)
+        self.assertContains(response, "server.arcgisonline.com", html=False)
 
     def test_create_with_manual_coordinates_keeps_typed_address_and_point(self):
         with mock.patch(

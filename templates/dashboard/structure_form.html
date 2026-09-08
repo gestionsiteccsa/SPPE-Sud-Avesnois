@@ -13,7 +13,10 @@
   .adresse-suggest__list { position: absolute; z-index: 30; left: 0; right: 0; top: 100%; margin: 0.25rem 0 0; padding: 0.25rem; list-style: none; background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-md); max-height: 16rem; overflow-y: auto; }
   .adresse-suggest__item { width: 100%; text-align: left; padding: 0.6rem 0.7rem; border: 0; border-radius: 0.45rem; background: transparent; cursor: pointer; font-size: var(--fs-sm); }
   .adresse-suggest__item:hover, .adresse-suggest__item--active { background: var(--color-primary-soft); }
-  .adresse-minimap { height: 12rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-top: 0.6rem; z-index: 0; background: var(--color-surface-3); }
+  .adresse-minimap { height: 24rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-top: 0.6rem; z-index: 0; background: var(--color-surface-3); }
+  .adresse-minimap .leaflet-control-layers { color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 0.82rem; }
+  .adresse-minimap .leaflet-control-layers-toggle:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+  .adresse-minimap .leaflet-control-layers label:focus-within { outline: var(--focus-outline); outline-offset: 2px; border-radius: 4px; }
 </style>
 {% endblock %}
 
@@ -514,10 +517,25 @@
     mapEl.hidden = false;
     if (!map) {
       map = L.map(mapEl, { scrollWheelZoom: false }).setView([center.lat, center.lon], zoom);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      var planLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>",
         maxZoom: 18
-      }).addTo(map);
+      });
+      var satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics",
+        maxZoom: 18
+      });
+      planLayer.addTo(map);
+      L.control.layers(
+        { "Plan": planLayer, "Satellite": satelliteLayer },
+        null,
+        { position: "topright", collapsed: window.innerWidth < 640 }
+      ).addTo(map);
+      var layersToggle = map.getContainer().querySelector(".leaflet-control-layers-toggle");
+      if (layersToggle) {
+        layersToggle.setAttribute("title", "Fonds de carte : Plan ou Satellite");
+        layersToggle.setAttribute("aria-label", "Choisir le fond de carte : Plan ou Satellite");
+      }
       map.on("click", function (event) {
         if (manualArmed) placeManualPoint(event.latlng);
       });
