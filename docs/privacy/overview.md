@@ -24,6 +24,7 @@ Les données de démonstration du code courant sont fictives et utilisent le dom
 - o2switch héberge l'application, SQLite, Redis, SMTP, logs et sauvegardes JetBackup ;
 - un stockage externe est recommandé pour une copie chiffrée des sauvegardes ;
 - OpenStreetMap reçoit directement du navigateur les requêtes de tuiles cartographiques et les métadonnées réseau associées ;
+- la Base Adresse Nationale (`api-adresse.data.gouv.fr`, service public français) reçoit côté serveur l'adresse tapée dans le tableau de bord pour renvoyer latitude/longitude, sans nom, e-mail ni téléphone ; Nominatim/OpenStreetMap n'est interrogé qu'en repli ;
 - Chart.js, Leaflet, MarkerCluster, Tailwind et Inter sont servis localement ;
 - aucun outil analytics ou publicitaire n'est intégré.
 

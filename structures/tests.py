@@ -684,24 +684,45 @@ class GeocodeServiceTests(TestCase):
 
     def test_geocode_structure_sets_coordinates(self):
         structure = Structure(adresse="2 Rue Raymond Chomel", commune=self.commune)
-        with mock.patch("structures.services.geocode._lookup", return_value=(50.1, 3.2)):
+        with mock.patch(
+            "structures.services.geocode._lookup_best", return_value=(50.1, 3.2)
+        ):
             geocode_structure(structure)
         self.assertEqual((structure.latitude, structure.longitude), (50.1, 3.2))
 
     def test_geocode_structure_skips_when_already_set(self):
         structure = Structure(adresse="2 Rue Raymond Chomel", latitude=1.0, longitude=2.0)
-        with mock.patch("structures.services.geocode._lookup") as fake:
+        with mock.patch("structures.services.geocode._lookup_best") as fake:
             geocode_structure(structure)
         fake.assert_not_called()
 
     def test_geocode_structure_respects_disabled_setting(self):
         structure = Structure(adresse="2 Rue Raymond Chomel")
         with (
-            mock.patch("structures.services.geocode._lookup") as fake,
+            mock.patch("structures.services.geocode._lookup_best") as fake,
             override_settings(GEOCODE_ENABLED=False),
         ):
             geocode_structure(structure)
         fake.assert_not_called()
+
+    def test_lookup_best_prefers_ban_then_fallback_nominatim(self):
+        from structures.services.geocode import _lookup_best
+
+        with (
+            mock.patch(
+                "structures.services.ban.ban_lookup", return_value=(50.1, 3.2)
+            ),
+            mock.patch("structures.services.geocode._lookup") as nominatim,
+        ):
+            self.assertEqual(_lookup_best("2 rue X, 59610 Fourmies"), (50.1, 3.2))
+        nominatim.assert_not_called()
+        with (
+            mock.patch("structures.services.ban.ban_lookup", return_value=None),
+            mock.patch(
+                "structures.services.geocode._lookup", return_value=(51.0, 4.0)
+            ),
+        ):
+            self.assertEqual(_lookup_best("adresse inconnue ban"), (51.0, 4.0))
 
     def test_build_query_uses_address_and_commune(self):
         structure = Structure(adresse="2 Rue Raymond Chomel", commune=self.commune)
@@ -772,7 +793,9 @@ class GeocodeCommandTests(TestCase):
             nom_structure="Crèche A", adresse="2 Rue X", commune=commune
         )
         Structure.objects.create(nom_structure="Crèche B", adresse="3 Rue Y", commune=commune)
-        with mock.patch("structures.services.geocode._lookup", return_value=(50.1, 3.2)):
+        with mock.patch(
+            "structures.services.geocode._lookup_best", return_value=(50.1, 3.2)
+        ):
             call_command("geocode_structures")
         missing.refresh_from_db()
         self.assertEqual((missing.latitude, missing.longitude), (50.1, 3.2))
@@ -782,10 +805,163 @@ class GeocodeCommandTests(TestCase):
         missing = Structure.objects.create(
             nom_structure="Crèche A", adresse="2 Rue X", commune=commune
         )
-        with mock.patch("structures.services.geocode._lookup", return_value=(50.1, 3.2)):
+        with mock.patch(
+            "structures.services.geocode._lookup_best", return_value=(50.1, 3.2)
+        ):
             call_command("geocode_structures", dry_run=True)
         missing.refresh_from_db()
         self.assertIsNone(missing.latitude)
+
+    def test_command_geocodes_partially_filled_coordinates(self):
+        commune = Commune.objects.create(nom="Fourmies", code_postal="59610")
+        partial = Structure.objects.create(
+            nom_structure="Crèche Partielle",
+            adresse="2 Rue X",
+            commune=commune,
+            latitude=50.0,
+            longitude=None,
+        )
+        with mock.patch(
+            "structures.services.geocode._lookup_best", return_value=(50.1, 3.2)
+        ):
+            call_command("geocode_structures")
+        partial.refresh_from_db()
+        self.assertEqual((partial.latitude, partial.longitude), (50.1, 3.2))
+
+    def test_command_exports_ko_to_csv(self):
+        import csv
+
+        commune = Commune.objects.create(nom="Fourmies", code_postal="59610")
+        Structure.objects.create(
+            nom_structure="Crèche KO", adresse="Adresse introuvable XYZ", commune=commune
+        )
+        with (
+            TemporaryDirectory() as tmp,
+            mock.patch("structures.services.geocode._lookup_best", return_value=None),
+        ):
+            export_path = str(Path(tmp) / "ko.csv")
+            call_command("geocode_structures", export_ko=export_path)
+            with open(export_path, encoding="utf-8-sig") as handle:
+                rows = list(csv.DictReader(handle, delimiter=";"))
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["nom"], "Crèche KO")
+
+
+class BanServiceTests(TestCase):
+    def setUp(self):
+        from structures.services import ban as ban_module
+
+        ban_module.ban_lookup.cache_clear()
+        ban_module.ban_autocomplete.cache_clear()
+
+    def _ban_response(self, payload: dict):
+        response = mock.MagicMock()
+        response.read.return_value = json.dumps(payload).encode("utf-8")
+        response.__enter__.return_value = response
+        return response
+
+    def test_ban_lookup_returns_lat_lon_when_score_ok(self):
+        from structures.services.ban import ban_lookup
+
+        payload = {
+            "features": [
+                {
+                    "geometry": {"coordinates": [3.456, 50.123]},
+                    "properties": {"label": "2 Rue X 59610 Fourmies", "score": 0.9},
+                }
+            ]
+        }
+        with mock.patch(
+            "structures.services.ban.urllib.request.urlopen",
+            return_value=self._ban_response(payload),
+        ):
+            self.assertEqual(ban_lookup("2 rue X Fourmies unique 1"), (50.123, 3.456))
+
+    def test_ban_lookup_rejects_low_score(self):
+        from structures.services.ban import ban_lookup
+
+        payload = {
+            "features": [
+                {
+                    "geometry": {"coordinates": [3.0, 50.0]},
+                    "properties": {"label": "Rue", "score": 0.2},
+                }
+            ]
+        }
+        with mock.patch(
+            "structures.services.ban.urllib.request.urlopen",
+            return_value=self._ban_response(payload),
+        ):
+            self.assertIsNone(ban_lookup("rue vague unique 2"))
+
+    def test_ban_lookup_returns_none_on_network_error(self):
+        from structures.services.ban import ban_lookup
+
+        with mock.patch(
+            "structures.services.ban.urllib.request.urlopen",
+            side_effect=OSError("réseau indisponible"),
+        ):
+            self.assertIsNone(ban_lookup("adresse sans reseau unique 3"))
+
+    def test_ban_autocomplete_rejects_short_query_without_http(self):
+        from structures.services.ban import ban_autocomplete
+
+        with mock.patch(
+            "structures.services.ban.urllib.request.urlopen"
+        ) as urlopen:
+            self.assertEqual(ban_autocomplete("ab"), ())
+        urlopen.assert_not_called()
+
+
+class AddressSuggestViewTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="admin-adresses@example.test",
+            email="admin-adresses@example.test",
+            password="Un-mot-de-passe-tres-long-2026",
+        )
+        self.commune = Commune.objects.create(nom="Fourmies", code_postal="59610")
+        caches["ratelimit"].clear()
+
+    def test_suggest_requires_login(self):
+        response = self.client.get(reverse("dashboard:address_suggest"), {"q": "2 rue"})
+        self.assertIn(response.status_code, (302, 403))
+
+    def test_suggest_returns_results_for_authenticated_user(self):
+        self.client.force_login(self.admin)
+        fake = (
+            {
+                "label": "2 Rue Raymond Chomel 59610 Fourmies",
+                "latitude": 50.1,
+                "longitude": 3.2,
+                "score": 0.9,
+                "postcode": "59610",
+                "city": "Fourmies",
+            },
+        )
+        with mock.patch(
+            "structures.views.dashboard.ban_autocomplete", return_value=fake
+        ):
+            response = self.client.get(
+                reverse("dashboard:address_suggest"),
+                {"q": "2 rue Raymond", "commune": str(self.commune.pk)},
+            )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["results"]), 1)
+        self.assertEqual(payload["results"][0]["label"], fake[0]["label"])
+
+    def test_suggest_rejects_short_query_without_service_call(self):
+        self.client.force_login(self.admin)
+        with mock.patch(
+            "structures.views.dashboard.ban_autocomplete"
+        ) as suggest:
+            response = self.client.get(
+                reverse("dashboard:address_suggest"), {"q": "ab"}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"results": []})
+        suggest.assert_not_called()
 
 
 class StructureConstraintTests(TestCase):

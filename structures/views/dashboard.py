@@ -18,6 +18,7 @@ from django.db.models.functions import (
     Trim,
     TruncMonth,
 )
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -68,6 +69,7 @@ from structures.services.sqlite_backup import (
     mark_backup_verified,
     run_backup,
 )
+from structures.services.ban import ban_autocomplete
 from structures.services.stats import build_dashboard_statistics
 
 
@@ -427,6 +429,51 @@ class DashboardStructureDeleteView(StructureManageAccessMixin, DeleteView):
         ctx = super().get_context_data(**kwargs)
         ctx["active_tab"] = "structures"
         return ctx
+
+
+class DashboardAddressSuggestView(StructureManageAccessMixin, View):
+    """Suggestions d'adresses BAN pour l'aide à la saisie (dashboard uniquement)."""
+
+    @method_decorator(ratelimit(key="user", rate="60/m", method="GET", block=True))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get(self, request):
+        raw_query = (request.GET.get("q") or "").strip()
+        if len(raw_query) < 3 or len(raw_query) > 200:
+            return JsonResponse({"results": []})
+        postcode = ""
+        commune_raw = request.GET.get("commune")
+        try:
+            commune_id = int(commune_raw) if commune_raw not in (None, "") else None
+        except (TypeError, ValueError):
+            commune_id = None
+        if commune_id is not None:
+            allowed = self.allowed_commune_ids()
+            if allowed is None or commune_id in allowed:
+                try:
+                    commune = Commune.objects.only("code_postal", "nom").get(pk=commune_id)
+                except Commune.DoesNotExist:
+                    commune = None
+                if commune is not None and commune.code_postal:
+                    postcode = commune.code_postal
+        try:
+            suggestions = ban_autocomplete(raw_query, limit=5, postcode=postcode)
+        except Exception as error:  # noqa: BLE001 — jamais 500 pour une aide saisie
+            logger.info("Suggestions d'adresses indisponibles : %s", error)
+            return JsonResponse({"results": []})
+        results = [
+            {
+                "label": item["label"],
+                "latitude": item["latitude"],
+                "longitude": item["longitude"],
+                "score": item["score"],
+                "postcode": item["postcode"],
+                "city": item["city"],
+            }
+            for item in suggestions
+        ]
+        return JsonResponse({"results": results})
 
 
 class DashboardCommuneListView(SuperuserRequiredMixin, ListView):

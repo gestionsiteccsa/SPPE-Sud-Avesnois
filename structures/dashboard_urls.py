@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views.dashboard import (
+    DashboardAddressSuggestView,
     DashboardAuditLogView,
     DashboardBackupCreateView,
     DashboardBackupDeleteView,
@@ -46,6 +47,11 @@ urlpatterns = [
     path("structures/<int:pk>/modifier/", DashboardStructureUpdateView.as_view(), name="structure_edit"),
     path("structures/<int:pk>/supprimer/", DashboardStructureDeleteView.as_view(), name="structure_delete"),
     path("structures/lot/", DashboardStructureBatchView.as_view(), name="structure_batch"),
+    path(
+        "adresses/suggestions/",
+        DashboardAddressSuggestView.as_view(),
+        name="address_suggest",
+    ),
     path("communes/", DashboardCommuneListView.as_view(), name="commune_list"),
     path("communes/ajouter/", DashboardCommuneCreateView.as_view(), name="commune_add"),
     path("communes/<int:pk>/modifier/", DashboardCommuneUpdateView.as_view(), name="commune_edit"),

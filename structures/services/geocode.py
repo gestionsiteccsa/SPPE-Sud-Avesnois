@@ -1,4 +1,4 @@
-"""Géocodage des structures via OpenStreetMap/Nominatim.
+"""Géocodage des structures via la BAN puis OpenStreetMap/Nominatim en repli.
 
 Aucune dépendance externe : on utilise uniquement la bibliothèque standard.
 Les échecs (réseau, HTTP, résultat vide) sont toujours silencieux : une fiche
@@ -87,16 +87,32 @@ def build_query(structure) -> str:
     return query or structure.nom_affiche
 
 
+def _lookup_best(query: str) -> tuple[float, float] | None:
+    """Essaie la BAN puis Nominatim en repli, sans jamais lever d'exception."""
+    try:
+        from .ban import ban_lookup
+    except Exception:  # noqa: BLE001 — repli Nominatim si BAN indisponible
+        ban_lookup = None  # type: ignore[assignment]
+    if ban_lookup is not None:
+        try:
+            result = ban_lookup(query)
+        except Exception:  # noqa: BLE001 — silencieux, repli Nominatim
+            result = None
+        if result is not None:
+            return result
+    return _lookup(_normalize(query))
+
+
 def geocode_structure(structure) -> None:
     """Renseigne latitude/longitude si absentes, sans jamais lever d'exception."""
     if not settings.GEOCODE_ENABLED:
         return
     if structure.latitude is not None and structure.longitude is not None:
         return
-    query = _normalize(build_query(structure))
-    if not query:
+    query = build_query(structure)
+    if not query or not query.strip():
         return
-    result = _lookup(query)
+    result = _lookup_best(query)
     if result is None:
         return
     structure.latitude, structure.longitude = result

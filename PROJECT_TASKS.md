@@ -14,6 +14,7 @@ Les protections applicatives automatisables de l'audit sont livrées. Les tâche
 
 ## P1 — Premières semaines
 
+- [ ] Lancer `geocode_structures --dry-run` puis le batch réel après sauvegarde, et corriger à la main les adresses exportées en `--export-ko` (lieux-dits, rues récentes).
 - [ ] Configurer une sonde externe sur `/health/`, les alertes, la rotation des logs et la surveillance des sauvegardes.
 - [ ] Surveiller et consigner les erreurs `database is locked`, la taille de SQLite et la concurrence des écritures.
 - [ ] Tester la limitation de connexion entre plusieurs processus Passenger et la panne Redis contrôlée.

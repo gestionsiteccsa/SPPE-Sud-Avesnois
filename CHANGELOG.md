@@ -70,6 +70,7 @@
 - mode test des campagnes : adresses e-mail de test saisies par campagne (2-3, validées), lancement et relance envoyés uniquement à ces adresses (sujet préfixé `[TEST]`, aucune adresse réelle jamais utilisée), bandeau « Mode test » dans le tableau de bord et bouton « Passer en réel » (jetons régénérés, envois aux vraies adresses, invitations courrier repassées en « non contacté ») ; bouton « Lancer en mode test » avec saisie des adresses directement sur la page d'une campagne en brouillon.
 - carte des structures : sélecteur de fond « Plan » (OpenStreetMap, par défaut) / « Satellite » (Esri World Imagery) avec attributions conservées et politique CSP étendue aux tuiles Esri.
 - carte des structures : filtre par disponibilité (« Tout », « Disponible », « Complet », « Non communiqué ») appliqué instantanément aux marqueurs, avec annonce du nombre affiché et bouton « Recentrer » adapté au filtre actif.
+- géocodage des adresses : Base Adresse Nationale en premier puis Nominatim en repli, aide à la saisie dans le formulaire (suggestions + mini-carte OpenStreetMap de contrôle, boutons « Re-vérifier » / « Effacer »), proxy dashboard `/tableau-de-bord/adresses/suggestions/` limité en débit, commande `geocode_structures` avec filtre latitude/longitude manquante et export `--export-ko` des introuvables.
 
 ### Modifié
 

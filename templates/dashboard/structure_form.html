@@ -6,6 +6,17 @@
 {% block page_title %}{% if object %}Modifier&nbsp;: {{ object.nom_affiche }}{% else %}Ajouter une structure{% endif %}{% endblock %}
 {% block page_subtitle %}{% if object %}Modifiez les informations ci-dessous{% else %}Renseignez les informations de la nouvelle structure{% endif %}{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}" />
+<style nonce="{{ csp_nonce }}">
+  .adresse-suggest { position: relative; }
+  .adresse-suggest__list { position: absolute; z-index: 30; left: 0; right: 0; top: 100%; margin: 0.25rem 0 0; padding: 0.25rem; list-style: none; background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-md); max-height: 16rem; overflow-y: auto; }
+  .adresse-suggest__item { width: 100%; text-align: left; padding: 0.6rem 0.7rem; border: 0; border-radius: 0.45rem; background: transparent; cursor: pointer; font-size: var(--fs-sm); }
+  .adresse-suggest__item:hover, .adresse-suggest__item--active { background: var(--color-primary-soft); }
+  .adresse-minimap { height: 12rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-top: 0.6rem; z-index: 0; background: var(--color-surface-3); }
+</style>
+{% endblock %}
+
 {% block content %}
 <form class="w-full" method="post" novalidate>
   {% csrf_token %}
@@ -169,8 +180,19 @@
     </h2>
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_adresse">Adresse</label>
-      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="adresse" id="id_adresse"
-             value="{{ form.adresse.value|default:'' }}">
+      <div class="adresse-suggest" id="adresse-aide" data-suggest-url="{% url 'dashboard:address_suggest' %}">
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="adresse" id="id_adresse"
+               value="{{ form.adresse.value|default:'' }}" role="combobox" aria-expanded="false" aria-controls="adresse-suggestions" aria-autocomplete="list" autocomplete="off" spellcheck="false">
+        <ul class="adresse-suggest__list" id="adresse-suggestions" role="listbox" aria-label="Suggestions d'adresses" hidden></ul>
+      </div>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0" id="adresse-statut" role="status"></p>
+      <div id="adresse-minimap" class="adresse-minimap" hidden aria-hidden="true"></div>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0" id="adresse-coords-texte" hidden></p>
+      <div class="flex flex-wrap gap-2 mt-1">
+        <button type="button" id="adresse-reverifier" class="inline-flex items-center justify-center min-h-[2.5rem] px-3 py-1.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] border bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)]">Re-vérifier l'adresse sur la carte</button>
+        <button type="button" id="adresse-effacer" class="inline-flex items-center justify-center min-h-[2.5rem] px-3 py-1.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] border bg-[var(--color-surface)] text-[var(--color-text-muted)] border-[var(--color-border-strong)] hover:text-[var(--color-danger)] hover:border-[var(--color-danger)]">Effacer les coordonnées</button>
+      </div>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0">Choisissez une suggestion pour placer la fiche. Sans JavaScript, les coordonnées sont calculées automatiquement à l'enregistrement.</p>
     </div>
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_commune">Commune</label>
@@ -354,6 +376,7 @@
 
 {% block extra_js %}
 <link rel="stylesheet" href="{% static 'css/timeslider.min.css' %}">
+<script src="{% static 'vendor/leaflet/leaflet.js' %}" nonce="{{ csp_nonce }}"></script>
 <script src="{% static 'js/timeslider.min.js' %}" nonce="{{ csp_nonce }}"></script>
 <script nonce="{{ csp_nonce }}">
 (function () {
@@ -440,6 +463,187 @@
     structCb.addEventListener("change", toggleIdentity);
     applyIdentityVisibility();
   }
+})();
+</script>
+<script nonce="{{ csp_nonce }}">
+(function () {
+  "use strict";
+  var aide = document.getElementById("adresse-aide");
+  if (!aide) return;
+  var input = document.getElementById("id_adresse");
+  var communeSelect = document.getElementById("id_commune");
+  var list = document.getElementById("adresse-suggestions");
+  var status = document.getElementById("adresse-statut");
+  var mapEl = document.getElementById("adresse-minimap");
+  var coordsText = document.getElementById("adresse-coords-texte");
+  var latField = document.querySelector('input[name="latitude"]');
+  var lonField = document.querySelector('input[name="longitude"]');
+  var recheckBtn = document.getElementById("adresse-reverifier");
+  var clearBtn = document.getElementById("adresse-effacer");
+  if (!input || !list || !latField || !lonField) return;
+  var suggestUrl = aide.getAttribute("data-suggest-url") || "";
+  var timer = null;
+  var controller = null;
+  var items = [];
+  var activeIndex = -1;
+  var map = null;
+  var marker = null;
+
+  function parseCoord(value) {
+    var num = parseFloat(String(value == null ? "" : value).replace(",", "."));
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function currentCoords() {
+    var lat = parseCoord(latField.value);
+    var lon = parseCoord(lonField.value);
+    if (lat === null || lon === null) return null;
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+    return { lat: lat, lon: lon };
+  }
+
+  function ensureMap(coords) {
+    if (typeof L === "undefined" || !mapEl) return;
+    mapEl.hidden = false;
+    if (!map) {
+      map = L.map(mapEl, { scrollWheelZoom: false }).setView([coords.lat, coords.lon], 16);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>",
+        maxZoom: 18
+      }).addTo(map);
+    } else {
+      map.setView([coords.lat, coords.lon], 16);
+    }
+    if (!marker) {
+      marker = L.marker([coords.lat, coords.lon]).addTo(map);
+    } else {
+      marker.setLatLng([coords.lat, coords.lon]);
+    }
+    setTimeout(function () { try { map.invalidateSize(); } catch (e) {} }, 60);
+  }
+
+  function showCoords(coords, label) {
+    ensureMap(coords);
+    if (coordsText) {
+      coordsText.hidden = false;
+      coordsText.textContent = "Coordonnées : " + coords.lat.toFixed(6) + ", " + coords.lon.toFixed(6) + (label ? " — " + label : "");
+    }
+  }
+
+  function clearCoords(message) {
+    latField.value = "";
+    lonField.value = "";
+    if (mapEl) mapEl.hidden = true;
+    if (coordsText) coordsText.hidden = true;
+    if (status && message) status.textContent = message;
+  }
+
+  function closeList() {
+    list.hidden = true;
+    list.innerHTML = "";
+    items = [];
+    activeIndex = -1;
+    input.setAttribute("aria-expanded", "false");
+  }
+
+  function setActive(index) {
+    var children = list.querySelectorAll(".adresse-suggest__item");
+    children.forEach(function (el, i) {
+      var active = i === index;
+      el.classList.toggle("adresse-suggest__item--active", active);
+      el.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    activeIndex = index;
+  }
+
+  function choose(item) {
+    if (!item) return;
+    input.value = item.label;
+    latField.value = item.latitude;
+    lonField.value = item.longitude;
+    closeList();
+    if (status) status.textContent = "Adresse sélectionnée, vérifiez le point sur la mini-carte.";
+    showCoords({ lat: item.latitude, lon: item.longitude }, item.label);
+    input.focus();
+  }
+
+  function render(suggestions) {
+    list.innerHTML = "";
+    items = suggestions || [];
+    if (!items.length) { closeList(); return; }
+    items.forEach(function (item, index) {
+      var li = document.createElement("li");
+      li.setAttribute("role", "presentation");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "adresse-suggest__item";
+      btn.setAttribute("role", "option");
+      btn.setAttribute("aria-selected", "false");
+      btn.id = "adresse-option-" + index;
+      btn.textContent = item.label;
+      btn.addEventListener("click", function () { choose(item); });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    setActive(-1);
+    if (status) {
+      status.textContent = items.length === 1
+        ? "1 suggestion, flèches puis Entrée pour choisir."
+        : items.length + " suggestions, flèches puis Entrée pour choisir.";
+    }
+  }
+
+  function fetchSuggestions(force) {
+    var q = input.value.trim();
+    if (!force && q.length < 3) { closeList(); return; }
+    if (controller) { try { controller.abort(); } catch (e) {} }
+    controller = ("AbortController" in window) ? new AbortController() : null;
+    var params = new URLSearchParams({ q: q });
+    if (communeSelect && communeSelect.value) params.set("commune", communeSelect.value);
+    if (status) status.textContent = "Recherche d'adresses…";
+    var options = controller ? { signal: controller.signal } : undefined;
+    fetch(suggestUrl + "?" + params.toString(), Object.assign({ headers: { "Accept": "application/json" } }, options || {}))
+      .then(function (resp) { if (!resp.ok) throw new Error("http " + resp.status); return resp.json(); })
+      .then(function (data) { render((data && data.results) || []); })
+      .catch(function (err) {
+        if (err && err.name === "AbortError") return;
+        closeList();
+        if (status) status.textContent = "Suggestions indisponibles, l'enregistrement calculera les coordonnées.";
+      });
+  }
+
+  function scheduleFetch() {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(function () { fetchSuggestions(false); }, 300);
+  }
+
+  input.addEventListener("input", function () {
+    // Saisie manuelle = coordonnées à revalider, sauf sélection explicite.
+    if (latField.value || lonField.value) { latField.value = ""; lonField.value = ""; }
+    if (mapEl) mapEl.hidden = true;
+    if (coordsText) coordsText.hidden = true;
+    scheduleFetch();
+  });
+  input.addEventListener("keydown", function (event) {
+    if (list.hidden) return;
+    if (event.key === "ArrowDown") { event.preventDefault(); setActive(items.length ? (activeIndex + 1) % items.length : -1); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); setActive(items.length ? (activeIndex - 1 + items.length) % items.length : -1); }
+    else if (event.key === "Enter") { if (activeIndex >= 0 && items[activeIndex]) { event.preventDefault(); choose(items[activeIndex]); } }
+    else if (event.key === "Escape") { closeList(); input.setAttribute("aria-expanded", "false"); }
+  });
+  document.addEventListener("click", function (event) {
+    if (!aide.contains(event.target)) closeList();
+  });
+  if (communeSelect) communeSelect.addEventListener("change", function () {
+    if (input.value.trim().length >= 3) fetchSuggestions(false);
+  });
+  if (recheckBtn) recheckBtn.addEventListener("click", function () { fetchSuggestions(true); });
+  if (clearBtn) clearBtn.addEventListener("click", function () { clearCoords("Coordonnées effacées, elles seront recalculées à l'enregistrement."); input.focus(); });
+
+  var initial = currentCoords();
+  if (initial) showCoords(initial, input.value.trim());
 })();
 </script>
 {% endblock %}

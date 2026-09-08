@@ -184,6 +184,10 @@ SITE_URL = config("SITE_URL", default="https://www.sppe.ccsudavesnois.fr").rstri
 
 GEOCODE_ENABLED = True
 GEOCODE_TIMEOUT = config("GEOCODE_TIMEOUT", default=4, cast=int)
+GEOCODE_BAN_URL = config(
+    "GEOCODE_BAN_URL", default="https://api-adresse.data.gouv.fr/search/"
+)
+GEOCODE_BAN_MIN_SCORE = config("GEOCODE_BAN_MIN_SCORE", default=0.5, cast=float)
 
 _backup_dir_env = config("BACKUP_DIR", default=None)
 if IS_PRODUCTION and not _backup_dir_env:
