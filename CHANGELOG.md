@@ -118,6 +118,7 @@
 - build des ressources : sorties strictement reproductibles entre Windows et Linux (normalisation LF des copies vendor, stdin binaire pour esbuild, écritures LF, `.gitattributes`), corrigeant l'échec CI `git diff --exit-code -- static` sur `leaflet.css` (CRLF livré par npm) et les `min.js`.
 - CI : variable `BACKUP_DIR` fournie au contrôle `check --deploy` (exigée en production depuis la fonction sauvegardes).
 - fiche structure : l'adresse n'affiche plus le code postal et la commune en double lorsque l'adresse saisie les contient déjà (comparaison insensible à la casse et aux accents) ; le bloc adresse est masqué s'il est vide.
+- formulaire de fiche : placement manuel du point sur la carte (« Placer le point manuellement », marqueur déplaçable ou clic) avec adresse tapée conservée telle quelle ; le point manuel survit à la frappe, seuls suggestion, « Re-vérifier » ou « Effacer » le remplacent.
 - tests : le test de limitation de connexion fige l'horloge vue par django-ratelimit (fenêtres ancrées au temps réel, échec aléatoire si la boucle chevauchait une frontière de minute sur runner chargé).
 
 ### Sécurité

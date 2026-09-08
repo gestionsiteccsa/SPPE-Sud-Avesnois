@@ -219,10 +219,11 @@
       <div id="adresse-minimap" class="adresse-minimap" hidden aria-hidden="true"></div>
       <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0" id="adresse-coords-texte" hidden></p>
       <div class="flex flex-wrap gap-2 mt-1">
+        <button type="button" id="adresse-placer" class="inline-flex items-center justify-center min-h-[2.5rem] px-3 py-1.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] border bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)]">Placer le point manuellement</button>
         <button type="button" id="adresse-reverifier" class="inline-flex items-center justify-center min-h-[2.5rem] px-3 py-1.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] border bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)]">Re-vérifier l'adresse sur la carte</button>
         <button type="button" id="adresse-effacer" class="inline-flex items-center justify-center min-h-[2.5rem] px-3 py-1.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-xs)] border bg-[var(--color-surface)] text-[var(--color-text-muted)] border-[var(--color-border-strong)] hover:text-[var(--color-danger)] hover:border-[var(--color-danger)]">Effacer les coordonnées</button>
       </div>
-      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0">Choisissez une suggestion pour placer la fiche. Sans JavaScript, les coordonnées sont calculées automatiquement à l'enregistrement.</p>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0">Choisissez une suggestion pour placer la fiche. Adresse introuvable avec son numéro ? Gardez votre saisie et placez le point exact via « Placer le point manuellement ». Sans JavaScript, les coordonnées sont calculées automatiquement à l'enregistrement.</p>
     </div>
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_commune">Commune</label>
@@ -490,6 +491,10 @@
   var activeIndex = -1;
   var map = null;
   var marker = null;
+  var manualPoint = false;
+  var manualArmed = false;
+  var placeBtn = document.getElementById("adresse-placer");
+  var DEFAULT_VIEW = { lat: 50.03, lon: 4.07, zoom: 13 };
 
   function parseCoord(value) {
     var num = parseFloat(String(value == null ? "" : value).replace(",", "."));
@@ -504,24 +509,42 @@
     return { lat: lat, lon: lon };
   }
 
-  function ensureMap(coords) {
-    if (typeof L === "undefined" || !mapEl) return;
+  function initMap(center, zoom) {
+    if (typeof L === "undefined" || !mapEl) return false;
     mapEl.hidden = false;
     if (!map) {
-      map = L.map(mapEl, { scrollWheelZoom: false }).setView([coords.lat, coords.lon], 16);
+      map = L.map(mapEl, { scrollWheelZoom: false }).setView([center.lat, center.lon], zoom);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>",
         maxZoom: 18
       }).addTo(map);
+      map.on("click", function (event) {
+        if (manualArmed) placeManualPoint(event.latlng);
+      });
     } else {
-      map.setView([coords.lat, coords.lon], 16);
+      map.setView([center.lat, center.lon], zoom);
     }
+    setTimeout(function () { try { map.invalidateSize(); } catch (e) {} }, 60);
+    return true;
+  }
+
+  function updateMarker(coords) {
+    if (!map) return;
     if (!marker) {
-      marker = L.marker([coords.lat, coords.lon]).addTo(map);
+      marker = L.marker([coords.lat, coords.lon], {
+        draggable: true,
+        keyboard: true,
+        title: "Point de la structure (déplaçable à la souris)"
+      }).addTo(map);
+      marker.on("dragend", function () { placeManualPoint(marker.getLatLng()); });
     } else {
       marker.setLatLng([coords.lat, coords.lon]);
     }
-    setTimeout(function () { try { map.invalidateSize(); } catch (e) {} }, 60);
+  }
+
+  function ensureMap(coords) {
+    if (!initMap(coords, 16)) return;
+    updateMarker(coords);
   }
 
   function showCoords(coords, label) {
@@ -535,9 +558,46 @@
   function clearCoords(message) {
     latField.value = "";
     lonField.value = "";
+    manualPoint = false;
+    manualArmed = false;
     if (mapEl) mapEl.hidden = true;
     if (coordsText) coordsText.hidden = true;
     if (status && message) status.textContent = message;
+  }
+
+  function placeManualPoint(latlng) {
+    var lat = Math.round(latlng.lat * 1e6) / 1e6;
+    var lon = Math.round(latlng.lng * 1e6) / 1e6;
+    latField.value = lat;
+    lonField.value = lon;
+    manualPoint = true;
+    updateMarker({ lat: lat, lon: lon });
+    if (mapEl) mapEl.hidden = false;
+    if (coordsText) {
+      coordsText.hidden = false;
+      coordsText.textContent = "Coordonnées : " + lat.toFixed(6) + ", " + lon.toFixed(6) + " — point manuel.";
+    }
+    if (status) status.textContent = "Point placé manuellement, votre adresse est conservée telle quelle.";
+  }
+
+  function armManualMode() {
+    if (typeof L === "undefined" || !mapEl) {
+      if (status) status.textContent = "Carte indisponible pour le moment, l'enregistrement calculera les coordonnées.";
+      return;
+    }
+    manualArmed = true;
+    mapEl.removeAttribute("aria-hidden");
+    mapEl.setAttribute("role", "region");
+    mapEl.setAttribute("aria-label", "Carte de placement manuel du point de la structure");
+    var start = currentCoords();
+    if (start) {
+      initMap(start, map ? map.getZoom() : 16);
+      updateMarker(start);
+    } else {
+      initMap({ lat: DEFAULT_VIEW.lat, lon: DEFAULT_VIEW.lon }, DEFAULT_VIEW.zoom);
+    }
+    if (status) status.textContent = "Cliquez sur la carte ou déplacez le marqueur pour placer le point exact. Votre adresse reste inchangée.";
+    try { if (mapEl.focus) mapEl.focus({ preventScroll: true }); } catch (e) {}
   }
 
   function closeList() {
@@ -560,6 +620,8 @@
 
   function choose(item) {
     if (!item) return;
+    manualPoint = false;
+    manualArmed = false;
     input.value = item.label;
     latField.value = item.latitude;
     lonField.value = item.longitude;
@@ -622,6 +684,12 @@
   }
 
   input.addEventListener("input", function () {
+    if (manualPoint) {
+      // Point placé à la main : on garde les coordonnées, seule l'adresse change.
+      if (status) status.textContent = "Adresse modifiée, point manuel conservé. « Effacer les coordonnées » pour recommencer.";
+      scheduleFetch();
+      return;
+    }
     // Saisie manuelle = coordonnées à revalider, sauf sélection explicite.
     if (latField.value || lonField.value) { latField.value = ""; lonField.value = ""; }
     if (mapEl) mapEl.hidden = true;
@@ -642,6 +710,7 @@
     if (input.value.trim().length >= 3) fetchSuggestions(false);
   });
   if (recheckBtn) recheckBtn.addEventListener("click", function () { fetchSuggestions(true); });
+  if (placeBtn) placeBtn.addEventListener("click", function () { armManualMode(); });
   if (clearBtn) clearBtn.addEventListener("click", function () { clearCoords("Coordonnées effacées, elles seront recalculées à l'enregistrement."); input.focus(); });
 
   var initial = currentCoords();

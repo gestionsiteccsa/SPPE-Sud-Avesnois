@@ -2364,6 +2364,40 @@ class StructureFlashMessageTests(TestCase):
         self.assertRedirects(response, reverse("dashboard:structure_list"))
         self.assertContains(response, "La structure « Crèche flash » a été créée.")
 
+    def test_add_page_offers_manual_point_placement(self):
+        response = self.client.get(reverse("dashboard:structure_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="adresse-placer"', html=False)
+        self.assertContains(response, "Placer le point manuellement")
+        self.assertContains(response, 'id="adresse-minimap"', html=False)
+
+    def test_create_with_manual_coordinates_keeps_typed_address_and_point(self):
+        with mock.patch(
+            "structures.services.geocode._lookup_best", return_value=None
+        ) as fake_lookup:
+            response = self.client.post(
+                reverse("dashboard:structure_add"),
+                {
+                    "nom": "Pin manuel",
+                    "horaires": self.horaires,
+                    "age_min": "3",
+                    "age_min_unite": "ans",
+                    "age_max": "12",
+                    "age_max_unite": "ans",
+                    "adresse": "53 Rue Pasteur 59186 Anor",
+                    "latitude": "50.087500",
+                    "longitude": "4.071000",
+                },
+                follow=True,
+            )
+
+        self.assertRedirects(response, reverse("dashboard:structure_list"))
+        structure = Structure.objects.get(nom="Pin manuel")
+        self.assertEqual(structure.adresse, "53 Rue Pasteur 59186 Anor")
+        self.assertEqual((structure.latitude, structure.longitude), (50.0875, 4.071))
+        fake_lookup.assert_not_called()
+
     def test_update_structure_shows_flash_message(self):
         structure = Structure.objects.create(nom="Avant")
 
