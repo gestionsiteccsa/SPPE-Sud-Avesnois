@@ -1,4 +1,6 @@
 from datetime import date
+import re
+import unicodedata
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -46,6 +48,13 @@ JOURS_SEM = [
 
 def horaires_default():
     return [{"jour": j[0], "ferme": True} for j in JOURS_SEM]
+
+
+def _normaliser_pour_comparaison(value: str) -> str:
+    """Minuscules, sans accents, ponctuation neutralisée : comparaison tolérante."""
+    sans_accents = unicodedata.normalize("NFKD", value or "")
+    sans_accents = sans_accents.encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9]+", " ", sans_accents.lower()).strip()
 
 
 class Structure(models.Model):
@@ -249,6 +258,28 @@ class Structure(models.Model):
         if self.age_max is not None and self.age_max_unite:
             parties.append(f"{self.age_max} {self.age_max_unite}")
         return " - ".join(parties) if parties else "Non renseigné"
+
+    @property
+    def adresse_affichee(self):
+        """Adresse postale sans doublon de commune/code postal.
+
+        Les adresses saisies via la BAN contiennent déjà « CP Ville » ; dans
+        ce cas on affiche l'adresse telle quelle, sinon on ajoute le suffixe
+        « CP Ville » (comparaison insensible à la casse et aux accents).
+        """
+        adresse = (self.adresse or "").strip()
+        suffixe = ""
+        if self.commune:
+            suffixe = " ".join(
+                part
+                for part in (self.commune.code_postal, self.commune.nom)
+                if (part or "").strip()
+            )
+        if adresse and suffixe:
+            if _normaliser_pour_comparaison(suffixe) in _normaliser_pour_comparaison(adresse):
+                return adresse
+            return f"{adresse}, {suffixe}"
+        return adresse or suffixe
 
     def afficher_horaires(self):
         if not self.horaires:

@@ -112,10 +112,12 @@
 - affichage des erreurs de validation du formulaire de structure : résumé global en tête de formulaire et messages sous les champs concernés (auparavant, seules les erreurs du champ « nom » étaient visibles) ;
 - formulaire de fiche : bloc « Accueil spécifique » en colonne de droite sous « Tranche d'âge » ; « Adresse & Contact » en pleine largeur avec « Capacité d'accueil » et « Informations de gestion » côte à côte en dessous.
 - conservation de la commune et du type sélectionnés après une erreur de validation du formulaire de structure.
+- formulaire de fiche : emails minuscules sans espaces superflus ; téléphones français validés et normalisés au format national (`01 23 45 67 89`, `+33`/`0033` acceptés).
 - build des ressources : un échec d'esbuild affiche désormais son message d'erreur (plus de log aveugle en CI) avec un contrôle préalable du binaire dans le workflow qualité.
 - build des ressources : le lanceur esbuild détecte si `bin/esbuild` est le shim JS ou le binaire natif installé par le postinstall (exécution directe dans ce cas), corrigeant l'échec CI `SyntaxError: Invalid or unexpected token` sur le fichier ELF.
 - build des ressources : sorties strictement reproductibles entre Windows et Linux (normalisation LF des copies vendor, stdin binaire pour esbuild, écritures LF, `.gitattributes`), corrigeant l'échec CI `git diff --exit-code -- static` sur `leaflet.css` (CRLF livré par npm) et les `min.js`.
 - CI : variable `BACKUP_DIR` fournie au contrôle `check --deploy` (exigée en production depuis la fonction sauvegardes).
+- fiche structure : l'adresse n'affiche plus le code postal et la commune en double lorsque l'adresse saisie les contient déjà (comparaison insensible à la casse et aux accents) ; le bloc adresse est masqué s'il est vide.
 - tests : le test de limitation de connexion fige l'horloge vue par django-ratelimit (fenêtres ancrées au temps réel, échec aléatoire si la boucle chevauchait une frontière de minute sur runner chargé).
 
 ### Sécurité

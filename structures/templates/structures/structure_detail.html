@@ -92,22 +92,21 @@
                 {% endif %}
               </p>
             </div>
+            {% if structure.adresse_affichee %}
             <div class="sm:col-span-2">
               <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-1">Adresse</p>
               <p class="text-[length:var(--fs-base)] text-[var(--color-text)] m-0 flex items-center gap-2">
                 <svg class="w-4 h-4 shrink-0 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-map-pin"></use></svg>
-                {% if structure.adresse %}{{ structure.adresse }}, {% endif %}
-                {% if structure.commune %}{{ structure.commune.code_postal }} {{ structure.commune.nom }}{% endif %}
-                {% if structure.adresse or structure.commune %}
-                  <a class="inline-flex items-center gap-1 text-[length:var(--fs-xs)] font-medium text-[var(--color-primary)] no-underline hover:underline ml-2"
-                     href="https://www.openstreetmap.org/?query={{ structure.adresse|urlencode }}+{{ structure.commune.code_postal|urlencode }}+{{ structure.commune.nom|urlencode }}"
-                     rel="noopener noreferrer" target="_blank">
-                     <svg class="w-3.5 h-3.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-external"></use></svg>
-                     Itinéraire<span class="visually-hidden"> (nouvelle fenêtre)</span>
-                   </a>
-                {% endif %}
+                {{ structure.adresse_affichee }}
+                <a class="inline-flex items-center gap-1 text-[length:var(--fs-xs)] font-medium text-[var(--color-primary)] no-underline hover:underline ml-2"
+                   href="https://www.openstreetmap.org/?query={{ structure.adresse|urlencode }}+{{ structure.commune.code_postal|urlencode }}+{{ structure.commune.nom|urlencode }}"
+                   rel="noopener noreferrer" target="_blank">
+                  <svg class="w-3.5 h-3.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-external"></use></svg>
+                  Itinéraire<span class="visually-hidden"> (nouvelle fenêtre)</span>
+                </a>
               </p>
             </div>
+            {% endif %}
           </div>
         </div>
       </article>

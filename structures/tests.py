@@ -1522,6 +1522,54 @@ class PublicStructureViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Crèche Visible")
 
+    def test_detail_does_not_duplicate_city_when_address_is_complete(self):
+        structure = Structure.objects.create(
+            nom="Adresse complète",
+            afficher=True,
+            commune=self.commune,
+            adresse="12 rue des Fleurs, 75001 Exemple",
+        )
+
+        response = self.client.get(reverse("structures:detail", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "12 rue des Fleurs, 75001 Exemple")
+        self.assertEqual(response.content.decode().count("75001 Exemple"), 1)
+
+    def test_detail_appends_city_when_address_is_street_only(self):
+        structure = Structure.objects.create(
+            nom="Rue seule",
+            afficher=True,
+            commune=self.commune,
+            adresse="12 rue des Fleurs",
+        )
+
+        response = self.client.get(reverse("structures:detail", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "12 rue des Fleurs, 75001 Exemple")
+
+    def test_detail_deduplicates_despite_case_and_accents(self):
+        commune = Commune.objects.create(nom="Avesnes-sur-Helpe", code_postal="59460")
+        structure = Structure.objects.create(
+            nom="Casse différente",
+            afficher=True,
+            commune=commune,
+            adresse="8 rue de la Gare, 59460 AVESNES SUR HELPE",
+        )
+
+        response = self.client.get(reverse("structures:detail", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "8 rue de la Gare, 59460 AVESNES SUR HELPE")
+        self.assertNotContains(response, "59460 AVESNES SUR HELPE, 59460")
+
+    def test_detail_shows_city_when_address_is_empty(self):
+        response = self.client.get(reverse("structures:detail", args=[self.visible.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "75001 Exemple")
+
     def test_detail_outside_scope_is_404(self):
         outside = Structure.objects.create(
             nom="Hors périmètre", afficher=True, commune=self.autre_commune
