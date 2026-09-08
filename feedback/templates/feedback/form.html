@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Signaler un bug — SPPE Sud-Avesnois{% endblock %}
+
+{% block content %}
+<div class="max-w-[var(--container-narrow)] mx-auto px-4 md:px-6 py-9">
+  <h1 class="font-display text-[length:var(--fs-2xl)] font-bold mb-2">Signaler un bug ou une remarque</h1>
+  <p class="text-[var(--color-text-muted)] mb-6">
+    Cette page s'affiche quand l'envoi sans JavaScript échoue ou quand vous ouvrez le formulaire directement.
+  </p>
+  <form class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 shadow-[var(--shadow-sm)]" method="post" action="{% url 'feedback:submit' %}" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="p-3 rounded-[var(--radius-md)] bg-[var(--color-danger-soft)] border border-[var(--color-danger-border)] text-[var(--color-danger)] text-[length:var(--fs-sm)] mb-4" role="alert">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    {% for field in form %}
+      <div class="flex flex-col gap-2 mb-4">
+        <label class="text-[length:var(--fs-sm)] font-semibold" for="{{ field.id_for_label }}">
+          {{ field.label }}{% if field.field.required %} <span class="text-[var(--color-danger)]" aria-hidden="true">*</span>{% endif %}
+        </label>
+        {{ field }}
+        {% if field.help_text %}<p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]">{{ field.help_text }}</p>{% endif %}
+        {% if field.errors %}
+          <p class="text-[length:var(--fs-xs)] text-[var(--color-danger)]" role="alert">{{ field.errors|striptags }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="inline-flex items-center justify-center gap-2 min-h-[2.75rem] px-5 py-3 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] bg-[var(--color-primary)] text-white border border-[var(--color-primary)] w-full">
+      Envoyer le signalement
+    </button>
+  </form>
+</div>
+{% endblock %}

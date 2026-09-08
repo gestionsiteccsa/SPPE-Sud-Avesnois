@@ -33,6 +33,7 @@
 
 ### Ajouté
 
+- signalements : bouton fixe « Signaler un bug » sur tout le site (utilisateurs connectés) ouvrant une modale accessible (`<dialog>`, page pré-remplie modifiable, envoi JSON avec repli sans JS) ; stockage en base (`feedback.FeedbackReport`, statuts nouveau/en cours/résolu), email aux `DestinataireNotification` actifs et administration Django dédiée.
 - manifeste Python 3.13 reproductible et lockfile npm ;
 - configuration Passenger/WSGI, endpoint `/health/` et CI Python 3.13 ;
 - commandes de sauvegarde et de vérification SQLite ;

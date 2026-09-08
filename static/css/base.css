@@ -256,6 +256,99 @@ a[rel~="noopener"]::after {
   animation: spin 0.7s linear infinite;
 }
 
+/* ---- Bouton fixe + modale de signalement (feedback) ---------- */
+.feedback-fab {
+  position: fixed;
+  right: max(var(--space-4), env(safe-area-inset-right));
+  bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  z-index: var(--z-dialog);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-circle);
+  background: var(--color-primary);
+  color: #fff;
+  border: 1px solid var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+.feedback-fab:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: #fff;
+}
+
+.feedback-dialog {
+  /* Centrage explicite, sans dépendre des valeurs UA (left/right) : le reset
+     global (* { margin: 0 }) écrase le centrage natif du <dialog> en top
+     layer. position fixed + inset 0 + margin auto centre dans tous les cas,
+     et max-height empêche tout débordement vertical. */
+  position: fixed;
+  inset: 0;
+  height: fit-content;
+  margin: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: var(--space-6);
+  width: min(36rem, calc(100vw - 2rem));
+  max-height: min(90dvh, 60rem);
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.feedback-dialog::backdrop {
+  background: var(--color-overlay);
+}
+.feedback-dialog__close-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0 0;
+}
+.feedback-dialog__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+}
+.feedback-dialog__close:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text);
+}
+.feedback-dialog__title {
+  font-size: var(--fs-lg);
+  margin-bottom: var(--space-2);
+  padding-right: var(--space-7);
+}
+.feedback-dialog__desc {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-5);
+}
+.feedback-dialog__status {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-info-border);
+  background: var(--color-info-soft);
+  color: var(--color-info);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-4);
+}
+.feedback-dialog__status[data-kind="success"] {
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+.feedback-dialog__status[data-kind="error"] {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
 /* ---- Skip link pré-style (vrai style dans layout.css) ---------- */
 .skip-link {
   position: absolute;
