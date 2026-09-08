@@ -120,3 +120,68 @@ class FeedbackSubmitTests(TestCase):
                 )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(FeedbackReport.objects.count(), 1)
+
+    def test_email_contains_html_alternative_with_badge_and_admin_link(self):
+        DestinataireNotification.objects.create(email="gestion@example.test")
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.url,
+            {
+                "type": "bug",
+                "page_declaree": "/structures/",
+                "message": "La carte ne s'affiche plus depuis hier.",
+            },
+            HTTP_ACCEPT="application/json",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        email = mail.outbox[0]
+        self.assertTrue(email.alternatives)
+        html_body = email.alternatives[0][0]
+        self.assertEqual(email.alternatives[0][1], "text/html")
+        self.assertIn("Bug", html_body)
+        self.assertIn("#b91c1c", html_body)
+        self.assertIn("agent@example.test", html_body)
+        self.assertIn("La carte ne s&#x27;affiche plus depuis hier.", html_body)
+        self.assertIn("Voir le signalement", html_body)
+        # Le corps texte reste intact pour les clients non HTML.
+        self.assertIn("Type : Bug", email.body)
+        self.assertIn("La carte ne s'affiche plus depuis hier.", email.body)
+
+    def test_email_html_escapes_user_content(self):
+        DestinataireNotification.objects.create(email="gestion@example.test")
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.url,
+            {
+                "type": "suggestion",
+                "page_declaree": "/",
+                "message": "<script>alert(1)</script> Ajouter un filtre.",
+            },
+            HTTP_ACCEPT="application/json",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        html_body = mail.outbox[0].alternatives[0][0]
+        self.assertNotIn("<script>alert(1)</script>", html_body)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", html_body)
+        self.assertIn("#1d4ed8", html_body)
+
+    def test_email_without_detail_url_omits_admin_button(self):
+        from feedback.emails import notify_admins_new_feedback
+
+        DestinataireNotification.objects.create(email="gestion@example.test")
+        report = FeedbackReport.objects.create(
+            user=self.user,
+            type=FeedbackReport.TYPE_AUTRE,
+            page_declaree="/",
+            message="Simple remarque.",
+        )
+
+        notify_admins_new_feedback(report, "")
+
+        html_body = mail.outbox[0].alternatives[0][0]
+        self.assertNotIn("Voir le signalement", html_body)
+        self.assertIn("#4b5563", html_body)

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 from authentication.models import DestinataireNotification
 
@@ -25,7 +26,7 @@ def notify_admins_new_feedback(report, detail_url: str = "") -> None:
     if not recipients:
         return
     author = report.user.email if report.user and report.user.email else "inconnu"
-    lines = [
+    text_lines = [
         "Un nouveau signalement a été envoyé depuis le site.",
         "",
         f"Type : {report.get_type_display()}",
@@ -37,11 +38,17 @@ def notify_admins_new_feedback(report, detail_url: str = "") -> None:
         report.message,
     ]
     if detail_url:
-        lines += ["", f"Voir dans l'admin : {detail_url}"]
-    EmailMessage(
+        text_lines += ["", f"Voir dans l'admin : {detail_url}"]
+    html_body = render_to_string(
+        "feedback/emails/nouveau_signalement.html",
+        {"report": report, "author": author, "detail_url": detail_url},
+    )
+    message = EmailMultiAlternatives(
         subject="Nouveau signalement — SPPE Sud-Avesnois",
-        body="\n".join(lines),
+        body="\n".join(text_lines),
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=recipients,
         cc=cc,
-    ).send()
+    )
+    message.attach_alternative(html_body, "text/html")
+    message.send()
