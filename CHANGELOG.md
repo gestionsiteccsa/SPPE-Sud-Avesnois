@@ -114,6 +114,7 @@
 - build des ressources : le lanceur esbuild détecte si `bin/esbuild` est le shim JS ou le binaire natif installé par le postinstall (exécution directe dans ce cas), corrigeant l'échec CI `SyntaxError: Invalid or unexpected token` sur le fichier ELF.
 - build des ressources : sorties strictement reproductibles entre Windows et Linux (normalisation LF des copies vendor, stdin binaire pour esbuild, écritures LF, `.gitattributes`), corrigeant l'échec CI `git diff --exit-code -- static` sur `leaflet.css` (CRLF livré par npm) et les `min.js`.
 - CI : variable `BACKUP_DIR` fournie au contrôle `check --deploy` (exigée en production depuis la fonction sauvegardes).
+- tests : le test de limitation de connexion fige l'horloge vue par django-ratelimit (fenêtres ancrées au temps réel, échec aléatoire si la boucle chevauchait une frontière de minute sur runner chargé).
 
 ### Sécurité
 

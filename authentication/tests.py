@@ -4,6 +4,8 @@ from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 
+from unittest import mock
+
 from authentication.forms import DashboardUserCreateForm, DashboardUserUpdateForm
 from authentication.models import (
     CollaborateurInscription,
@@ -156,17 +158,24 @@ class LoginRateLimitTests(TestCase):
     def test_login_is_rate_limited_per_account(self):
         url = reverse("login")
 
-        for _attempt in range(10):
+        # Fenêtres de limitation ancrées sur l'horloge (django-ratelimit) :
+        # fige le temps pour que les 11 tentatives partagent la même fenêtre
+        # et que le test ne dépende pas du passage d'une frontière de minute
+        # sur un runner chargé.
+        with mock.patch("django_ratelimit.core.time") as mock_time:
+            mock_time.time.return_value = 1_700_000_000.0
+
+            for _attempt in range(10):
+                response = self.client.post(
+                    url,
+                    {"username": "cible@example.test", "password": "incorrect"},
+                )
+                self.assertEqual(response.status_code, 200)
+
             response = self.client.post(
                 url,
                 {"username": "cible@example.test", "password": "incorrect"},
             )
-            self.assertEqual(response.status_code, 200)
-
-        response = self.client.post(
-            url,
-            {"username": "cible@example.test", "password": "incorrect"},
-        )
 
         self.assertEqual(response.status_code, 403)
 
