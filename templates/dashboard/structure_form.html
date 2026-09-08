@@ -35,7 +35,7 @@
     </div>
   {% endif %}
 
-  {# --- Ligne : Identité + Tranche d'âge --- #}
+  {# --- Ligne : Identité + Tranche d'âge + Accueil spécifique --- #}
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5 items-start">
   <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
@@ -144,6 +144,34 @@
         </div>
         {% if form.age_max.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.age_max.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
         {% if form.age_max_unite.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.age_max_unite.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# --- Carte : Accueil spécifique --- #}
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
+    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-accessibility"></use></svg>
+      Accueil spécifique
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_accueil_handicap">Accueil handicap</label>
+        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="accueil_handicap" id="id_accueil_handicap"
+                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+          <option value="" {% if form.accueil_handicap.value is None %}selected{% endif %}>Non concerné</option>
+          <option value="true" {% if form.accueil_handicap.value == True %}selected{% endif %}>Oui</option>
+          <option value="false" {% if form.accueil_handicap.value == False %}selected{% endif %}>Non</option>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_accueil_urgence">Accueil d'urgence</label>
+        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="accueil_urgence" id="id_accueil_urgence"
+                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
+          <option value="" {% if form.accueil_urgence.value is None %}selected{% endif %}>Non concerné</option>
+          <option value="true" {% if form.accueil_urgence.value == True %}selected{% endif %}>Oui</option>
+          <option value="false" {% if form.accueil_urgence.value == False %}selected{% endif %}>Non</option>
+        </select>
       </div>
     </div>
   </div>
@@ -267,37 +295,8 @@
   </div>
   </div>
 
-  {# --- Ligne : Accueil spécifique + Informations de gestion --- #}
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5 items-start">
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
-    <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
-      <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-accessibility"></use></svg>
-      Accueil spécifique
-    </h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_accueil_handicap">Accueil handicap</label>
-        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="accueil_handicap" id="id_accueil_handicap"
-                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
-          <option value="" {% if form.accueil_handicap.value is None %}selected{% endif %}>Non concerné</option>
-          <option value="true" {% if form.accueil_handicap.value == True %}selected{% endif %}>Oui</option>
-          <option value="false" {% if form.accueil_handicap.value == False %}selected{% endif %}>Non</option>
-        </select>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_accueil_urgence">Accueil d'urgence</label>
-        <select class="block w-full px-3.5 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 appearance-none" name="accueil_urgence" id="id_accueil_urgence"
-                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 0.6rem center;background-size:1rem;">
-          <option value="" {% if form.accueil_urgence.value is None %}selected{% endif %}>Non concerné</option>
-          <option value="true" {% if form.accueil_urgence.value == True %}selected{% endif %}>Oui</option>
-          <option value="false" {% if form.accueil_urgence.value == False %}selected{% endif %}>Non</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
   {# --- Section : Gestion --- #}
-  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
+  <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 mb-5 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-settings"></use></svg>
       Informations de gestion
@@ -356,7 +355,6 @@
              {% if form.reference_monenfant.value %}checked{% endif %}>
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] cursor-pointer" for="id_reference_monenfant">Référencé sur monenfant.fr</label>
     </div>
-  </div>
   </div>
 
   {{ form.horaires }}

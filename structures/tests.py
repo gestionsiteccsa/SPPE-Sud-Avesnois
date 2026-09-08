@@ -2268,6 +2268,21 @@ class StructureFormZeroValueDisplayTests(TestCase):
         self.assertTrue(tag)
         self.assertIn("checked", tag)
 
+    def test_accueil_specifique_appears_after_tranche_age(self):
+        structure = Structure.objects.create(nom="Ordre des blocs")
+
+        response = self.client.get(reverse("dashboard:structure_edit", args=[structure.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        pos_age = html.index("id_age_non_renseigne")
+        pos_accueil = html.index("id_accueil_handicap")
+        pos_horaires = html.index("horaires-fieldset")
+        pos_gestion = html.index("id_directeur")
+        self.assertLess(pos_age, pos_accueil)
+        self.assertLess(pos_accueil, pos_horaires)
+        self.assertLess(pos_horaires, pos_gestion)
+
 
 @override_settings(GEOCODE_ENABLED=False)
 class StructureFlashMessageTests(TestCase):
