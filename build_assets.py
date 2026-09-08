@@ -76,7 +76,7 @@ def build_app_css() -> None:
     combined = f"{tokens}\n@layer base {{\n{base}\n}}"
     minified = minify_css(combined)
     output = STATIC / "css" / "app.min.css"
-    output.write_text(minified, encoding="utf-8")
+    _write_text_file(output, minified)
     print(f"  WROTE app.min.css ({len(minified)} caractères)")
 
 
@@ -109,18 +109,22 @@ def _esbuild_command(cli: Path) -> list[str]:
 
 
 def _invoke_esbuild(command: list[str], input: str | None) -> str:
+    # Stdin en binaire : en mode texte, Windows convertirait `\n` en `\r\n`
+    # dans le flux envoyé à esbuild, dont la sortie différerait alors de
+    # celle produite sous Linux pour la même entrée.
     try:
         result = subprocess.run(
             command,
-            input=input,
+            input=input.encode("utf-8") if input is not None else None,
             check=True,
             capture_output=True,
-            text=True,
             cwd=ROOT,
             timeout=60,
         )
     except subprocess.CalledProcessError as exc:
-        details = (exc.stderr or "").strip() or (exc.stdout or "").strip()
+        stderr = exc.stderr.decode("utf-8", "replace") if exc.stderr else ""
+        stdout = exc.stdout.decode("utf-8", "replace") if exc.stdout else ""
+        details = stderr.strip() or stdout.strip()
         message = (
             "esbuild a échoué "
             f"(code {exc.returncode}, commande : {' '.join(command)})."
@@ -130,7 +134,7 @@ def _invoke_esbuild(command: list[str], input: str | None) -> str:
         else:
             message += " Aucun détail sur stderr."
         raise RuntimeError(message) from exc
-    return result.stdout
+    return result.stdout.decode("utf-8")
 
 
 def _run_esbuild(arguments: list[str], input: str | None = None) -> str:
@@ -162,7 +166,7 @@ def build_js() -> None:
     combined = "\n".join(parts)
     minified = _run_esbuild(["--target=es2015"], input=combined)
     output = STATIC / "js" / "bundle.min.js"
-    output.write_text(minified, encoding="utf-8")
+    _write_text_file(output, minified)
     print(f"  WROTE bundle.min.js ({len(combined)} -> {len(minified)} caractères)")
 
 
@@ -172,20 +176,36 @@ def build_timeslider() -> None:
     js_content = js_source.read_text(encoding="utf-8")
     js_minified = _run_esbuild(["--target=es2015"], input=js_content)
     js_output = STATIC / "js" / "timeslider.min.js"
-    js_output.write_text(js_minified, encoding="utf-8")
+    _write_text_file(js_output, js_minified)
     print(f"  WROTE timeslider.min.js ({len(js_content)} -> {len(js_minified)} caractères)")
 
     css_source = STATIC / "css" / "timeslider.css"
     css_content = css_source.read_text(encoding="utf-8")
     css_minified = _run_esbuild(["--loader=css"], input=css_content)
     css_output = STATIC / "css" / "timeslider.min.css"
-    css_output.write_text(css_minified, encoding="utf-8")
+    _write_text_file(css_output, css_minified)
     print(f"  WROTE timeslider.min.css ({len(css_content)} -> {len(css_minified)} caractères)")
 
 
 def _copy_file(source: Path, destination: Path) -> None:
+    """Copie un fichier vendor en normalisant les fins de ligne des textes.
+
+    Certains paquets npm (ex. Leaflet) livrent des fichiers en CRLF : la
+    copie brute produirait des artefacts différents du dépôt (normalisé LF)
+    sous Linux, faisant échouer le contrôle CI des ressources versionnées.
+    Les binaires (images, fontes) sont copiés à l'octet près.
+    """
     destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, destination)
+    data = source.read_bytes()
+    if source.suffix.lower() in {".css", ".js"}:
+        data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    destination.write_bytes(data)
+
+
+def _write_text_file(destination: Path, content: str) -> None:
+    """Écrit un artefact généré avec des fins de ligne LF sur tout OS."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(content, encoding="utf-8", newline="\n")
 
 
 def build_vendor_assets() -> None:

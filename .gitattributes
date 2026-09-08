@@ -1,0 +1,5 @@
+# Normalise les fins de ligne à LF dans le dépôt sur tous les OS.
+# Indispensable à la reproductibilité du build : le contrôle CI
+# (`git diff --exit-code -- static`) exige des artefacts identiques
+# que le build tourne sous Windows ou sous Linux.
+* text=auto

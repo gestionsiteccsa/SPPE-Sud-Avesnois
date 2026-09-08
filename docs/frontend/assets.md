@@ -28,6 +28,8 @@ Relisez ensuite le diff de `static/`. Les fichiers générés sont versionnés p
 
 En cas d'échec d'esbuild, `build_assets.py` affiche le message d'erreur du binaire (commande, code et `stderr`) au lieu d'une erreur nue. Le lanceur détecte automatiquement si `bin/esbuild` est le shim JS (via `node`) ou le binaire natif installé par le postinstall (exécution directe) ; vérifiez d'abord que `node_modules/esbuild/bin/esbuild --version` répond (sinon, relancer `npm ci`).
 
+Reproductibilité Windows/Linux : les copies vendor texte sont normalisées en LF, esbuild reçoit son entrée en binaire et les artefacts sont écrits en LF ; `.gitattributes` (`* text=auto`) fige cette convention. Le contrôle CI `git diff --exit-code -- static` exige un rebuild strictement identique.
+
 ## Conventions Tailwind v4
 
 - une variable CSS de taille de texte s'écrit `text-[length:var(--fs-...)]` afin que Tailwind ne l'interprète pas comme une couleur ;
