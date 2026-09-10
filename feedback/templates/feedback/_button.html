@@ -58,14 +58,13 @@
 
     <div class="flex flex-col gap-2 mb-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="feedback-page">
-        Page concernée <span class="text-[var(--color-danger)]" aria-hidden="true">*</span>
+        Page concernée <span class="font-normal text-[var(--color-text-muted)]">(facultatif)</span>
       </label>
       <input
         id="feedback-page"
         name="page_declaree"
         type="text"
         class="block w-full px-4 py-3 text-[length:var(--fs-base)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem]"
-        required
         maxlength="500"
         autocomplete="off"
         spellcheck="false"
@@ -80,7 +79,7 @@
         <option value="/dashboard/"></option>
       </datalist>
       <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)]" id="feedback-page-help">
-        Pré-remplie avec votre page actuelle, modifiable librement.
+        Facultatif. Pré-remplie avec votre page actuelle, modifiable librement.
       </p>
     </div>
 

@@ -31,7 +31,7 @@ def notify_admins_new_feedback(report, detail_url: str = "") -> None:
         "",
         f"Type : {report.get_type_display()}",
         f"Auteur : {author}",
-        f"Page indiquée : {report.page_declaree}",
+        f"Page indiquée : {report.page_declaree or '—'}",
         f"Page détectée : {report.page_auto or '—'}",
         "",
         "Message :",

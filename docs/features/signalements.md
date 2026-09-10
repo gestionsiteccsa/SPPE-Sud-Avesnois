@@ -8,7 +8,7 @@ signalement : bug, suggestion ou autre remarque.
 
 1. L'utilisateur clique l'icône « Signaler un bug ou une remarque ».
 2. La modale (`<dialog>` natif) s'ouvre avec le focus sur le message.
-3. Le champ **« Page concernée » est pré-rempli** avec la page courante
+3. Le champ **« Page concernée » (facultatif) est pré-rempli** avec la page courante
    (`window.location.pathname`), mais reste **modifiable librement**
    (saisie + suggestions des grandes sections).
 4. Envoi en `fetch` JSON avec CSRF ; sans JavaScript, le formulaire POST
@@ -23,7 +23,7 @@ Modèle `feedback.FeedbackReport` :
 - `user` (compte auteur, `SET_NULL` pour garder l'historique) ;
 - `type` : bug / suggestion / autre ;
 - `message` : 10 à 2000 caractères, texte brut ;
-- `page_declaree` : page indiquée par l'utilisateur (modifiable) ;
+- `page_declaree` : page indiquée par l'utilisateur (modifiable, facultative) ;
 - `page_auto` : page déduite côté serveur (en-tête `Referer` même hôte,
   repli sur le contexte envoyé par le JS) — jamais acceptée aveuglément ;
 - `url_name`, `user_agent` (tronqué à 500) ;

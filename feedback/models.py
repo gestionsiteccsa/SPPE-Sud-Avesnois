@@ -46,8 +46,10 @@ class FeedbackReport(models.Model):
     )
     page_declaree = models.CharField(
         max_length=500,
+        blank=True,
+        default="",
         verbose_name="Page concernée",
-        help_text="Page indiquée par l'utilisateur (pré-remplie, modifiable).",
+        help_text="Page indiquée par l'utilisateur (pré-remplie, modifiable, facultative).",
     )
     url_name = models.CharField(
         max_length=200,

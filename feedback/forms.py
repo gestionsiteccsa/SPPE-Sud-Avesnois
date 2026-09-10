@@ -25,8 +25,8 @@ class FeedbackForm(forms.ModelForm):
         }
         help_texts = {
             "page_declaree": (
-                "Pré-remplie avec la page où vous étiez. Modifiez-la si le "
-                "problème concerne une autre page."
+                "Facultatif. Pré-remplie avec la page où vous étiez. "
+                "Modifiez-la si le problème concerne une autre page."
             ),
             "message": "Décrivez le problème ou votre remarque (10 à 2000 caractères).",
         }
@@ -53,8 +53,6 @@ class FeedbackForm(forms.ModelForm):
 
     def clean_page_declaree(self) -> str:
         value = (self.cleaned_data.get("page_declaree") or "").strip()
-        if not value:
-            raise forms.ValidationError("Indiquez la page concernée.")
         if len(value) > 500:
             raise forms.ValidationError("Cette adresse de page est trop longue.")
         return value
