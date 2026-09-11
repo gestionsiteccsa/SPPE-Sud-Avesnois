@@ -5,6 +5,9 @@
 ### Ajouté
 
 - fiches structure : champ « Commentaire interne » dans « Informations de gestion », affiché en rouge sur la fiche pour les comptes connectés uniquement (la fiche exige déjà une connexion).
+- annuaire : détection automatique des horaires atypiques (ouverture le week-end, avant 7h30 ou après 19h) avec message sur la fiche, pastille et raisons en clair sur les cartes, et filtre « Horaires : atypiques uniquement ».
+- recherche de l'annuaire : le mot-clé cherche aussi dans le nom de structure et le prénom (les fiches créées via « Vous êtes une structure ? » ou comme personne sont désormais trouvables par leur nom).
+- fiches structure : le type devient obligatoire — « Type existant » ou « Ou créer un nouveau type » doit être renseigné, et saisir un nouveau type identique à celui sélectionné affiche une erreur.
 
 ### Modifié
 

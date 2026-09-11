@@ -51,6 +51,12 @@
                     Urgence
                   </span>
                 {% endif %}
+                {% if structure.horaires_atypiques %}
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-info-bg)] text-[var(--badge-info-fg)]" title="{{ structure.horaires_atypiques|join:' · ' }}">
+                    <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+                    Horaires atypiques
+                  </span>
+                {% endif %}
               </div>
             </div>
             {% if can_edit_structure %}
@@ -124,6 +130,12 @@
               <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-3 mb-4">{{ structure.horaires_notes }}</p>
             {% else %}
               <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] mt-3 mb-4">Horaires habituels — susceptible de varier selon les périodes.</p>
+            {% endif %}
+            {% if structure.horaires_atypiques %}
+              <p class="flex items-start gap-2 mt-0 mb-4 px-4 py-3 rounded-[var(--radius-md)] bg-[var(--badge-info-bg)] text-[var(--badge-info-fg)] text-[length:var(--fs-sm)] font-semibold" role="status">
+                <svg class="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+                <span>Horaires atypiques&nbsp;: {{ structure.horaires_atypiques|join:" · " }}.</span>
+              </p>
             {% endif %}
             <div class="overflow-x-auto border border-[var(--color-border)] rounded-[var(--radius-lg)]">
               <table class="w-full border-collapse text-[length:var(--fs-sm)]">

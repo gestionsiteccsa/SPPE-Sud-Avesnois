@@ -46,7 +46,11 @@ from structures.services.sqlite_backup import (
     run_backup,
     verify_sqlite_database,
 )
-from structures.services.stats import build_dashboard_statistics
+from structures.services.stats import (
+    a_horaires_atypiques,
+    build_dashboard_statistics,
+    raisons_horaires_atypiques,
+)
 
 
 User = get_user_model()
@@ -433,6 +437,7 @@ class StructureIdentityTests(TestCase):
     def setUp(self):
         self.commune = Commune.objects.create(nom="Testville", code_postal="75001")
         self.autre_commune = Commune.objects.create(nom="Autreville", code_postal="75002")
+        self.type = TypeStructure.objects.create(nom="Crèche")
         self.horaires = json.dumps([{"jour": "lundi", "ferme": True}])
 
     def test_form_requires_person_name_when_unchecked(self):
@@ -457,6 +462,7 @@ class StructureIdentityTests(TestCase):
                 "nom": "Dupont",
                 "prenom": "Marie",
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -476,6 +482,7 @@ class StructureIdentityTests(TestCase):
                 "prenom": "Marie",
                 "nom_structure": "Crèche Des Coquilles",
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -494,6 +501,7 @@ class StructureIdentityTests(TestCase):
                 "est_structure": "on",
                 "nom_structure": "Crèche Les Lutins",
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -508,6 +516,7 @@ class StructureIdentityTests(TestCase):
                 "nom": "Dupont",
                 "prenom": "Marie",
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -551,6 +560,7 @@ class StructureIdentityTests(TestCase):
                 "nom_structure": "Crèche Les Lutins",
                 "commune": self.autre_commune.pk,
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -595,6 +605,7 @@ class StructureIdentityTests(TestCase):
                 "nom_structure": "Crèche Les Lutins",
                 "commune": self.commune.pk,
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -619,6 +630,7 @@ class StructureIdentityTests(TestCase):
                 "prenom": "Marie",
                 "commune": self.commune.pk,
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "latitude": 50.2841,
                 "longitude": 3.7887,
                 "age_min": "3",
@@ -645,6 +657,71 @@ class StructureIdentityTests(TestCase):
     def test_nom_affiche_falls_back_to_legacy_nom(self):
         structure = Structure(nom="Ancienne valeur")
         self.assertEqual(structure.nom_affiche, "Ancienne valeur")
+
+
+class HorairesAtypiquesTests(TestCase):
+    def test_classic_weekday_schedule_has_no_reason(self):
+        horaires = [
+            {"jour": "lundi", "ferme": False, "ouverture": "07:30", "fermeture": "19:00"},
+            {"jour": "mardi", "ferme": False, "ouverture": "08:00", "fermeture": "18:00"},
+            {"jour": "samedi", "ferme": True},
+            {"jour": "dimanche", "ferme": True},
+        ]
+
+        self.assertEqual(raisons_horaires_atypiques(horaires), [])
+        self.assertFalse(a_horaires_atypiques(horaires))
+
+    def test_exact_bounds_are_not_atypical(self):
+        horaires = [
+            {"jour": "lundi", "ferme": False, "ouverture": "07:30", "fermeture": "19:00"},
+        ]
+
+        self.assertEqual(raisons_horaires_atypiques(horaires), [])
+
+    def test_weekend_opening_is_atypical(self):
+        horaires = [
+            {"jour": "samedi", "ferme": False, "ouverture": "09:00", "fermeture": "12:00"},
+            {"jour": "dimanche", "ferme": True},
+        ]
+
+        raisons = raisons_horaires_atypiques(horaires)
+
+        self.assertEqual(raisons, ["Ouvert le samedi"])
+        self.assertTrue(a_horaires_atypiques(horaires))
+
+    def test_early_opening_and_late_closing_are_atypical(self):
+        horaires = [
+            {"jour": "mardi", "ferme": False, "ouverture": "06:30", "fermeture": "18:00"},
+            {"jour": "jeudi", "ferme": False, "ouverture": "08:00", "fermeture": "20:00"},
+        ]
+
+        raisons = raisons_horaires_atypiques(horaires)
+
+        self.assertEqual(
+            raisons,
+            ["Ouverture dès 06:30 le mardi", "Fermeture à 20:00 le jeudi"],
+        )
+
+    def test_closed_day_with_times_is_ignored(self):
+        horaires = [
+            {"jour": "dimanche", "ferme": True, "ouverture": "06:00", "fermeture": "22:00"},
+        ]
+
+        self.assertEqual(raisons_horaires_atypiques(horaires), [])
+
+    def test_blank_and_malformed_times_are_ignored(self):
+        horaires = [
+            {"jour": "lundi", "ferme": False, "ouverture": "", "fermeture": ""},
+            {"jour": "mardi", "ferme": False, "ouverture": "7h", "fermeture": "25:00"},
+            {"jour": "mercredi", "ferme": False},
+        ]
+
+        self.assertEqual(raisons_horaires_atypiques(horaires), [])
+
+    def test_empty_schedule_has_no_reason(self):
+        self.assertEqual(raisons_horaires_atypiques([]), [])
+        self.assertEqual(raisons_horaires_atypiques(None), [])
+        self.assertFalse(a_horaires_atypiques(None))
 
 
 class GeocodeServiceTests(TestCase):
@@ -734,6 +811,7 @@ class GeocodeServiceTests(TestCase):
 
 class StructureFormGeocodeTests(TestCase):
     def setUp(self):
+        self.type = TypeStructure.objects.create(nom="Crèche")
         self.horaires = json.dumps([{"jour": "lundi", "ferme": True}])
 
     def test_save_geocodes_when_coordinates_missing(self):
@@ -742,6 +820,7 @@ class StructureFormGeocodeTests(TestCase):
                 "est_structure": "on",
                 "nom_structure": "Crèche Les Lutins",
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -765,6 +844,7 @@ class StructureFormGeocodeTests(TestCase):
                 "est_structure": "on",
                 "nom_structure": "Crèche Les Lutins",
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "latitude": 50.1,
                 "longitude": 3.2,
                 "age_min": "3",
@@ -1584,6 +1664,77 @@ class PublicStructureViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertNotIn("Note interne confidentielle.", response.content.decode())
 
+    def test_list_filters_atypical_schedules(self):
+        atypique = Structure.objects.create(
+            nom="Crèche Atypique",
+            afficher=True,
+            commune=self.commune,
+            horaires=[
+                {
+                    "jour": "samedi",
+                    "ferme": False,
+                    "ouverture": "09:00",
+                    "fermeture": "12:00",
+                }
+            ],
+        )
+
+        response = self.client.get(reverse("structures:liste"), {"horaires": "atypiques"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["structure_list"]), [atypique])
+        self.assertContains(response, "Horaires atypiques")
+        self.assertContains(response, "Ouvert le samedi")
+
+    def test_list_ignores_invalid_horaires_filter(self):
+        response = self.client.get(reverse("structures:liste"), {"horaires": "zzz"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.visible, list(response.context["structure_list"]))
+
+    def test_detail_shows_atypical_schedule_banner(self):
+        self.visible.horaires = [
+            {"jour": "mardi", "ferme": False, "ouverture": "06:30", "fermeture": "18:00"}
+        ]
+        self.visible.save()
+
+        response = self.client.get(reverse("structures:detail", args=[self.visible.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Horaires atypiques")
+        self.assertContains(response, "Ouverture dès 06:30 le mardi")
+
+    def test_detail_hides_atypical_banner_for_classic_schedule(self):
+        response = self.client.get(reverse("structures:detail", args=[self.visible.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Horaires atypiques")
+
+    def test_search_finds_structure_by_nom_structure(self):
+        creche = Structure.objects.create(
+            nom_structure="Les Petits Lutins TestQ",
+            afficher=True,
+            commune=self.commune,
+        )
+
+        response = self.client.get(reverse("structures:liste"), {"q": "Lutins TestQ"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(creche, list(response.context["structure_list"]))
+
+    def test_search_finds_person_by_prenom(self):
+        assistante = Structure.objects.create(
+            nom="Durand TestQ",
+            prenom="Sophie TestQ",
+            afficher=True,
+            commune=self.commune,
+        )
+
+        response = self.client.get(reverse("structures:liste"), {"q": "Sophie TestQ"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(assistante, list(response.context["structure_list"]))
+
     def test_detail_does_not_duplicate_city_when_address_is_complete(self):
         structure = Structure.objects.create(
             nom="Adresse complète",
@@ -2136,12 +2287,81 @@ class StructureFormErrorDisplayTests(TestCase):
         )
         self.client.force_login(self.admin)
         self.commune = Commune.objects.create(nom="Testville", code_postal="75001")
+        self.type = TypeStructure.objects.create(nom="Crèche")
         self.horaires = json.dumps([{"jour": "lundi", "ferme": True}])
 
     def _post_invalid(self, **extra):
-        data = {"nom": "Structure invalide", "horaires": self.horaires}
+        data = {
+            "nom": "Structure invalide",
+            "horaires": self.horaires,
+            "type": str(self.type.pk),
+        }
         data.update(extra)
         return self.client.post(reverse("dashboard:structure_add"), data)
+
+    def test_missing_type_and_type_nom_error_is_displayed(self):
+        response = self._post_invalid(
+            type="",
+            type_nom="",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Sélectionnez un type existant ou créez-en un nouveau.",
+            html=False,
+        )
+        self.assertFalse(Structure.objects.filter(nom="Structure invalide").exists())
+
+    def test_existing_type_only_is_accepted(self):
+        response = self._post_invalid(
+            nom="Structure typée",
+            type_nom="",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
+        )
+
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure typée")
+        self.assertEqual(structure.type, self.type)
+
+    def test_new_type_only_is_accepted(self):
+        response = self._post_invalid(
+            nom="Structure nouveau type",
+            type="",
+            type_nom="Micro-crèche",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
+        )
+
+        self.assertEqual(response.status_code, 302)
+        structure = Structure.objects.get(nom="Structure nouveau type")
+        self.assertEqual(structure.type.nom, "Micro-crèche")
+
+    def test_identical_type_and_type_nom_error_is_displayed(self):
+        response = self._post_invalid(
+            type_nom="creche",
+            age_min="3",
+            age_min_unite="ans",
+            age_max="12",
+            age_max_unite="ans",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Ce type existe déjà",
+            html=False,
+        )
+        self.assertFalse(Structure.objects.filter(nom="Structure invalide").exists())
 
     def test_negative_age_error_is_displayed(self):
         response = self._post_invalid(age_min="-3", age_min_unite="ans")
@@ -2363,6 +2583,7 @@ class StructureScheduleEditorTests(TestCase):
             password="Un-mot-de-passe-tres-long-2026",
         )
         self.client.force_login(self.admin)
+        self.type = TypeStructure.objects.create(nom="Crèche")
 
     def test_form_exposes_timeslider_widget_full_width(self):
         response = self.client.get(reverse("dashboard:structure_add"))
@@ -2392,6 +2613,7 @@ class StructureScheduleEditorTests(TestCase):
             {
                 "nom": "Structure horaires",
                 "horaires": json.dumps(schedule),
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -2559,6 +2781,7 @@ class StructureFlashMessageTests(TestCase):
         )
         self.client.force_login(self.admin)
         self.horaires = json.dumps([{"jour": "lundi", "ferme": True}])
+        self.type = TypeStructure.objects.create(nom="Crèche")
 
     def test_create_structure_shows_flash_message(self):
         response = self.client.post(
@@ -2566,6 +2789,7 @@ class StructureFlashMessageTests(TestCase):
             {
                 "nom": "Crèche flash",
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -2596,6 +2820,7 @@ class StructureFlashMessageTests(TestCase):
                 {
                     "nom": "Pin manuel",
                     "horaires": self.horaires,
+                    "type": str(self.type.pk),
                     "age_min": "3",
                     "age_min_unite": "ans",
                     "age_max": "12",
@@ -2621,6 +2846,7 @@ class StructureFlashMessageTests(TestCase):
             {
                 "nom": "Après",
                 "horaires": self.horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",
@@ -2765,6 +2991,7 @@ class CollaboratorStructureScopeTests(TestCase):
         self.commune_a = Commune.objects.create(nom="Marseille", code_postal="13001")
         self.commune_b = Commune.objects.create(nom="Aix-en-Provence", code_postal="13100")
         UserCommune.objects.create(user=self.collab, commune=self.commune_a)
+        self.type = TypeStructure.objects.create(nom="Crèche")
         self.structure_a = Structure.objects.create(nom="Crèche A", commune=self.commune_a)
         self.structure_b = Structure.objects.create(nom="Crèche B", commune=self.commune_b)
 
@@ -2840,7 +3067,12 @@ class CollaboratorStructureScopeTests(TestCase):
 
         response = self.client.post(
             reverse("dashboard:structure_add"),
-            {"nom": "Hors périmètre", "commune": str(self.commune_b.pk), "horaires": horaires},
+            {
+                "nom": "Hors périmètre",
+                "commune": str(self.commune_b.pk),
+                "horaires": horaires,
+                "type": str(self.type.pk),
+            },
         )
 
         self.assertEqual(response.status_code, 200)
@@ -2858,6 +3090,7 @@ class CollaboratorStructureScopeTests(TestCase):
                 "nom": "Crèche C",
                 "commune": str(self.commune_a.pk),
                 "horaires": horaires,
+                "type": str(self.type.pk),
                 "age_min": "3",
                 "age_min_unite": "ans",
                 "age_max": "12",

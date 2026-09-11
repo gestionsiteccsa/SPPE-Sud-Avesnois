@@ -299,6 +299,12 @@ class Structure(models.Model):
             txt += f" ({self.horaires_notes})"
         return txt
 
+    def horaires_atypiques(self):
+        """Raisons d'horaires atypiques (liste vide = horaires classiques)."""
+        from structures.services.stats import raisons_horaires_atypiques
+
+        return raisons_horaires_atypiques(self.horaires)
+
     def afficher_places(self):
         if self.places_non_communique:
             return "Non communiqué"

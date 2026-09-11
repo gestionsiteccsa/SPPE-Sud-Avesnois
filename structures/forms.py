@@ -117,6 +117,21 @@ class StructureForm(forms.ModelForm):
         cleaned = super().clean()
         type_nom = cleaned.get("type_nom", "").strip()
         self._new_type_name = type_nom
+        type_obj = cleaned.get("type")
+
+        if not type_obj and not type_nom:
+            self.add_error(
+                "type", "Sélectionnez un type existant ou créez-en un nouveau."
+            )
+        elif (
+            type_obj
+            and type_nom
+            and _normalize_name(type_nom) == _normalize_name(type_obj.nom)
+        ):
+            self.add_error(
+                "type_nom",
+                "Ce type existe déjà : sélectionnez-le dans la liste « Type existant ».",
+            )
 
         est_structure = cleaned.get("est_structure", False)
         nom_structure = cleaned.get("nom_structure", "").strip()

@@ -6,6 +6,7 @@ from communes.models import Commune
 
 from ..access import allowed_commune_ids
 from ..models import Structure, TypeStructure
+from ..services.stats import a_horaires_atypiques
 
 
 def query_int(raw):
@@ -51,9 +52,20 @@ class StructureListView(LoginRequiredMixin, ListView):
         if q:
             qs = qs.filter(
                 Q(nom__icontains=q)
+                | Q(prenom__icontains=q)
+                | Q(nom_structure__icontains=q)
                 | Q(type__nom__icontains=q)
                 | Q(commune__nom__icontains=q)
             )
+        if self.request.GET.get("horaires") == "atypiques":
+            atypiques_ids = [
+                pk
+                for pk, horaires in qs.values_list("pk", "horaires").iterator(
+                    chunk_size=500
+                )
+                if a_horaires_atypiques(horaires)
+            ]
+            qs = qs.filter(pk__in=atypiques_ids)
         return qs
 
     def get_context_data(self, **kwargs):

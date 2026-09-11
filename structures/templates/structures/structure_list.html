@@ -29,7 +29,7 @@
               aria-expanded="false">
         <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-filter"></use></svg>
         Filtres
-        {% if filters.q or filters.type or filters.commune or filters.places or filters.handicap or filters.urgence %}
+        {% if filters.q or filters.type or filters.commune or filters.places or filters.handicap or filters.urgence or filters.horaires %}
           <span class="inline-flex items-center justify-center min-h-5 px-2 rounded-full bg-[var(--color-primary)] text-white text-[length:var(--fs-xs)] font-bold">Actifs</span>
         {% endif %}
       </button>
@@ -115,6 +115,16 @@
           </select>
         </div>
 
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[length:var(--fs-xs)] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.06em]" for="horaires">Horaires</label>
+          <select class="block w-full px-3 py-2.5 pr-7 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] transition-[border-color,box-shadow] duration-200 hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] appearance-none"
+                   style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2399A2B0%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 1rem;"
+                   id="horaires" name="horaires">
+            <option value="">Tous</option>
+            <option value="atypiques" {% if filters.horaires == "atypiques" %}selected{% endif %}>Atypiques uniquement</option>
+          </select>
+        </div>
+
         <div class="flex flex-col justify-end gap-2 sm:col-span-2 xl:col-span-1 2xl:col-span-1">
           <button class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:pointer-events-none w-full bg-[var(--color-primary)] text-white border-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]" type="submit">
             <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-search"></use></svg>
@@ -130,7 +140,7 @@
           <p class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)] m-0">
             <strong class="text-[var(--color-text)]">{{ page_obj.paginator.count }}</strong>
             structure{{ page_obj.paginator.count|pluralize }}
-            {% if filters.q or filters.type or filters.commune or filters.places or filters.handicap or filters.urgence %}
+            {% if filters.q or filters.type or filters.commune or filters.places or filters.handicap or filters.urgence or filters.horaires %}
               <span class="text-[var(--color-text-subtle)]">— filtré{{ page_obj.paginator.count|pluralize }}</span>
               <a class="text-[var(--color-primary)] no-underline hover:underline text-[length:var(--fs-xs)] ml-1.5" href="{% url 'structures:liste' %}">✕ Réinitialiser</a>
             {% endif %}
@@ -183,6 +193,12 @@
                         <span>{{ s.commune.code_postal }} {{ s.commune.nom }}</span>
                       </p>
                     {% endif %}
+                    {% if s.horaires_atypiques %}
+                      <p class="flex items-start gap-2 m-0">
+                        <svg class="w-4 h-4 mt-1 shrink-0 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+                        <span>Horaires atypiques&nbsp;: {{ s.horaires_atypiques|join:" · " }}.</span>
+                      </p>
+                    {% endif %}
                   </div>
 
                   <div class="flex flex-wrap items-center gap-2 mt-auto pt-3.5 border-t border-[var(--color-border)]">
@@ -196,6 +212,12 @@
                       <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-info-bg)] text-[var(--badge-info-fg)]">
                         <svg class="w-3 h-3 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
                         Urgence
+                      </span>
+                    {% endif %}
+                    {% if s.horaires_atypiques %}
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-info-bg)] text-[var(--badge-info-fg)]" title="{{ s.horaires_atypiques|join:' · ' }}">
+                        <svg class="w-3 h-3 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-clock"></use></svg>
+                        Horaires atypiques
                       </span>
                     {% endif %}
                     <span class="inline-flex items-center gap-1.5 ml-auto text-[length:var(--fs-xs)] font-semibold text-[var(--color-primary)]">

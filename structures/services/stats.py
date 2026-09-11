@@ -1,5 +1,6 @@
 """Calculs statistiques partagés par le tableau de bord."""
 
+import re
 from calendar import monthrange
 from datetime import date
 from typing import Literal, TypedDict
@@ -179,6 +180,65 @@ def format_day_schedule(schedule, day: str) -> str:
     if ouverture and fermeture:
         return f"{ouverture}–{fermeture}"
     return "Ouvert"
+
+
+JOURS_WEEKEND = {"samedi", "dimanche"}
+#: Ouverture avant cette heure = horaire atypique (en minutes depuis minuit).
+OUVERTURE_LIMITE_MINUTES = 7 * 60 + 30
+#: Fermeture après cette heure = horaire atypique (en minutes depuis minuit).
+FERMETURE_LIMITE_MINUTES = 19 * 60
+
+_HEURE_RE = re.compile(r"^(\d{1,2}):(\d{2})$")
+
+
+def _heure_en_minutes(raw: object) -> int | None:
+    """Convertit « HH:MM » en minutes depuis minuit ; None si absent ou malformé."""
+    match = _HEURE_RE.match(str(raw or "").strip())
+    if match is None:
+        return None
+    heures, minutes = int(match.group(1)), int(match.group(2))
+    if heures > 23 or minutes > 59:
+        return None
+    return heures * 60 + minutes
+
+
+def raisons_horaires_atypiques(schedule) -> list[str]:
+    """Raisons pour lesquelles des horaires sont atypiques (liste vide sinon).
+
+    Atypique = ouverture le week-end (samedi/dimanche), ouverture avant 7h30
+    ou fermeture après 19h. Les jours fermés et les heures vides ou
+    malformées sont ignorés : on ne signale que du positif avéré.
+    """
+    raisons = []
+    for item in schedule or []:
+        if not isinstance(item, dict) or item.get("ferme") is not False:
+            continue
+        jour = str(item.get("jour") or "").strip()
+        label_jour = dict(JOURS_SEM).get(jour, jour) or "jour inconnu"
+        if jour in JOURS_WEEKEND:
+            raisons.append(f"Ouvert le {label_jour.lower()}")
+        ouverture_minutes = _heure_en_minutes(item.get("ouverture"))
+        if (
+            ouverture_minutes is not None
+            and ouverture_minutes < OUVERTURE_LIMITE_MINUTES
+        ):
+            raisons.append(
+                f"Ouverture dès {str(item.get('ouverture')).strip()} le {label_jour.lower()}"
+            )
+        fermeture_minutes = _heure_en_minutes(item.get("fermeture"))
+        if (
+            fermeture_minutes is not None
+            and fermeture_minutes > FERMETURE_LIMITE_MINUTES
+        ):
+            raisons.append(
+                f"Fermeture à {str(item.get('fermeture')).strip()} le {label_jour.lower()}"
+            )
+    return raisons
+
+
+def a_horaires_atypiques(schedule) -> bool:
+    """Indique si des horaires déclarent une ouverture atypique (week-end ou amplitude élargie)."""
+    return bool(raisons_horaires_atypiques(schedule))
 
 
 def _opening_day_statistics(queryset: QuerySet) -> list[dict]:

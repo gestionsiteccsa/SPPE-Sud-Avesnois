@@ -85,8 +85,9 @@
     </div>
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_type_nom">Ou créer un nouveau type</label>
-      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="type_nom" id="id_type_nom"
+      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.type_nom.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="text" name="type_nom" id="id_type_nom"
              value="{{ form.type_nom.value|default:'' }}" placeholder="Ex&nbsp;: Micro-crèche" aria-describedby="id_type_nom-help">
+      {% if form.type_nom.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.type_nom.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0" id="id_type_nom-help">{{ form.fields.type_nom.help_text }}</p>
     </div>
     <div class="flex flex-row items-center gap-3 mt-4 pt-4 border-t border-[var(--color-border)]">
