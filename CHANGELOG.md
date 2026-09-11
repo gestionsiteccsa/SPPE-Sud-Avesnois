@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- fiches structure : champ « Commentaire interne » dans « Informations de gestion », affiché en rouge sur la fiche pour les comptes connectés uniquement (la fiche exige déjà une connexion).
+
 ### Modifié
 
 - campagnes : le lancement, la relance, le passage en réel et la génération des courriers créent ou mettent à jour les invitations **en une seule opération groupée** (`bulk_create`/`bulk_update`) au lieu d'une écriture par fiche — une campagne de 200 fiches passe d'environ 1 600 à moins de 10 requêtes ; chaque opération consigne désormais **une entrée résumée** dans le journal d'audit (action « groupée ») au lieu d'une entrée par invitation.
@@ -20,6 +24,11 @@
 - page d'import : la colonne « Tranche d'âge » est documentée comme obligatoire (« non renseigné » accepté) et le message d'erreur est adapté au contexte d'import.
 - journal d'audit : les champs proposés lors d'une demande de modification sont désormais journalisés explicitement (création par lots ne déclenchant pas les signaux).
 - fiches existantes sans tranche d'âge : migration de données les marquant « âge non renseigné » pour rester modifiables.
+- formulaire de fiche : la case « Non communiqué » est décochée automatiquement (côté formulaire et côté serveur) dès que « Places disponibles » dépasse 0.
+- fiches structure : champ « Aides » supprimé (modèle, formulaire, fiche et import) ; « Nb professionnel·les » pré-rempli avec 1 à la création et fiches existantes vides mises à 1 par migration de données.
+- tableau de bord : la liste des structures est triée par défaut par nom de famille puis prénom (repli sur le nom de la structure pour les fiches sans nom de famille) ; chaque fiche affichée propose un bouton « Voir la fiche » (œil) vers sa fiche, aucun bouton pour les fiches masquées.
+- fiches des personnes : le nom affiché commence par le nom de famille (« Dupont Marie » au lieu de « Marie Dupont ») partout où il apparaît (listes, fiche, messages, file de validation).
+- fiche structure : bouton « Modifier » visible pour les comptes connectés autorisés (superadmins partout, collaborateurs sur leurs communes liées) ; « Supprimer » reste réservé aux superadmins.
 
 ### Corrigé
 

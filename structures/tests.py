@@ -640,7 +640,7 @@ class StructureIdentityTests(TestCase):
 
     def test_nom_affiche_joins_person_name(self):
         structure = Structure(nom="Dupont", prenom="Marie")
-        self.assertEqual(structure.nom_affiche, "Marie Dupont")
+        self.assertEqual(structure.nom_affiche, "Dupont Marie")
 
     def test_nom_affiche_falls_back_to_legacy_nom(self):
         structure = Structure(nom="Ancienne valeur")
@@ -1522,6 +1522,68 @@ class PublicStructureViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Crèche Visible")
 
+    def test_detail_shows_edit_button_to_collaborator_in_scope(self):
+        response = self.client.get(reverse("structures:detail", args=[self.visible.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, reverse("dashboard:structure_edit", args=[self.visible.pk])
+        )
+        self.assertNotContains(
+            response, reverse("dashboard:structure_delete", args=[self.visible.pk])
+        )
+
+    def test_detail_hides_edit_button_outside_scope(self):
+        outside = Structure.objects.create(
+            nom="Hors périmètre", afficher=True, commune=self.autre_commune
+        )
+
+        response = self.client.get(reverse("structures:detail", args=[outside.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response, reverse("dashboard:structure_edit", args=[outside.pk])
+        )
+
+    def test_detail_shows_edit_and_delete_buttons_to_superuser(self):
+        admin = User.objects.create_superuser(
+            username="admin-fiche@example.test",
+            email="admin-fiche@example.test",
+            password="Un-mot-de-passe-tres-long-2026",
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse("structures:detail", args=[self.visible.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, reverse("dashboard:structure_edit", args=[self.visible.pk])
+        )
+        self.assertContains(
+            response, reverse("dashboard:structure_delete", args=[self.visible.pk])
+        )
+
+    def test_detail_shows_commentaire_interne_to_authenticated_user(self):
+        self.visible.commentaire_interne = "À rappeler en septembre."
+        self.visible.save()
+
+        response = self.client.get(reverse("structures:detail", args=[self.visible.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Commentaire interne")
+        self.assertContains(response, "À rappeler en septembre.")
+        self.assertContains(response, "bg-[var(--color-danger-soft)]")
+
+    def test_detail_hides_commentaire_interne_from_anonymous(self):
+        self.visible.commentaire_interne = "Note interne confidentielle."
+        self.visible.save()
+        self.client.logout()
+
+        response = self.client.get(reverse("structures:detail", args=[self.visible.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn("Note interne confidentielle.", response.content.decode())
+
     def test_detail_does_not_duplicate_city_when_address_is_complete(self):
         structure = Structure.objects.create(
             nom="Adresse complète",
@@ -1794,6 +1856,33 @@ class DashboardStructureListTests(TestCase):
         self.assertContains(response, 'aria-sort="ascending"')
         self.assertContains(response, "?o=type.asc")
         self.assertContains(response, "Trier par Type, ordre croissant")
+
+    def test_default_sort_is_by_family_name_then_first_name(self):
+        Structure.objects.create(nom="Zulu TestTri", prenom="Anna")
+        Structure.objects.create(nom="Alpha TestTri", prenom="Zoe")
+        Structure.objects.create(nom="Alpha TestTri", prenom="Marc")
+
+        response = self.client.get(reverse("dashboard:structure_list"), {"q": "TestTri"})
+
+        self.assertEqual(
+            [(s.nom, s.prenom) for s in response.context["structure_list"]],
+            [
+                ("Alpha TestTri", "Marc"),
+                ("Alpha TestTri", "Zoe"),
+                ("Zulu TestTri", "Anna"),
+            ],
+        )
+
+    def test_list_links_visible_structures_to_public_detail(self):
+        hidden = Structure.objects.create(nom="Fiche masquée test", afficher=False)
+
+        response = self.client.get(reverse("dashboard:structure_list"))
+
+        self.assertContains(
+            response, reverse("structures:detail", args=[self.structure.pk])
+        )
+        self.assertContains(response, f"Voir la fiche {self.structure.nom_affiche}")
+        self.assertNotContains(response, f"Voir la fiche {hidden.nom_affiche}")
 
 
 class DashboardOverviewAndReferenceTests(TestCase):
@@ -2396,6 +2485,29 @@ class StructureFormZeroValueDisplayTests(TestCase):
                 "",
                 f"Le champ {field} doit rester vide lorsqu'il n'est pas renseigné.",
             )
+
+    def test_add_form_prefills_nb_professionnels_with_one(self):
+        response = self.client.get(reverse("dashboard:structure_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            self._input_value(response.content.decode(), "nb_professionnels"),
+            "1",
+            "Le champ « Nb professionnel·les » doit être pré-rempli avec 1 à la création.",
+        )
+
+    def test_new_structure_defaults_nb_professionnels_to_one(self):
+        structure = Structure.objects.create(nom="Nouvelle fiche")
+
+        self.assertEqual(structure.nb_professionnels, 1)
+
+    def test_add_form_has_commentaire_interne_instead_of_aides(self):
+        response = self.client.get(reverse("dashboard:structure_add"))
+
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertIn('name="commentaire_interne"', html)
+        self.assertNotIn('name="aides"', html)
 
     def test_hidden_structure_shows_afficher_checkbox_unchecked(self):
         structure = Structure.objects.create(nom="Fiche masquée", afficher=False)

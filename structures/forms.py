@@ -156,7 +156,7 @@ class StructureForm(forms.ModelForm):
                 duplicate_display = (
                     dup_nom_structure.strip()
                     or " ".join(
-                        part for part in (dup_prenom, dup_nom) if part.strip()
+                        part for part in (dup_nom, dup_prenom) if part.strip()
                     )
                     or dup_nom
                 )
@@ -164,6 +164,9 @@ class StructureForm(forms.ModelForm):
                     "nom_structure" if est_structure else "nom",
                     f"Une fiche « {duplicate_display} » existe déjà dans cette commune.",
                 )
+        places_disponibles = cleaned.get("places_disponibles")
+        if places_disponibles is not None and places_disponibles > 0:
+            cleaned["places_non_communique"] = False
         return cleaned
 
     def save(self, commit=True):

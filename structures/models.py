@@ -121,8 +121,8 @@ class Structure(models.Model):
     tel_direction = models.CharField(max_length=50, blank=True, verbose_name="Tél. direction")
     email_direction = models.EmailField(blank=True, verbose_name="Email direction")
     statut = models.CharField(max_length=100, blank=True, verbose_name="Statut")
-    aides = models.CharField(max_length=255, blank=True, verbose_name="Aides")
-    nb_professionnels = models.IntegerField(null=True, blank=True, verbose_name="Nb professionnel·les")
+    commentaire_interne = models.TextField(blank=True, verbose_name="Commentaire interne")
+    nb_professionnels = models.IntegerField(null=True, blank=True, default=1, verbose_name="Nb professionnel·les")
     recrutement = models.BooleanField(null=True, blank=True, verbose_name="Recrutement en cours")
     accueil_urgence = models.BooleanField(null=True, blank=True, verbose_name="Accueil d'urgence")
 
@@ -179,7 +179,7 @@ class Structure(models.Model):
     def nom_affiche(self):
         if self.nom_structure.strip():
             return self.nom_structure
-        return " ".join(part for part in (self.prenom, self.nom) if part.strip()) or self.nom
+        return " ".join(part for part in (self.nom, self.prenom) if part.strip()) or self.nom
 
     @classmethod
     def from_db(cls, db, field_names, values):

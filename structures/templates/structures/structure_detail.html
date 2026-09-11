@@ -53,18 +53,20 @@
                 {% endif %}
               </div>
             </div>
-            {% if user.is_superuser %}
+            {% if can_edit_structure %}
               <div class="flex items-center gap-2 shrink-0">
                 <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary-soft-border)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-hover)] hover:border-[var(--color-primary)]"
                    href="{% url 'dashboard:structure_edit' structure.pk %}">
                   <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-edit"></use></svg>
                   <span class="hidden sm:inline">Modifier</span>
                 </a>
+                {% if user.is_superuser %}
                 <a class="inline-flex items-center justify-center gap-1.5 min-h-[2.5rem] px-4 py-2.5 rounded-[var(--radius-md)] font-semibold text-[length:var(--fs-sm)] no-underline cursor-pointer border transition-all select-none hover:no-underline active:translate-y-px bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:bg-[var(--color-danger-hover)]"
                    href="{% url 'dashboard:structure_delete' structure.pk %}">
                   <svg class="w-4 h-4 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-trash"></use></svg>
                   <span class="hidden sm:inline">Supprimer</span>
                 </a>
+                {% endif %}
               </div>
             {% endif %}
           </header>
@@ -162,6 +164,18 @@
         </article>
       {% endif %}
 
+      {% if user.is_authenticated and structure.commentaire_interne %}
+        <article class="bg-[var(--color-danger-soft)] border border-[var(--color-danger-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] overflow-hidden">
+          <div class="p-6 md:p-8">
+            <h2 class="font-display text-[length:var(--fs-lg)] font-bold text-[var(--color-danger)] m-0 flex items-center gap-2">
+              <svg class="w-5 h-5 text-[var(--color-danger)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-info"></use></svg>
+              Commentaire interne
+            </h2>
+            <p class="text-[length:var(--fs-base)] text-[var(--color-danger)] font-semibold mt-4 leading-[1.6]">{{ structure.commentaire_interne|linebreaksbr }}</p>
+          </div>
+        </article>
+      {% endif %}
+
       {% if user.is_superuser %}
         <article class="bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border-strong)] rounded-[var(--radius-xl)] overflow-hidden">
           <div class="p-6 md:p-8">
@@ -185,10 +199,6 @@
               <div>
                 <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Statut</p>
                 <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.statut|default:"—" }}</p>
-              </div>
-              <div>
-                <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Aides</p>
-                <p class="text-[length:var(--fs-sm)] text-[var(--color-text)] m-0">{{ structure.aides|default:"—" }}</p>
               </div>
               <div>
                 <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-0.5">Professionnel·les</p>

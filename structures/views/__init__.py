@@ -4,6 +4,7 @@ from django.views.generic import DetailView, ListView, TemplateView
 
 from communes.models import Commune
 
+from ..access import allowed_commune_ids
 from ..models import Structure, TypeStructure
 
 
@@ -69,6 +70,23 @@ class StructureDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         qs = super().get_queryset().select_related("type", "commune").filter(afficher=True)
         return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["can_edit_structure"] = self._can_edit(self.request.user, self.object)
+        return ctx
+
+    @staticmethod
+    def _can_edit(user, structure) -> bool:
+        """Bouton « Modifier » : superadmin partout, collaborateur actif sur ses communes liées."""
+        if not user.is_authenticated or not user.is_active:
+            return False
+        if user.is_superuser:
+            return True
+        commune_ids = allowed_commune_ids(user)
+        if commune_ids is None:
+            return True
+        return structure.commune_id in commune_ids
 
 
 class StructureMapView(LoginRequiredMixin, TemplateView):

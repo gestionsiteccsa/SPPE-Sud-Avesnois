@@ -328,17 +328,10 @@
         {% if form.email_direction.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.email_direction.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_statut">Statut</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="statut" id="id_statut"
-               value="{{ form.statut.value|default:'' }}">
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_aides">Aides</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="aides" id="id_aides"
-               value="{{ form.aides.value|default:'' }}">
-      </div>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_statut">Statut</label>
+      <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200" type="text" name="statut" id="id_statut"
+             value="{{ form.statut.value|default:'' }}">
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
       <div class="flex flex-col gap-1.5">
@@ -356,6 +349,12 @@
           <option value="false" {% if form.recrutement.value == False %}selected{% endif %}>Non</option>
         </select>
       </div>
+    </div>
+    <div class="flex flex-col gap-1.5 mt-4">
+      <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_commentaire_interne">Commentaire interne</label>
+      <textarea class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 resize-y" name="commentaire_interne" id="id_commentaire_interne" rows="2"
+                placeholder="Ex&nbsp;: à rappeler en septembre…">{{ form.commentaire_interne.value|default:'' }}</textarea>
+      <p class="text-[length:var(--fs-xs)] text-[var(--color-text-muted)] m-0">Visible uniquement par les comptes connectés, affiché en rouge sur la fiche.</p>
     </div>
     <div class="flex flex-row items-center gap-3 mt-4 pt-4 border-t border-[var(--color-border)]">
       <input class="w-5 h-5 accent-[var(--color-primary)]" type="checkbox" name="reference_monenfant" id="id_reference_monenfant"
@@ -468,6 +467,22 @@
   if (structCb) {
     structCb.addEventListener("change", toggleIdentity);
     applyIdentityVisibility();
+  }
+
+  var placesDispoInput = document.getElementById("id_places_disponibles");
+  var placesNonCommuniqueCb = document.getElementById("id_places_non_communique");
+  function syncNonCommunique() {
+    if (!placesDispoInput || !placesNonCommuniqueCb) return;
+    var raw = (placesDispoInput.value == null ? "" : String(placesDispoInput.value)).trim().replace(",", ".");
+    var nb = raw === "" ? NaN : Number(raw);
+    if (Number.isFinite(nb) && nb > 0 && placesNonCommuniqueCb.checked) {
+      placesNonCommuniqueCb.checked = false;
+    }
+  }
+  if (placesDispoInput && placesNonCommuniqueCb) {
+    placesDispoInput.addEventListener("input", syncNonCommunique);
+    placesDispoInput.addEventListener("change", syncNonCommunique);
+    syncNonCommunique();
   }
 })();
 </script>

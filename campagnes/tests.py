@@ -311,8 +311,8 @@ class VerificationPublicPageTests(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Marie Dupont")
-        self.assertNotContains(response, "Léa Martin")
+        self.assertContains(response, "Dupont Marie")
+        self.assertNotContains(response, "Martin Léa")
 
     def test_opening_is_recorded(self):
         self.client.get(self.url)

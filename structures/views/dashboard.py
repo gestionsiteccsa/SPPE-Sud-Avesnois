@@ -12,7 +12,6 @@ from django.db import transaction
 from django.db.models import Count, Q, Value
 from django.db.models.functions import (
     Coalesce,
-    Concat,
     Lower,
     NullIf,
     Trim,
@@ -282,7 +281,7 @@ class DashboardOpeningDayView(StructureManageAccessMixin, View):
 
 
 SORT_MAP = {
-    "nom": "nom_affichage_lower",
+    "nom": "nom_famille_tri",
     "type": "type__nom",
     "commune": "commune__nom",
     "places": "places_disponibles",
@@ -301,12 +300,14 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
             .get_queryset()
             .select_related("type", "commune")
             .annotate(
-                nom_affichage_lower=Lower(
+                nom_famille_tri=Lower(
                     Coalesce(
-                        NullIf(Trim("nom_structure"), Value("")),
-                        Trim(Concat("prenom", Value(" "), "nom")),
+                        NullIf(Trim("nom"), Value("")),
+                        Trim("nom_structure"),
+                        Value(""),
                     )
-                )
+                ),
+                prenom_tri=Lower(Coalesce(Trim("prenom"), Value(""))),
             )
         )
         q = self.request.GET.get("q")
@@ -333,7 +334,15 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
             desc = len(parts) > 1 and parts[1] == "desc"
             order_field = SORT_MAP.get(raw)
             if order_field:
-                qs = qs.order_by(f"-{order_field}" if desc else order_field)
+                if raw == "nom":
+                    # Tri par nom de famille puis prénom ; repli sur le nom
+                    # de structure pour les fiches sans nom de famille.
+                    qs = qs.order_by(
+                        f"-{order_field}" if desc else order_field,
+                        "-prenom_tri" if desc else "prenom_tri",
+                    )
+                else:
+                    qs = qs.order_by(f"-{order_field}" if desc else order_field)
         commune_ids = self.allowed_commune_ids()
         if commune_ids is not None:
             qs = qs.filter(commune_id__in=commune_ids)

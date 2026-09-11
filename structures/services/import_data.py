@@ -246,7 +246,6 @@ def _prepare_row(row: Mapping[str, object], *, line_number: int) -> PreparedStru
             "tel_direction": normalized.get("tel direction", ""),
             "email_direction": normalized.get("email direction", ""),
             "statut": normalized.get("statut", ""),
-            "aides": normalized.get("Aides", ""),
             "nb_professionnels": _parse_optional_integer(
                 normalized.get("Nb de professionnel.les", ""),
                 field_label="nombre de professionnel·les",
