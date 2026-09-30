@@ -256,7 +256,7 @@ CSP_POLICY = (
     "default-src 'self'; "
     "script-src 'self' 'nonce-%(nonce)s'; "
     "style-src 'self' 'unsafe-inline'; "
-    "img-src 'self' data: https://*.basemaps.cartocdn.com https://server.arcgisonline.com; "
+    "img-src 'self' data: https://server.arcgisonline.com; "
     "font-src 'self'; "
     "connect-src 'self'; "
     "object-src 'none'; "

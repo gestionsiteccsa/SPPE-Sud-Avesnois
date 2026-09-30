@@ -1561,19 +1561,20 @@ class StructureMapSecurityTests(TestCase):
 
         response = self.client.get(reverse("structures:carte"))
 
-        self.assertContains(response, "basemaps.cartocdn.com", html=False)
-        self.assertContains(response, "server.arcgisonline.com", html=False)
+        self.assertContains(response, "World_Street_Map", html=False)
+        self.assertContains(response, "World_Imagery", html=False)
+        self.assertNotContains(response, "basemaps.cartocdn.com", html=False)
         self.assertContains(response, "L.control.layers", html=False)
         self.assertContains(response, "Choisir le fond de carte", html=False)
 
-    def test_map_csp_allows_carto_and_esri_tiles(self):
+    def test_map_csp_allows_esri_tiles(self):
         Structure.objects.create(nom="Structure", latitude=50.0, longitude=4.0)
 
         response = self.client.get(reverse("structures:carte"))
 
         policy = response["Content-Security-Policy"]
-        self.assertIn("https://*.basemaps.cartocdn.com", policy)
         self.assertIn("https://server.arcgisonline.com", policy)
+        self.assertNotIn("basemaps.cartocdn.com", policy)
 
     def test_map_renders_availability_filter_with_all_option(self):
         Structure.objects.create(
@@ -2980,7 +2981,7 @@ class StructureFlashMessageTests(TestCase):
         self.assertContains(response, "Placer le point manuellement")
         self.assertContains(response, 'id="adresse-minimap"', html=False)
         self.assertContains(response, "Satellite", html=False)
-        self.assertContains(response, "basemaps.cartocdn.com", html=False)
+        self.assertContains(response, "World_Street_Map", html=False)
         self.assertContains(response, "server.arcgisonline.com", html=False)
 
     def test_create_with_manual_coordinates_keeps_typed_address_and_point(self):
