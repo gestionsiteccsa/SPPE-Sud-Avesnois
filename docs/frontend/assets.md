@@ -39,7 +39,7 @@ Reproductibilité Windows/Linux : les copies vendor texte sont normalisées en L
 
 ## Dépendance externe restante
 
-La carte propose deux fonds via le sélecteur en haut à droite : « Plan » (OpenStreetMap, affiché par défaut) et « Satellite » (Esri World Imagery). Conserver les attributions visibles et respecter la politique d'utilisation de chaque fournisseur. Une indisponibilité des tuiles ne doit pas empêcher les listes et fiches de fonctionner.
+La carte propose deux fonds via le sélecteur en haut à droite : « Plan » (CARTO Voyager sur données OpenStreetMap, affiché par défaut) et « Satellite » (Esri World Imagery). Les tuiles OSM directes (`tile.openstreetmap.org`) sont interdites : les serveurs bénévoles d'OSM bloquent ce type d'usage (403). Conserver les attributions visibles et respecter la politique d'utilisation de chaque fournisseur. Une indisponibilité des tuiles ne doit pas empêcher les listes et fiches de fonctionner.
 
 ## Limite de sécurité
 
