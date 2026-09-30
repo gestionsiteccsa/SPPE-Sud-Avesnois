@@ -33,10 +33,10 @@
                     <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-alert"></use></svg>
                     Complet
                   </span>
-                {% elif structure.places_disponibles %}
+                {% elif structure.places_disponibles_total %}
                   <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-success-bg)] text-[var(--badge-success-fg)]">
                     <svg class="w-3.5 h-3.5 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
-                    {{ structure.places_disponibles }} place{{ structure.places_disponibles|pluralize }}
+                    {{ structure.places_disponibles_total }} place{{ structure.places_disponibles_total|pluralize }}
                   </span>
                 {% endif %}
                 {% if structure.accueil_handicap %}
@@ -86,15 +86,17 @@
               </p>
             </div>
             <div>
-              <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-1">Capacité</p>
+              <p class="text-[length:var(--fs-xs)] uppercase tracking-[0.06em] text-[var(--color-text-muted)] font-semibold mb-1">Agrément PMI</p>
               <p class="text-[length:var(--fs-base)] text-[var(--color-text)] m-0 flex items-center gap-2">
                 <svg class="w-4 h-4 shrink-0 text-[var(--color-text-subtle)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg>
-                {% if structure.places_complet %}
+                {% if structure.agrement_pmi_total is not None %}
+                  {{ structure.agrement_pmi_total }} place{{ structure.agrement_pmi_total|pluralize }}{% if structure.places_disponibles_total is not None %} <span class="text-[var(--color-success)] font-semibold">({{ structure.places_disponibles_total }} disponible{{ structure.places_disponibles_total|pluralize }})</span>{% endif %}
+                {% elif structure.places_complet %}
                   <span class="text-[var(--color-danger)] font-semibold">Complet</span>
                 {% elif structure.places_non_communique %}
                   Non communiqué
-                {% elif structure.places_disponibles %}
-                  <span class="text-[var(--color-success)] font-semibold">{{ structure.places_disponibles }} place{{ structure.places_disponibles|pluralize }}</span>{% if structure.nb_places_total %} sur {{ structure.nb_places_total }}{% endif %}
+                {% elif structure.places_disponibles_total %}
+                  <span class="text-[var(--color-success)] font-semibold">{{ structure.places_disponibles_total }} place{{ structure.places_disponibles_total|pluralize }}</span>
                 {% else %}
                   Non communiqué
                 {% endif %}
@@ -288,8 +290,20 @@
           </h2>
           <dl class="flex flex-col gap-3 mt-4">
             <div class="flex items-center justify-between gap-2">
-              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Places totales</dt>
-              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.nb_places_total|default:"—" }}</dd>
+              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Agrément PMI temps complet</dt>
+              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.agrement_pmi_temps_complet|default:"—" }}</dd>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
+              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Agrément PMI périscolaire</dt>
+              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.agrement_pmi_periscolaire|default:"—" }}</dd>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
+              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Places disponibles temps complet</dt>
+              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.places_disponibles_temps_complet|default:"—" }}</dd>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
+              <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Places disponibles périscolaire</dt>
+              <dd class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)] m-0">{{ structure.places_disponibles_periscolaire|default:"—" }}</dd>
             </div>
             <div class="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
               <dt class="text-[length:var(--fs-sm)] text-[var(--color-text-muted)]">Type</dt>

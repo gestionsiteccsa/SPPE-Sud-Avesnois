@@ -108,11 +108,21 @@ class Structure(models.Model):
     email = models.EmailField(blank=True, verbose_name="Email")
 
     # Places
-    places_disponibles = models.IntegerField(null=True, blank=True, verbose_name="Places disponibles")
+    places_disponibles_temps_complet = models.IntegerField(
+        null=True, blank=True, verbose_name="Places disponibles temps complet"
+    )
+    places_disponibles_periscolaire = models.IntegerField(
+        null=True, blank=True, verbose_name="Places disponibles périscolaire"
+    )
     places_complet = models.BooleanField(default=False, verbose_name="Complet")
     places_non_communique = models.BooleanField(default=False, verbose_name="Non communiqué")
     conditions_places = models.TextField(blank=True, verbose_name="Conditions places disponibles")
-    nb_places_total = models.IntegerField(null=True, blank=True, verbose_name="Nombre de places total")
+    agrement_pmi_temps_complet = models.IntegerField(
+        null=True, blank=True, verbose_name="Agrément PMI temps complet"
+    )
+    agrement_pmi_periscolaire = models.IntegerField(
+        null=True, blank=True, verbose_name="Agrément PMI périscolaire"
+    )
 
     # Infos complémentaires
     accueil_handicap = models.BooleanField(null=True, blank=True, verbose_name="Accueil handicap")
@@ -138,14 +148,24 @@ class Structure(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(places_disponibles__isnull=True)
-                | models.Q(places_disponibles__gte=0),
-                name="structure_places_disponibles_positive",
+                condition=models.Q(places_disponibles_temps_complet__isnull=True)
+                | models.Q(places_disponibles_temps_complet__gte=0),
+                name="structure_dispo_tc_positive",
             ),
             models.CheckConstraint(
-                condition=models.Q(nb_places_total__isnull=True)
-                | models.Q(nb_places_total__gte=0),
-                name="structure_places_total_positive",
+                condition=models.Q(places_disponibles_periscolaire__isnull=True)
+                | models.Q(places_disponibles_periscolaire__gte=0),
+                name="structure_dispo_peri_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(agrement_pmi_temps_complet__isnull=True)
+                | models.Q(agrement_pmi_temps_complet__gte=0),
+                name="structure_agrement_tc_positif",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(agrement_pmi_periscolaire__isnull=True)
+                | models.Q(agrement_pmi_periscolaire__gte=0),
+                name="structure_agrement_peri_positif",
             ),
             models.CheckConstraint(
                 condition=models.Q(nb_professionnels__isnull=True)
@@ -165,10 +185,24 @@ class Structure(models.Model):
                 name="structure_places_statuts_coherents",
             ),
             models.CheckConstraint(
-                condition=models.Q(places_disponibles__isnull=True)
-                | models.Q(nb_places_total__isnull=True)
-                | models.Q(places_disponibles__lte=models.F("nb_places_total")),
-                name="structure_places_disponibles_lte_total",
+                condition=models.Q(places_disponibles_temps_complet__isnull=True)
+                | models.Q(agrement_pmi_temps_complet__isnull=True)
+                | models.Q(
+                    places_disponibles_temps_complet__lte=models.F(
+                        "agrement_pmi_temps_complet"
+                    )
+                ),
+                name="structure_dispo_tc_lte_agrement_tc",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(places_disponibles_periscolaire__isnull=True)
+                | models.Q(agrement_pmi_periscolaire__isnull=True)
+                | models.Q(
+                    places_disponibles_periscolaire__lte=models.F(
+                        "agrement_pmi_periscolaire"
+                    )
+                ),
+                name="structure_dispo_peri_lte_agrement_peri",
             ),
         ]
 
@@ -239,12 +273,22 @@ class Structure(models.Model):
         if self.places_complet and self.places_non_communique:
             errors["places_complet"] = "Une structure ne peut pas être à la fois complète et non communiquée."
         if (
-            self.places_disponibles is not None
-            and self.nb_places_total is not None
-            and self.places_disponibles > self.nb_places_total
+            self.places_disponibles_temps_complet is not None
+            and self.agrement_pmi_temps_complet is not None
+            and self.places_disponibles_temps_complet > self.agrement_pmi_temps_complet
         ):
-            errors["places_disponibles"] = (
-                "Le nombre de places disponibles ne peut pas dépasser la capacité totale."
+            errors["places_disponibles_temps_complet"] = (
+                "Le nombre de places disponibles temps complet ne peut pas "
+                "dépasser l'agrément PMI temps complet."
+            )
+        if (
+            self.places_disponibles_periscolaire is not None
+            and self.agrement_pmi_periscolaire is not None
+            and self.places_disponibles_periscolaire > self.agrement_pmi_periscolaire
+        ):
+            errors["places_disponibles_periscolaire"] = (
+                "Le nombre de places disponibles périscolaire ne peut pas "
+                "dépasser l'agrément PMI périscolaire."
             )
         if errors:
             raise ValidationError(errors)
@@ -305,13 +349,44 @@ class Structure(models.Model):
 
         return raisons_horaires_atypiques(self.horaires)
 
+    @property
+    def agrement_pmi_total(self):
+        """Somme des agréments PMI renseignés ; None si aucun n'est renseigné."""
+        valeurs = [
+            value
+            for value in (
+                self.agrement_pmi_temps_complet,
+                self.agrement_pmi_periscolaire,
+            )
+            if value is not None
+        ]
+        if not valeurs:
+            return None
+        return sum(valeurs)
+
+    @property
+    def places_disponibles_total(self):
+        """Somme des places disponibles renseignées ; None si aucune n'est renseignée."""
+        valeurs = [
+            value
+            for value in (
+                self.places_disponibles_temps_complet,
+                self.places_disponibles_periscolaire,
+            )
+            if value is not None
+        ]
+        if not valeurs:
+            return None
+        return sum(valeurs)
+
     def afficher_places(self):
         if self.places_non_communique:
             return "Non communiqué"
         if self.places_complet:
             return "Complet"
-        if self.places_disponibles is not None:
-            return str(self.places_disponibles)
+        total = self.places_disponibles_total
+        if total is not None:
+            return str(total)
         return "Non communiqué"
 
     def monenfant_status(self):

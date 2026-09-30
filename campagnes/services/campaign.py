@@ -25,7 +25,8 @@ PUBLIC_FIELDS = (
     "email",
     "adresse",
     "commune",
-    "places_disponibles",
+    "places_disponibles_temps_complet",
+    "places_disponibles_periscolaire",
     "conditions_places",
 )
 FIELD_LABELS = {
@@ -33,7 +34,8 @@ FIELD_LABELS = {
     "email": "E-mail",
     "adresse": "Adresse",
     "commune": "Commune",
-    "places_disponibles": "Places disponibles",
+    "places_disponibles_temps_complet": "Places disponibles temps complet",
+    "places_disponibles_periscolaire": "Places disponibles périscolaire",
     "conditions_places": "Informations complémentaires",
 }
 

@@ -6,6 +6,7 @@ from datetime import date
 from typing import Literal, TypedDict
 
 from django.db.models import Avg, Count, F, Q, QuerySet, Sum
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from structures.models import JOURS_SEM, Structure
@@ -14,8 +15,25 @@ from structures.models import JOURS_SEM, Structure
 _AVAILABLE_PLACES_FILTER = Q(
     places_complet=False,
     places_non_communique=False,
-    places_disponibles__isnull=False,
+) & (
+    Q(places_disponibles_temps_complet__isnull=False)
+    | Q(places_disponibles_periscolaire__isnull=False)
 )
+
+#: Somme temps complet + périscolaire d'une fiche (NULL compté comme 0).
+_DISPO_TOTAL_EXPRESSION = Coalesce(
+    "places_disponibles_temps_complet", 0
+) + Coalesce("places_disponibles_periscolaire", 0)
+
+#: Somme des agréments PMI d'une fiche (NULL compté comme 0).
+_AGREMENT_TOTAL_EXPRESSION = Coalesce(
+    "agrement_pmi_temps_complet", 0
+) + Coalesce("agrement_pmi_periscolaire", 0)
+
+#: Au moins un agrément PMI renseigné.
+_AGREMENT_KNOWN_FILTER = Q(
+    agrement_pmi_temps_complet__isnull=False
+) | Q(agrement_pmi_periscolaire__isnull=False)
 
 GroupField = Literal["type__nom", "commune__nom"]
 
@@ -62,7 +80,7 @@ def sum_available_places(base_queryset=None) -> int:
     queryset = base_queryset if base_queryset is not None else Structure.objects
     return (
         queryset.filter(_AVAILABLE_PLACES_FILTER).aggregate(
-            s=Sum("places_disponibles")
+            s=Sum(_DISPO_TOTAL_EXPRESSION)
         )["s"]
         or 0
     )
@@ -110,7 +128,7 @@ def _grouped_offer_statistics(
         queryset.values(label=F(group_field))
         .annotate(
             structure_count=Count("id"),
-            capacity_total=Sum("nb_places_total"),
+            capacity_total=Sum(_AGREMENT_TOTAL_EXPRESSION),
         )
         .order_by()
     )
@@ -133,11 +151,14 @@ def _grouped_offer_statistics(
 def _offer_summary(queryset: QuerySet) -> OfferSummary:
     values = queryset.aggregate(
         structures=Count("id"),
-        capacity_total=Sum("nb_places_total"),
-        capacity_average=Avg("nb_places_total"),
-        capacity_known=Count("id", filter=Q(nb_places_total__isnull=False)),
+        capacity_total=Sum(_AGREMENT_TOTAL_EXPRESSION),
+        capacity_average=Avg(
+            _AGREMENT_TOTAL_EXPRESSION,
+            filter=_AGREMENT_KNOWN_FILTER,
+        ),
+        capacity_known=Count("id", filter=_AGREMENT_KNOWN_FILTER),
         available_places=Sum(
-            "places_disponibles",
+            _DISPO_TOTAL_EXPRESSION,
             filter=_AVAILABLE_PLACES_FILTER,
         ),
         availability_known=Count("id", filter=_AVAILABLE_PLACES_FILTER),
@@ -304,7 +325,7 @@ def _freshness_statistics(
 def _completeness_statistics(queryset: QuerySet) -> list[CompletenessItem]:
     values = queryset.aggregate(
         structures=Count("id"),
-        capacity=Count("id", filter=Q(nb_places_total__isnull=False)),
+        capacity=Count("id", filter=_AGREMENT_KNOWN_FILTER),
         age_range=Count(
             "id",
             filter=Q(age_non_renseigne=False)
@@ -321,7 +342,7 @@ def _completeness_statistics(queryset: QuerySet) -> list[CompletenessItem]:
     )
     structures = int(values["structures"] or 0)
     definitions = (
-        ("Capacité totale", values["capacity"]),
+        ("Agrément PMI", values["capacity"]),
         ("Tranche d’âge", values["age_range"]),
         ("Téléphone ou email", values["contact"]),
         ("Géolocalisation", values["geolocation"]),

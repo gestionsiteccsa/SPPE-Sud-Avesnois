@@ -67,8 +67,8 @@ class DashboardStatisticsServiceTests(TestCase):
             afficher=True,
             commune=self.commune,
             type=self.type,
-            nb_places_total=20,
-            places_disponibles=4,
+            agrement_pmi_temps_complet=20,
+            places_disponibles_temps_complet=4,
             telephone="0102030405",
             latitude=50.0,
             longitude=4.0,
@@ -85,7 +85,7 @@ class DashboardStatisticsServiceTests(TestCase):
             afficher=False,
             commune=self.commune,
             type=self.type,
-            nb_places_total=100,
+            agrement_pmi_temps_complet=100,
             email="contact@example.test",
         )
 
@@ -126,7 +126,7 @@ class DashboardStatisticsServiceTests(TestCase):
                     afficher=True,
                     commune=self.commune,
                     type=type_,
-                    nb_places_total=capacity,
+                    agrement_pmi_temps_complet=capacity,
                 )
                 for index in range(quantity)
             )
@@ -163,7 +163,7 @@ class DashboardStatisticsServiceTests(TestCase):
         Structure.objects.create(
             nom="Fiche renseignée",
             afficher=False,
-            nb_places_total=12,
+            agrement_pmi_temps_complet=12,
             age_non_renseigne=False,
             age_min=3,
             telephone="0102030405",
@@ -320,6 +320,63 @@ class StructureImportTests(TestCase):
         structure = Structure.objects.get()
         self.assertEqual(structure.nom_structure, "Crèche Exemple")
         self.assertEqual(structure.nom, "")
+
+    def test_import_maps_new_agrement_and_dispo_columns(self):
+        import_rows(
+            [
+                {
+                    "NOM": "Crèche Découpée",
+                    "Tranche d'âge": "3 ans - 12 ans",
+                    "agrément PMI temps complet": "20",
+                    "agrément PMI périscolaire": "6",
+                    "places dispo temps complet": "4",
+                    "places dispo périscolaire": "2",
+                }
+            ],
+            replace=False,
+            actor=None,
+        )
+
+        structure = Structure.objects.get()
+        self.assertEqual(structure.agrement_pmi_temps_complet, 20)
+        self.assertEqual(structure.agrement_pmi_periscolaire, 6)
+        self.assertEqual(structure.places_disponibles_temps_complet, 4)
+        self.assertEqual(structure.places_disponibles_periscolaire, 2)
+
+    def test_import_reports_legacy_columns_to_temps_complet(self):
+        import_rows(
+            [
+                {
+                    "NOM": "Crèche Héritée",
+                    "Tranche d'âge": "3 ans - 12 ans",
+                    "nb de places total": "24",
+                    "places dispos": "3",
+                }
+            ],
+            replace=False,
+            actor=None,
+        )
+
+        structure = Structure.objects.get()
+        self.assertEqual(structure.agrement_pmi_temps_complet, 24)
+        self.assertIsNone(structure.agrement_pmi_periscolaire)
+        self.assertEqual(structure.places_disponibles_temps_complet, 3)
+        self.assertIsNone(structure.places_disponibles_periscolaire)
+
+    def test_import_rejects_dispo_above_agrement(self):
+        with self.assertRaises(ImportDataError):
+            import_rows(
+                [
+                    {
+                        "NOM": "Crèche Incohérente",
+                        "Tranche d'âge": "3 ans - 12 ans",
+                        "agrément PMI temps complet": "10",
+                        "places dispo temps complet": "11",
+                    }
+                ],
+                replace=False,
+                actor=None,
+            )
 
     def test_import_skips_duplicate_in_same_commune(self):
         commune = Commune.objects.create(nom="Doublonville", code_postal="75001")
@@ -1047,7 +1104,75 @@ class AddressSuggestViewTests(TestCase):
 class StructureConstraintTests(TestCase):
     def test_database_rejects_negative_available_places(self):
         with self.assertRaises(IntegrityError), transaction.atomic():
-            Structure.objects.create(nom="Structure invalide", places_disponibles=-1)
+            Structure.objects.create(nom="Structure invalide", places_disponibles_temps_complet=-1)
+
+    def test_database_rejects_negative_agrement_pmi(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Structure.objects.create(nom="Structure invalide", agrement_pmi_periscolaire=-2)
+
+    def test_database_rejects_dispo_above_agrement_per_category(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Structure.objects.create(
+                nom="Structure invalide",
+                agrement_pmi_temps_complet=10,
+                places_disponibles_temps_complet=11,
+            )
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Structure.objects.create(
+                nom="Structure invalide",
+                agrement_pmi_periscolaire=5,
+                places_disponibles_periscolaire=6,
+            )
+
+    def test_model_rejects_dispo_above_agrement_per_category(self):
+        temps_complet = Structure(
+            nom="Structure invalide",
+            age_non_renseigne=True,
+            agrement_pmi_temps_complet=10,
+            places_disponibles_temps_complet=11,
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            temps_complet.full_clean()
+        self.assertIn("places_disponibles_temps_complet", ctx.exception.message_dict)
+
+        periscolaire = Structure(
+            nom="Structure invalide",
+            age_non_renseigne=True,
+            agrement_pmi_periscolaire=5,
+            places_disponibles_periscolaire=6,
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            periscolaire.full_clean()
+        self.assertIn("places_disponibles_periscolaire", ctx.exception.message_dict)
+
+    def test_model_accepts_partial_values_without_agrement(self):
+        structure = Structure(
+            nom="Structure partielle",
+            age_non_renseigne=True,
+            places_disponibles_temps_complet=3,
+            agrement_pmi_periscolaire=8,
+        )
+        structure.full_clean()
+        self.assertEqual(structure.agrement_pmi_total, 8)
+        self.assertEqual(structure.places_disponibles_total, 3)
+
+    def test_totals_sum_both_categories(self):
+        structure = Structure(
+            nom="Structure complète",
+            agrement_pmi_temps_complet=20,
+            agrement_pmi_periscolaire=6,
+            places_disponibles_temps_complet=4,
+            places_disponibles_periscolaire=2,
+        )
+        self.assertEqual(structure.agrement_pmi_total, 26)
+        self.assertEqual(structure.places_disponibles_total, 6)
+        self.assertEqual(structure.afficher_places(), "6")
+
+    def test_totals_are_none_when_nothing_is_provided(self):
+        structure = Structure(nom="Structure vide")
+        self.assertIsNone(structure.agrement_pmi_total)
+        self.assertIsNone(structure.places_disponibles_total)
+        self.assertEqual(structure.afficher_places(), "Non communiqué")
 
     def test_model_rejects_inverted_age_range(self):
         structure = Structure(
@@ -1455,7 +1580,7 @@ class StructureMapSecurityTests(TestCase):
             nom="Crèche Dispo",
             latitude=50.0,
             longitude=4.0,
-            places_disponibles=2,
+            places_disponibles_temps_complet=2,
             places_complet=False,
             places_non_communique=False,
         )
@@ -1520,7 +1645,7 @@ class PublicStructureViewTests(TestCase):
             afficher=True,
             commune=self.commune,
             type=self.type_crèche,
-            places_disponibles=3,
+            places_disponibles_temps_complet=3,
             places_complet=False,
             places_non_communique=False,
         )
@@ -2056,8 +2181,8 @@ class DashboardOverviewAndReferenceTests(TestCase):
             afficher=True,
             commune=self.commune,
             type=self.type,
-            places_disponibles=3,
-            nb_places_total=20,
+            places_disponibles_temps_complet=3,
+            agrement_pmi_temps_complet=20,
             date_mise_a_jour_monenfant=date(2026, 7, 1),
             horaires=[{"jour": "mercredi", "ferme": False}],
         )
@@ -2067,7 +2192,7 @@ class DashboardOverviewAndReferenceTests(TestCase):
             commune=self.commune,
             type=self.type,
             places_non_communique=True,
-            nb_places_total=100,
+            agrement_pmi_temps_complet=100,
             date_mise_a_jour_monenfant=date(2025, 1, 1),
         )
         Structure.objects.create(
@@ -2076,7 +2201,7 @@ class DashboardOverviewAndReferenceTests(TestCase):
             commune=self.other_commune,
             type=self.other_type,
             places_complet=True,
-            nb_places_total=10,
+            agrement_pmi_temps_complet=10,
             date_mise_a_jour_monenfant=date(2026, 4, 1),
         )
 
@@ -2383,12 +2508,28 @@ class StructureFormErrorDisplayTests(TestCase):
         )
 
     def test_places_exceeding_capacity_error_is_displayed(self):
-        response = self._post_invalid(places_disponibles="20", nb_places_total="10")
+        response = self._post_invalid(
+            places_disponibles_temps_complet="20",
+            agrement_pmi_temps_complet="10",
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            "Le nombre de places disponibles ne peut pas dépasser la capacité totale.",
+            "Le nombre de places disponibles temps complet ne peut pas dépasser l&#x27;agrément PMI temps complet.",
+            html=False,
+        )
+
+    def test_periscolaire_places_exceeding_capacity_error_is_displayed(self):
+        response = self._post_invalid(
+            places_disponibles_periscolaire="8",
+            agrement_pmi_periscolaire="5",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Le nombre de places disponibles périscolaire ne peut pas dépasser l&#x27;agrément PMI périscolaire.",
             html=False,
         )
 
@@ -2673,8 +2814,10 @@ class StructureFormZeroValueDisplayTests(TestCase):
             age_min_unite="ans",
             age_max=4,
             age_max_unite="ans",
-            places_disponibles=0,
-            nb_places_total=0,
+            places_disponibles_temps_complet=0,
+            places_disponibles_periscolaire=0,
+            agrement_pmi_temps_complet=0,
+            agrement_pmi_periscolaire=0,
             nb_professionnels=0,
         )
 
@@ -2684,8 +2827,10 @@ class StructureFormZeroValueDisplayTests(TestCase):
         expected_values = {
             "age_min": "0",
             "age_max": "4",
-            "places_disponibles": "0",
-            "nb_places_total": "0",
+            "places_disponibles_temps_complet": "0",
+            "places_disponibles_periscolaire": "0",
+            "agrement_pmi_temps_complet": "0",
+            "agrement_pmi_periscolaire": "0",
             "nb_professionnels": "0",
         }
         for field, expected in expected_values.items():
@@ -2701,7 +2846,7 @@ class StructureFormZeroValueDisplayTests(TestCase):
         response = self.client.get(reverse("dashboard:structure_edit", args=[structure.pk]))
 
         self.assertEqual(response.status_code, 200)
-        for field in ("age_min", "age_max", "places_disponibles"):
+        for field in ("age_min", "age_max", "places_disponibles_temps_complet", "agrement_pmi_temps_complet"):
             self.assertEqual(
                 self._input_value(response.content.decode(), field),
                 "",
@@ -2762,7 +2907,7 @@ class StructureFormZeroValueDisplayTests(TestCase):
         pos_accueil = html.index("id_accueil_handicap")
         pos_horaires = html.index("horaires-fieldset")
         pos_adresse = html.index("id_adresse")
-        pos_capacite = html.index("id_places_disponibles")
+        pos_capacite = html.index("id_agrement_pmi_temps_complet")
         pos_gestion = html.index("id_directeur")
         self.assertLess(pos_age, pos_accueil)
         self.assertLess(pos_accueil, pos_horaires)
@@ -2800,6 +2945,32 @@ class StructureFlashMessageTests(TestCase):
 
         self.assertRedirects(response, reverse("dashboard:structure_list"))
         self.assertContains(response, "La structure « Crèche flash » a été créée.")
+
+    def test_create_structure_saves_split_agrement_and_dispo(self):
+        response = self.client.post(
+            reverse("dashboard:structure_add"),
+            {
+                "nom": "Crèche découpée",
+                "horaires": self.horaires,
+                "type": str(self.type.pk),
+                "age_min": "3",
+                "age_min_unite": "ans",
+                "age_max": "12",
+                "age_max_unite": "ans",
+                "agrement_pmi_temps_complet": "20",
+                "agrement_pmi_periscolaire": "6",
+                "places_disponibles_temps_complet": "4",
+                "places_disponibles_periscolaire": "2",
+            },
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("dashboard:structure_list"))
+        structure = Structure.objects.get(nom="Crèche découpée")
+        self.assertEqual(structure.agrement_pmi_temps_complet, 20)
+        self.assertEqual(structure.agrement_pmi_periscolaire, 6)
+        self.assertEqual(structure.places_disponibles_temps_complet, 4)
+        self.assertEqual(structure.places_disponibles_periscolaire, 2)
 
     def test_add_page_offers_manual_point_placement(self):
         response = self.client.get(reverse("dashboard:structure_add"))

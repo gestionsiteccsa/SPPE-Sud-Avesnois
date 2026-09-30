@@ -50,7 +50,8 @@ class VerificationView(View):
                     "email": structure.email,
                     "adresse": structure.adresse,
                     "commune": structure.commune_id,
-                    "places_disponibles": structure.places_disponibles,
+                    "places_disponibles_temps_complet": structure.places_disponibles_temps_complet,
+                    "places_disponibles_periscolaire": structure.places_disponibles_periscolaire,
                     "conditions_places": structure.conditions_places,
                 }
             )

@@ -169,10 +169,10 @@
                         <svg class="w-3 h-3 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-info"></use></svg>
                         Non communiqué
                       </span>
-                    {% elif s.places_disponibles %}
+                    {% elif s.places_disponibles_total %}
                       <span class="inline-flex shrink-0 items-center gap-1 px-2 py-0.5 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-success-bg)] text-[var(--badge-success-fg)]">
                         <svg class="w-3 h-3 shrink-0" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-check"></use></svg>
-                        {{ s.places_disponibles }} place{{ s.places_disponibles|pluralize }}
+                        {{ s.places_disponibles_total }} place{{ s.places_disponibles_total|pluralize }}
                       </span>
                     {% else %}
                       <span class="inline-flex shrink-0 items-center gap-1 px-2 py-0.5 rounded-full text-[length:var(--fs-xs)] font-semibold whitespace-nowrap bg-[var(--badge-neutral-bg)] text-[var(--badge-neutral-fg)]">

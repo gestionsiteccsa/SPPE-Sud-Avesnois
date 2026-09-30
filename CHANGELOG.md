@@ -11,6 +11,7 @@
 
 ### Modifié
 
+- fiche structure (ajout et modification) : le bloc « Capacité d'accueil » devient « Agrément PMI » — « Agrément PMI temps complet » et « Agrément PMI périscolaire » remplacent « Places total », « Places disponibles temps complet » et « Places disponibles périscolaire » remplacent « Places disponibles » ; les valeurs existantes sont reportées vers le temps complet par migration de données, et chaque catégorie est validée séparément (disponibles ≤ agrément). Listes, fiche, carte, statistiques, import et campagnes utilisent la somme des deux catégories.
 - campagnes : le lancement, la relance, le passage en réel et la génération des courriers créent ou mettent à jour les invitations **en une seule opération groupée** (`bulk_create`/`bulk_update`) au lieu d'une écriture par fiche — une campagne de 200 fiches passe d'environ 1 600 à moins de 10 requêtes ; chaque opération consigne désormais **une entrée résumée** dans le journal d'audit (action « groupée ») au lieu d'une entrée par invitation.
 - campagnes : le compteur d'ouvertures de la page publique est incrémenté directement en base (`F()` + mise à jour ciblée), supprimant toute perte d'incrément en cas d'ouvertures simultanées et les entrées d'audit associées ; la transition vers « consulté » reste appliquée.
 - file de validation : liste paginée (25 demandes par page) au lieu du chargement intégral de l'historique ; les compteurs affichés par catégorie restent globaux grâce à un comptage SQL dédié.

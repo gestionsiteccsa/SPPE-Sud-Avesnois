@@ -26,7 +26,7 @@ class HomeViewTests(TestCase):
             afficher=True,
             commune=self.commune,
             type=self.type_crèche,
-            places_disponibles=3,
+            places_disponibles_temps_complet=3,
             places_complet=False,
             places_non_communique=False,
         )

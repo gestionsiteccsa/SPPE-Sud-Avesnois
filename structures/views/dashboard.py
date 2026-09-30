@@ -284,7 +284,7 @@ SORT_MAP = {
     "nom": "nom_famille_tri",
     "type": "type__nom",
     "commune": "commune__nom",
-    "places": "places_disponibles",
+    "places": "places_tri",
     "maj": "date_mise_a_jour",
     "monenfant": "date_mise_a_jour_monenfant",
 }
@@ -308,6 +308,10 @@ class DashboardStructureListView(StructureManageAccessMixin, ListView):
                     )
                 ),
                 prenom_tri=Lower(Coalesce(Trim("prenom"), Value(""))),
+                # Tri « Places » : somme des places disponibles
+                # temps complet + périscolaire (NULL compté comme 0).
+                places_tri=Coalesce("places_disponibles_temps_complet", 0)
+                + Coalesce("places_disponibles_periscolaire", 0),
             )
         )
         q = self.request.GET.get("q")

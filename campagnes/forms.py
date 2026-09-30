@@ -101,9 +101,14 @@ class VerificationModificationForm(forms.Form):
         queryset=Commune.objects.order_by("nom"),
         empty_label="—",
     )
-    places_disponibles = forms.IntegerField(
+    places_disponibles_temps_complet = forms.IntegerField(
         required=False,
-        label="Places disponibles",
+        label="Places disponibles temps complet",
+        min_value=0,
+    )
+    places_disponibles_periscolaire = forms.IntegerField(
+        required=False,
+        label="Places disponibles périscolaire",
         min_value=0,
     )
     conditions_places = forms.CharField(
@@ -169,7 +174,8 @@ class AssistedRequestForm(forms.Form):
         queryset=Commune.objects.order_by("nom"),
         empty_label="—",
     )
-    places_disponibles = forms.IntegerField(required=False, label="Places disponibles", min_value=0)
+    places_disponibles_temps_complet = forms.IntegerField(required=False, label="Places disponibles temps complet", min_value=0)
+    places_disponibles_periscolaire = forms.IntegerField(required=False, label="Places disponibles périscolaire", min_value=0)
     conditions_places = forms.CharField(
         required=False,
         label="Informations complémentaires",

@@ -44,7 +44,13 @@ class StructureListView(LoginRequiredMixin, ListView):
         elif urgence == "non":
             qs = qs.filter(accueil_urgence=False)
         if places == "oui":
-            qs = qs.filter(places_complet=False, places_non_communique=False, places_disponibles__gt=0)
+            qs = qs.filter(
+                places_complet=False,
+                places_non_communique=False,
+            ).filter(
+                Q(places_disponibles_temps_complet__gt=0)
+                | Q(places_disponibles_periscolaire__gt=0)
+            )
         elif places == "complet":
             qs = qs.filter(places_complet=True)
         elif places == "non_communique":
@@ -120,10 +126,11 @@ class StructureMapView(LoginRequiredMixin, TemplateView):
             if s.places_complet:
                 status = "complete"
                 status_label = "Complet"
-            elif not s.places_non_communique and s.places_disponibles:
+            elif not s.places_non_communique and s.places_disponibles_total:
                 status = "available"
-                suffix = "place" if s.places_disponibles == 1 else "places"
-                status_label = f"{s.places_disponibles} {suffix}"
+                total = s.places_disponibles_total
+                suffix = "place" if total == 1 else "places"
+                status_label = f"{total} {suffix}"
             else:
                 status = "unknown"
                 status_label = "Non communiqué"

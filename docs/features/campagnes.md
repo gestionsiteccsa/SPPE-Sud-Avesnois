@@ -52,7 +52,7 @@ Pour les demandes en attente, la zone de traitement s'affiche sous la ligne : va
 - refuser la demande ;
 - ajouter un commentaire interne.
 
-Les champs acceptés sont copiés sur la fiche officielle, dans une transaction, avec traçage dans le journal d'audit. Les champs modifiables sont : téléphone, e-mail, adresse, commune, places disponibles et informations complémentaires. Les confirmations sans modification n'attendent aucune validation : elles apparaissent directement avec le badge « Confirmé sans modification ».
+Les champs acceptés sont copiés sur la fiche officielle, dans une transaction, avec traçage dans le journal d'audit. Les champs modifiables sont : téléphone, e-mail, adresse, commune, places disponibles temps complet, places disponibles périscolaire et informations complémentaires. Les confirmations sans modification n'attendent aucune validation : elles apparaissent directement avec le badge « Confirmé sans modification ».
 
 ## Saisie assistée
 

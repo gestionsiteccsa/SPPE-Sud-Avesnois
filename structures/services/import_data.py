@@ -211,8 +211,35 @@ def _prepare_row(row: Mapping[str, object], *, line_number: int) -> PreparedStru
         raise ImportDataError(f"Ligne {line_number} : la colonne « NOM » est obligatoire.")
 
     try:
-        available_places, complete, not_communicated = _parse_places(
-            normalized.get("places dispos", "")
+        dispo_tc_raw = normalized.get("places dispo temps complet", "")
+        if not dispo_tc_raw.strip():
+            # Ancienne colonne unique : reportée vers le temps complet.
+            dispo_tc_raw = normalized.get("places dispos", "")
+        available_places_tc, complete, not_communicated = _parse_places(dispo_tc_raw)
+        dispo_peri_raw = normalized.get("places dispo périscolaire", "")
+        available_places_peri = None
+        if dispo_peri_raw.strip():
+            available_places_peri, complete_peri, not_communicated_peri = _parse_places(
+                dispo_peri_raw
+            )
+            complete = complete or complete_peri
+            not_communicated = not_communicated or not_communicated_peri
+        agrement_tc_raw = normalized.get("agrément PMI temps complet", "") or normalized.get(
+            "agrement PMI temps complet", ""
+        )
+        if not agrement_tc_raw.strip():
+            # Ancienne colonne unique : reportée vers le temps complet.
+            agrement_tc_raw = normalized.get("nb de places total", "")
+        agrement_tc = _parse_optional_integer(
+            agrement_tc_raw,
+            field_label="agrément PMI temps complet",
+        )
+        agrement_peri_raw = normalized.get("agrément PMI périscolaire", "") or normalized.get(
+            "agrement PMI périscolaire", ""
+        )
+        agrement_peri = _parse_optional_integer(
+            agrement_peri_raw,
+            field_label="agrément PMI périscolaire",
         )
         raw_reference = normalized.get("Référencé monenfant.fr", "")
         referenced = _parse_bool(
@@ -227,14 +254,13 @@ def _prepare_row(row: Mapping[str, object], *, line_number: int) -> PreparedStru
             "adresse": normalized.get("adresse", ""),
             "telephone": normalized.get("tel", ""),
             "email": normalized.get("email", ""),
-            "places_disponibles": available_places,
+            "places_disponibles_temps_complet": available_places_tc,
+            "places_disponibles_periscolaire": available_places_peri,
             "places_complet": complete,
             "places_non_communique": not_communicated,
             "conditions_places": normalized.get("conditions places dispo", ""),
-            "nb_places_total": _parse_optional_integer(
-                normalized.get("nb de places total", ""),
-                field_label="nombre de places total",
-            ),
+            "agrement_pmi_temps_complet": agrement_tc,
+            "agrement_pmi_periscolaire": agrement_peri,
             "horaires": parser_horaires(raw_schedule),
             "horaires_notes": raw_schedule,
             "accueil_handicap": _parse_bool(

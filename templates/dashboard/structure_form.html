@@ -263,26 +263,41 @@
     </div>
   </div>
 
-  {# --- Ligne : Capacité d'accueil + Informations de gestion --- #}
+  {# --- Ligne : Agrément PMI + Informations de gestion --- #}
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5 items-start">
-  {# --- Section : Capacité --- #}
+  {# --- Section : Agrément PMI --- #}
   <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 md:p-7 shadow-[var(--shadow-xs)]">
     <h2 class="font-display text-[length:var(--fs-md)] font-bold text-[var(--color-text)] m-0 flex items-center gap-2">
       <svg class="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true"><use href="{% static 'img/icons.svg' %}#i-users"></use></svg>
-      Capacité d'accueil
+      Agrément PMI
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
       <div class="flex flex-col gap-1.5">
-        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_places_disponibles">Places disponibles</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.places_disponibles.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="places_disponibles" id="id_places_disponibles" min="0"
-                value="{{ form.places_disponibles.value|default_if_none:'' }}">
-        {% if form.places_disponibles.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.places_disponibles.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_agrement_pmi_temps_complet">Agrément PMI temps complet</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.agrement_pmi_temps_complet.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="agrement_pmi_temps_complet" id="id_agrement_pmi_temps_complet" min="0"
+                value="{{ form.agrement_pmi_temps_complet.value|default_if_none:'' }}">
+        {% if form.agrement_pmi_temps_complet.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.agrement_pmi_temps_complet.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
       <div class="flex flex-col gap-1.5">
-        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_nb_places_total">Places total</label>
-        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.nb_places_total.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="nb_places_total" id="id_nb_places_total" min="0"
-                value="{{ form.nb_places_total.value|default_if_none:'' }}">
-        {% if form.nb_places_total.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.nb_places_total.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_agrement_pmi_periscolaire">Agrément PMI périscolaire</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.agrement_pmi_periscolaire.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="agrement_pmi_periscolaire" id="id_agrement_pmi_periscolaire" min="0"
+                value="{{ form.agrement_pmi_periscolaire.value|default_if_none:'' }}">
+        {% if form.agrement_pmi_periscolaire.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.agrement_pmi_periscolaire.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+      </div>
+    </div>
+    <h3 class="text-[length:var(--fs-sm)] font-bold text-[var(--color-text)] m-0 mt-5">Places disponibles</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_places_disponibles_temps_complet">Places disponibles temps complet</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.places_disponibles_temps_complet.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="places_disponibles_temps_complet" id="id_places_disponibles_temps_complet" min="0"
+                value="{{ form.places_disponibles_temps_complet.value|default_if_none:'' }}">
+        {% if form.places_disponibles_temps_complet.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.places_disponibles_temps_complet.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[length:var(--fs-sm)] font-semibold text-[var(--color-text)]" for="id_places_disponibles_periscolaire">Places disponibles périscolaire</label>
+        <input class="block w-full px-3.5 py-2.5 text-[length:var(--fs-sm)] font-sans text-[var(--color-text)] bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-[var(--radius-md)] min-h-[2.75rem] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-[border-color,box-shadow] duration-200 {% if form.places_disponibles_periscolaire.errors %}border-[var(--color-danger)] bg-[var(--color-danger-soft)]{% endif %}" type="number" name="places_disponibles_periscolaire" id="id_places_disponibles_periscolaire" min="0"
+                value="{{ form.places_disponibles_periscolaire.value|default_if_none:'' }}">
+        {% if form.places_disponibles_periscolaire.errors %}<p class="text-[length:var(--fs-xs)] text-[var(--color-danger)] m-0 mt-1.5">{% for error in form.places_disponibles_periscolaire.errors %}{{ error|striptags }}{% endfor %}</p>{% endif %}
       </div>
     </div>
     <div class="flex flex-row items-center gap-3 mt-4">
@@ -470,19 +485,27 @@
     applyIdentityVisibility();
   }
 
-  var placesDispoInput = document.getElementById("id_places_disponibles");
+  var placesDispoInputs = [
+    document.getElementById("id_places_disponibles_temps_complet"),
+    document.getElementById("id_places_disponibles_periscolaire")
+  ].filter(function (el) { return !!el; });
   var placesNonCommuniqueCb = document.getElementById("id_places_non_communique");
   function syncNonCommunique() {
-    if (!placesDispoInput || !placesNonCommuniqueCb) return;
-    var raw = (placesDispoInput.value == null ? "" : String(placesDispoInput.value)).trim().replace(",", ".");
-    var nb = raw === "" ? NaN : Number(raw);
-    if (Number.isFinite(nb) && nb > 0 && placesNonCommuniqueCb.checked) {
+    if (!placesNonCommuniqueCb || placesDispoInputs.length === 0) return;
+    var hasPositive = placesDispoInputs.some(function (input) {
+      var raw = (input.value == null ? "" : String(input.value)).trim().replace(",", ".");
+      var nb = raw === "" ? NaN : Number(raw);
+      return Number.isFinite(nb) && nb > 0;
+    });
+    if (hasPositive && placesNonCommuniqueCb.checked) {
       placesNonCommuniqueCb.checked = false;
     }
   }
-  if (placesDispoInput && placesNonCommuniqueCb) {
-    placesDispoInput.addEventListener("input", syncNonCommunique);
-    placesDispoInput.addEventListener("change", syncNonCommunique);
+  if (placesNonCommuniqueCb) {
+    placesDispoInputs.forEach(function (input) {
+      input.addEventListener("input", syncNonCommunique);
+      input.addEventListener("change", syncNonCommunique);
+    });
     syncNonCommunique();
   }
 })();

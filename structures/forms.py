@@ -179,8 +179,11 @@ class StructureForm(forms.ModelForm):
                     "nom_structure" if est_structure else "nom",
                     f"Une fiche « {duplicate_display} » existe déjà dans cette commune.",
                 )
-        places_disponibles = cleaned.get("places_disponibles")
-        if places_disponibles is not None and places_disponibles > 0:
+        places_disponibles_tc = cleaned.get("places_disponibles_temps_complet")
+        places_disponibles_peri = cleaned.get("places_disponibles_periscolaire")
+        if (places_disponibles_tc is not None and places_disponibles_tc > 0) or (
+            places_disponibles_peri is not None and places_disponibles_peri > 0
+        ):
             cleaned["places_non_communique"] = False
         return cleaned
 
@@ -220,14 +223,26 @@ class StructureForm(forms.ModelForm):
             raise forms.ValidationError("L'âge ne peut pas être négatif.")
         return val
 
-    def clean_places_disponibles(self):
-        val = self.cleaned_data.get("places_disponibles")
+    def clean_places_disponibles_temps_complet(self):
+        val = self.cleaned_data.get("places_disponibles_temps_complet")
         if val is not None and val < 0:
             raise forms.ValidationError("Le nombre ne peut pas être négatif.")
         return val
 
-    def clean_nb_places_total(self):
-        val = self.cleaned_data.get("nb_places_total")
+    def clean_places_disponibles_periscolaire(self):
+        val = self.cleaned_data.get("places_disponibles_periscolaire")
+        if val is not None and val < 0:
+            raise forms.ValidationError("Le nombre ne peut pas être négatif.")
+        return val
+
+    def clean_agrement_pmi_temps_complet(self):
+        val = self.cleaned_data.get("agrement_pmi_temps_complet")
+        if val is not None and val < 0:
+            raise forms.ValidationError("Le nombre ne peut pas être négatif.")
+        return val
+
+    def clean_agrement_pmi_periscolaire(self):
+        val = self.cleaned_data.get("agrement_pmi_periscolaire")
         if val is not None and val < 0:
             raise forms.ValidationError("Le nombre ne peut pas être négatif.")
         return val
